@@ -1,5 +1,5 @@
 Class {
-	#name : #OpenAPI2MetamodelGenerator,
+	#name : #FamixOpenApiGenerator,
 	#superclass : #FamixMetamodelGenerator,
 	#instVars : [
 		'entities'
@@ -8,27 +8,27 @@ Class {
 }
 
 { #category : 'accessing' }
-OpenAPI2MetamodelGenerator class >> packageName [
+FamixOpenApiGenerator class >> packageName [
     ^ #'OpenAPI2-Model-Generated'
 ]
 
 { #category : 'accessing' }
-OpenAPI2MetamodelGenerator class >> prefix [
+FamixOpenApiGenerator class >> prefix [
     ^ #'OpenAPI2'
 ]
 
 { #category : 'private' }
-OpenAPI2MetamodelGenerator >> entityNamed: aSymbol [
+FamixOpenApiGenerator >> entityNamed: aSymbol [
     ^ entities at: aSymbol
 ]
 
 { #category : 'private' }
-OpenAPI2MetamodelGenerator >> defineEntityNamed: aSymbol [
+FamixOpenApiGenerator >> defineEntityNamed: aSymbol [
     entities at: aSymbol put: (builder newClassNamed: aSymbol comment: 'Generated from openapi2.ecore')
 ]
 
 { #category : 'definition' }
-OpenAPI2MetamodelGenerator >> defineClasses [
+FamixOpenApiGenerator >> defineClasses [
     super defineClasses.
     entities := Dictionary new.
     self defineEntityNamed: #JSONSchemaSubset.
@@ -68,7 +68,7 @@ OpenAPI2MetamodelGenerator >> defineClasses [
 ]
 
 { #category : 'definition' }
-OpenAPI2MetamodelGenerator >> defineHierarchy [
+FamixOpenApiGenerator >> defineHierarchy [
     super defineHierarchy.
     (self entityNamed: #API) --|> (self entityNamed: #ExternalDocsContainer).
     (self entityNamed: #API) --|> (self entityNamed: #SecurityContainer).
@@ -100,7 +100,7 @@ OpenAPI2MetamodelGenerator >> defineHierarchy [
 ]
 
 { #category : 'definition' }
-OpenAPI2MetamodelGenerator >> defineRelations [
+FamixOpenApiGenerator >> defineRelations [
     super defineRelations.
     (((self entityNamed: #ContainedCollections) property: #paramters) comment: 'Reference paramters from ContainedCollections to Parameter [0..*].') <>-* (self entityNamed: #Parameter).
     (((self entityNamed: #ContainedCollections) property: #schemas) comment: 'Reference schemas from ContainedCollections to Schema [0..*].') <>-* (self entityNamed: #Schema).
@@ -154,7 +154,7 @@ OpenAPI2MetamodelGenerator >> defineRelations [
 ]
 
 { #category : 'definition' }
-OpenAPI2MetamodelGenerator >> defineProperties [
+FamixOpenApiGenerator >> defineProperties [
     super defineProperties.
     (((self entityNamed: #JSONSchemaSubset) property: #type type: #String) comment: 'Attribute type from JSONSchemaSubset [1]').
     (((self entityNamed: #JSONSchemaSubset) property: #format type: #String) comment: 'Attribute format from JSONSchemaSubset [1]').

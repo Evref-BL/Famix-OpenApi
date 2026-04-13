@@ -1,18 +1,18 @@
-# OpenApiMetamodelGenerator (Pharo 12)
+# FamixOpenApiGenerator (Pharo 12)
 
 This project is initialized from `alkalinan/Pharo-12-project-template` and includes a Tonel package:
 
 - `OpenAPI2ModelGenerator`
-- `OpenApiMetamodelGenerator`
+- `FamixOpenApiGenerator`
 
-The baseline also loads Moose (v7) because `OpenAPI2MetamodelGenerator` inherits from `FamixMetamodelGenerator`.
+The baseline also loads Moose because `FamixOpenApi` inherits from `FamixMetamodelGenerator`.
 
 
 ## Load from GitHub repository
 
 ```smalltalk
 Metacello new
-  baseline: 'OpenApiMetamodelGenerator';
+  baseline: 'FamixOpenApiGenerator';
   repository: 'github://Evref-BL/Famix-OpenApi/src';
   load.
 ```
@@ -22,5 +22,5 @@ Metacello new
 After loading:
 
 ```smalltalk
-OpenAPI2MetamodelGenerator generate.
+FamixOpenApi generate.
 ```

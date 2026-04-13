@@ -1,11 +1,11 @@
 Class {
-	#name : #BaselineOfOpenApiMetamodelGenerator,
+	#name : #BaselineOfFamixOpenApi,
 	#superclass : #BaselineOf,
-	#package : 'BaselineOfOpenApiMetamodelGenerator'
+	#package : 'BaselineOfFamixOpenApi'
 }
 
 { #category : 'baselines' }
-BaselineOfOpenApiMetamodelGenerator >> baseline: spec [
+BaselineOfFamixOpenApi >> baseline: spec [
 	<baseline>
 	spec for: #common do: [
 
@@ -31,7 +31,7 @@ BaselineOfGitLabHealth >> customProjectAttributes [
 
 { #category : #baselines }
 BaselineOfGitLabHealth >> defineGroups: spec [
-		spec group: 'default' with: #('OpenAPI2ModelGenerator' 'OpenApiMetamodelGenerator')
+		spec group: 'default' with: #('FamixOpenApiGenerator')
 
 ]
 
@@ -42,7 +42,7 @@ BaselineOfGitLabHealth >> defineDependencies: spec [
 				baseline: 'Moose'
 				with: [
 				spec repository: 'github://moosetechnology/Moose:development/src' ].
-			spec package: 'OpenAPI2ModelGenerator' with: [ spec requires: #( 'Moose' ) ]
+			spec package: 'FamixOpenApiGenerator' with: [ spec requires: #( 'Moose' ) ]
 		]
 ]
 
@@ -50,7 +50,7 @@ BaselineOfGitLabHealth >> defineDependencies: spec [
 { #category : #baselines }
 BaselineOfGitLabHealth >> definePackages: spec [
 	"generic"
-	"spec package: 'OpenApiMetamodel'."
+	"spec package: 'FamixOpenApi'."
 
 
 ]
