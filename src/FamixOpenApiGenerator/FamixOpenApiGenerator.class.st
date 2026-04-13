@@ -43,7 +43,7 @@ FamixOpenApiGenerator >> defineClasses [
     super defineClasses.
     entities := Dictionary new.
     self defineEntityNamed: #ContainedCollections.
-    self defineEntityNamed: #API.
+    self defineEntityNamed: #Api.
     self defineEntityNamed: #Info.
     self defineEntityNamed: #Contact.
     self defineEntityNamed: #License.
@@ -87,8 +87,8 @@ FamixOpenApiGenerator >> defineTraits [
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineHierarchy [
     super defineHierarchy.
-    (self entityNamed: #API) --|> (self traitNamed: #ExternalDocsContainer).
-    (self entityNamed: #API) --|> (self traitNamed: #SecurityContainer).
+    (self entityNamed: #Api) --|> (self traitNamed: #ExternalDocsContainer).
+    (self entityNamed: #Api) --|> (self traitNamed: #SecurityContainer).
     (self entityNamed: #Path) --|> (self traitNamed: #ParameterContainer).
     (self entityNamed: #Operation) --|> (self traitNamed: #ParameterContainer).
     (self entityNamed: #Operation) --|> (self traitNamed: #ExternalDocsContainer).
@@ -122,14 +122,14 @@ FamixOpenApiGenerator >> defineRelations [
     (((self entityNamed: #ContainedCollections) property: #paramters) comment: 'Reference paramters from ContainedCollections to Parameter [0..*].') <>-* (self entityNamed: #Parameter).
     (((self entityNamed: #ContainedCollections) property: #schemas) comment: 'Reference schemas from ContainedCollections to Schema [0..*].') <>-* (self entityNamed: #Schema).
     (((self entityNamed: #ContainedCollections) property: #responses) comment: 'Reference responses from ContainedCollections to Response [0..*].') <>-* (self entityNamed: #Response).
-    (((self entityNamed: #API) property: #info) comment: 'Reference info from API to Info [0..1].') <>- (self entityNamed: #Info).
-    (((self entityNamed: #API) property: #paths) comment: 'Reference paths from API to Path [0..*].') <>-* (((self entityNamed: #Path) property: #api) comment: 'Opposite reference api from Path to API [0..1].').
-    (((self entityNamed: #API) property: #definitions) comment: 'Reference definitions from API to SchemaEntry [0..*].') <>-* (self entityNamed: #SchemaEntry).
-    (((self entityNamed: #API) property: #responses) comment: 'Reference responses from API to ResponseDefinitionEntry [0..*].') <>-* (self entityNamed: #ResponseDefinitionEntry).
-    (((self entityNamed: #API) property: #securityDefinitions) comment: 'Reference securityDefinitions from API to SecuritySchemeEntry [0..*].') <>-* (self entityNamed: #SecuritySchemeEntry).
-    (((self entityNamed: #API) property: #tags) comment: 'Reference tags from API to Tag [0..*].') <>-* (self entityNamed: #Tag).
-    (((self entityNamed: #API) property: #parameters) comment: 'Reference parameters from API to ParameterEntry [0..*].') <>-* (self entityNamed: #ParameterEntry).
-    (((self entityNamed: #API) property: #containedCollections) comment: 'Reference containedCollections from API to ContainedCollections [0..1].') <>- (self entityNamed: #ContainedCollections).
+    (((self entityNamed: #Api) property: #info) comment: 'Reference info from API to Info [0..1].') <>- (self entityNamed: #Info).
+    (((self entityNamed: #Api) property: #paths) comment: 'Reference paths from API to Path [0..*].') <>-* (((self entityNamed: #Path) property: #api) comment: 'Opposite reference api from Path to API [0..1].').
+    (((self entityNamed: #Api) property: #definitions) comment: 'Reference definitions from API to SchemaEntry [0..*].') <>-* (self entityNamed: #SchemaEntry).
+    (((self entityNamed: #Api) property: #responses) comment: 'Reference responses from API to ResponseDefinitionEntry [0..*].') <>-* (self entityNamed: #ResponseDefinitionEntry).
+    (((self entityNamed: #Api) property: #securityDefinitions) comment: 'Reference securityDefinitions from API to SecuritySchemeEntry [0..*].') <>-* (self entityNamed: #SecuritySchemeEntry).
+    (((self entityNamed: #Api) property: #tags) comment: 'Reference tags from API to Tag [0..*].') <>-* ((self entityNamed: #Tag) property: #anApi).
+    (((self entityNamed: #Api) property: #parameters) comment: 'Reference parameters from API to ParameterEntry [0..*].') <>-* (self entityNamed: #ParameterEntry).
+    (((self entityNamed: #Api) property: #containedCollections) comment: 'Reference containedCollections from API to ContainedCollections [0..1].') <>- (self entityNamed: #ContainedCollections).
     (((self entityNamed: #Info) property: #contact) comment: 'Reference contact from Info to Contact [0..1].') <>- (self entityNamed: #Contact).
     (((self entityNamed: #Info) property: #license) comment: 'Reference license from Info to License [0..1].') <>- (self entityNamed: #License).
     (((self entityNamed: #Path) property: #get) comment: 'Reference get from Path to Operation [0..1].') <>- (self entityNamed: #Operation).
@@ -188,11 +188,11 @@ FamixOpenApiGenerator >> defineProperties [
     (((self traitNamed: #JSONSchemaSubset) property: #enum type: #Object) comment: 'Attribute enum from JSONSchemaSubset [*]').
     (((self traitNamed: #JSONSchemaSubset) property: #default type: #String) comment: 'Attribute default from JSONSchemaSubset [1]').
     (((self traitNamed: #JSONSchemaSubset) property: #multipleOf type: #Number) comment: 'Attribute multipleOf from JSONSchemaSubset [1]').
-    (((self entityNamed: #API) property: #host type: #String) comment: 'Attribute host from API [1]').
-    (((self entityNamed: #API) property: #basePath type: #String) comment: 'Attribute basePath from API [1]').
-    (((self entityNamed: #API) property: #schemes type: #Object) comment: 'Attribute schemes from API [*]').
-    (((self entityNamed: #API) property: #consumes type: #Object) comment: 'Attribute consumes from API [*]').
-    (((self entityNamed: #API) property: #produces type: #Object) comment: 'Attribute produces from API [*]').
+    (((self entityNamed: #Api) property: #host type: #String) comment: 'Attribute host from API [1]').
+    (((self entityNamed: #Api) property: #basePath type: #String) comment: 'Attribute basePath from API [1]').
+    (((self entityNamed: #Api) property: #schemes type: #Object) comment: 'Attribute schemes from API [*]').
+    (((self entityNamed: #Api) property: #consumes type: #Object) comment: 'Attribute consumes from API [*]').
+    (((self entityNamed: #Api) property: #produces type: #Object) comment: 'Attribute produces from API [*]').
     (((self entityNamed: #Info) property: #title type: #String) comment: 'Attribute title from Info [1]').
     (((self entityNamed: #Info) property: #description type: #String) comment: 'Attribute description from Info [1]').
     (((self entityNamed: #Info) property: #termsOfService type: #String) comment: 'Attribute termsOfService from Info [1]').
