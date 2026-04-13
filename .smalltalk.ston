@@ -1,0 +1,18 @@
+SmalltalkCISpec {
+  #loading : [
+    SCIMetacelloLoadSpec {
+
+      #baseline : 'OpenApiMetamodelGenerator',
+      #directory : 'src',
+      #ignoreImage : true,
+      #onConflict : #useIncoming,
+      #onUpgrade : #useIncoming
+    }
+  ],
+  #testing : {
+    #coverage : {
+      #packages : [ 'OpenAPI2ModelGenerator.*', 'OpenApiMetamodelGenerator.*' ],
+      #format : #lcov
+    }
+  }
+}
