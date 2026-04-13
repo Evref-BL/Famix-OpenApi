@@ -32,7 +32,7 @@ FamixOpenApiGeneratorInstantiationTest >> testCanInstantiateGeneratedEntities [
 { #category : 'tests' }
 FamixOpenApiGeneratorInstantiationTest >> testUsesCurrentPrefixForGeneratedEntities [
 	| generatedApiClassName generatedApiClass |
-	generatedApiClassName := (FamixOpenApiGenerator prefix asString , 'API') asSymbol.
+	generatedApiClassName := (FamixOpenApiGenerator prefix asString , 'Api') asSymbol.
 	generatedApiClass := self generatedClassNamed: #Api.
 	self assert: generatedApiClass name equals: generatedApiClassName
 ]
