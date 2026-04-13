@@ -4,7 +4,7 @@ Class {
 	#instVars : [
 		'entities'
 	],
-	#category : 'OpenAPI2ModelGenerator'
+	#category : 'FamixOpenApiGenerator'
 }
 
 { #category : 'accessing' }
