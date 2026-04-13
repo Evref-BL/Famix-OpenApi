@@ -21,7 +21,7 @@ FamixOpenApiGeneratorInstantiationTest >> setUp [
 { #category : 'tests' }
 FamixOpenApiGeneratorInstantiationTest >> testCanInstantiateGeneratedEntities [
 	| entityNames |
-	entityNames := #(API Path Operation Schema Property Response).
+	entityNames := #(Api Path Operation Schema Property Response).
 	entityNames do: [ :entityName |
 		| generatedClass instance |
 		generatedClass := self generatedClassNamed: entityName.
