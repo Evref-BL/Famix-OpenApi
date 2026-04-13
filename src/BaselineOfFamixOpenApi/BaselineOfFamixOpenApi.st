@@ -12,31 +12,25 @@ BaselineOfFamixOpenApi >> baseline: spec [
 		self defineGroups: spec.
 		self defineDependencies: spec.
 		self definePackages: spec.
-
-		
-
-
-
 	]
 ]
 
 
 
 { #category : #baselines }
-BaselineOfGitLabHealth >> customProjectAttributes [
+BaselineOfFamixOpenApi >> customProjectAttributes [
     self class environment at: #MooseEntity ifAbsent: [ ^ #(#WithoutFamix) ].
-
     ^ #()
 ]
 
 { #category : #baselines }
-BaselineOfGitLabHealth >> defineGroups: spec [
+BaselineOfFamixOpenApi >> defineGroups: spec [
 		spec group: 'default' with: #('FamixOpenApiGenerator')
 
 ]
 
 { #category : #baselines }
-BaselineOfGitLabHealth >> defineDependencies: spec [
+BaselineOfFamixOpenApi >> defineDependencies: spec [
 	spec for: #( #WithoutFamix ) do: [
 			spec
 				baseline: 'Moose'
@@ -48,7 +42,7 @@ BaselineOfGitLabHealth >> defineDependencies: spec [
 
 
 { #category : #baselines }
-BaselineOfGitLabHealth >> definePackages: spec [
+BaselineOfFamixOpenApi >> definePackages: spec [
 	"generic"
 	"spec package: 'FamixOpenApi'."
 
