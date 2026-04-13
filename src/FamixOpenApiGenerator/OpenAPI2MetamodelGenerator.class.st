@@ -9,12 +9,12 @@ Class {
 
 { #category : 'accessing' }
 FamixOpenApiGenerator class >> packageName [
-    ^ #'OpenAPI2-Model-Generated'
+    ^ #'OpenAPI-Model'
 ]
 
 { #category : 'accessing' }
 FamixOpenApiGenerator class >> prefix [
-    ^ #'OpenAPI2'
+    ^ #'OAPI'
 ]
 
 { #category : 'private' }
