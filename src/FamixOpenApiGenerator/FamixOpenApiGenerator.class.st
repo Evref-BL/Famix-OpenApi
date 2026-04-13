@@ -116,12 +116,12 @@ FamixOpenApiGenerator >> defineRelations [
     (((self entityNamed: #Info) property: #contact) comment: 'Reference contact from Info to Contact [0..1].') <>- (self entityNamed: #Contact).
     (((self entityNamed: #Info) property: #license) comment: 'Reference license from Info to License [0..1].') <>- (self entityNamed: #License).
     (((self entityNamed: #Path) property: #get) comment: 'Reference get from Path to Operation [0..1].') <>- (self entityNamed: #Operation).
-    ((((self entityNamed: #Path) property: #put) comment: 'Reference put from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) withoutPrimaryContainer.
-    ((((self entityNamed: #Path) property: #post) comment: 'Reference post from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) withoutPrimaryContainer.
-    ((((self entityNamed: #Path) property: #delete) comment: 'Reference delete from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) withoutPrimaryContainer.
-    ((((self entityNamed: #Path) property: #options) comment: 'Reference options from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) withoutPrimaryContainer.
-    ((((self entityNamed: #Path) property: #head) comment: 'Reference head from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) withoutPrimaryContainer.
-    ((((self entityNamed: #Path) property: #patch) comment: 'Reference patch from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) withoutPrimaryContainer.
+    ((((self entityNamed: #Path) property: #put) comment: 'Reference put from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) .
+    ((((self entityNamed: #Path) property: #post) comment: 'Reference post from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) .
+    ((((self entityNamed: #Path) property: #delete) comment: 'Reference delete from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) .
+    ((((self entityNamed: #Path) property: #options) comment: 'Reference options from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) .
+    ((((self entityNamed: #Path) property: #head) comment: 'Reference head from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) .
+    ((((self entityNamed: #Path) property: #patch) comment: 'Reference patch from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) .
     (((self entityNamed: #Path) property: #parameters) comment: 'Reference parameters from Path to Parameter [0..*].') -* (self entityNamed: #Parameter).
     (((self entityNamed: #Operation) property: #responses) comment: 'Reference responses from Operation to ResponseEntry [1..*].') <>-* (self entityNamed: #ResponseEntry).
     (((self entityNamed: #Operation) property: #parameters) comment: 'Reference parameters from Operation to Parameter [0..*].') -* (self entityNamed: #Parameter).
