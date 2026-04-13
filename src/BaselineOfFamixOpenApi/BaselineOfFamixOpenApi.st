@@ -44,7 +44,9 @@ BaselineOfFamixOpenApi >> defineDependencies: spec [
 BaselineOfFamixOpenApi >> definePackages: spec [
 	"generic"
 	"spec package: 'FamixOpenApi'."
-	spec package: 'FamixOpenApiGenerator-Test' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ]
+	spec package: 'FamixOpenApiGenerator-Test' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ].
+	spec package: 'Famix-OpenApi-Importer' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ].
+	spec package: 'Famix-OpenApi-Importer-Test' with: [ spec requires: #( 'Famix-OpenApi-Importer' ) ]
 
 ]
 
