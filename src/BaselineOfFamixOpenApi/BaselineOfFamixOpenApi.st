@@ -25,8 +25,7 @@ BaselineOfFamixOpenApi >> customProjectAttributes [
 
 { #category : #baselines }
 BaselineOfFamixOpenApi >> defineGroups: spec [
-		spec group: 'default' with: #('FamixOpenApiGenerator')
-
+		"spec group: 'default' with: #('FamixOpenApiGenerator')"
 ]
 
 { #category : #baselines }
