@@ -52,7 +52,9 @@ BaselineOfFamixOpenApi >> definePackages: spec [
 	spec package: 'Famix-OpenApi-Importer' with: [ spec requires: #( 'FamixOpenApiGenerator' 'NeoJSON' ) ].
 	spec package: 'Famix-OpenApi-Importer-Test' with: [ spec requires: #( 'Famix-OpenApi-Importer' ) ].
 	spec package: 'Famix-OpenApi-Analysis' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ].
-	spec package: 'Famix-OpenApi-Analysis-Test' with: [ spec requires: #( 'Famix-OpenApi-Analysis' 'Famix-OpenApi-Importer' ) ]
+	spec package: 'Famix-OpenApi-Analysis-Test' with: [ spec requires: #( 'Famix-OpenApi-Analysis' 'Famix-OpenApi-Importer' ) ].
+	spec package: 'Famix-OpenAPI-Model' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ].
+	spec package: 'Famix-OpenAPI-Model-Extension' with: [ spec requires: #( 'Famix-OpenAPI-Model' ) ].
 
 ]
 

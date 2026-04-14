@@ -365,17 +365,17 @@ FamixOpenApiJsonVisitor >> setSourceTextOn: anEntity fromJsonNode: aJsonNode [
 ]
 
 { #category : 'private - json' }
-FamixOpenApiJsonVisitor >> stringArrayFromJsonNode: aJsonNode [
-	(self isSequenceLike: aJsonNode) ifFalse: [ ^ nil ].
-	^ (aJsonNode collect: [ :each | each asString ]) asArray
-]
-
-{ #category : 'private - json' }
 FamixOpenApiJsonVisitor >> sourceTextFromJsonNode: aJsonNode [
 	aJsonNode ifNil: [ ^ nil ].
 	^ [ NeoJSONWriter toString: aJsonNode ]
 		on: Error
 		do: [ nil ]
+]
+
+{ #category : 'private - json' }
+FamixOpenApiJsonVisitor >> stringArrayFromJsonNode: aJsonNode [
+	(self isSequenceLike: aJsonNode) ifFalse: [ ^ nil ].
+	^ (aJsonNode collect: [ :each | each asString ]) asArray
 ]
 
 { #category : 'private - references' }
@@ -810,7 +810,10 @@ FamixOpenApiJsonVisitor >> visitOperationIn: aPathNode httpMethod: anHttpMethod 
 				visitOperationNode: operationNode
 				httpMethod: anHttpMethod
 				relativePath: ((aPath respondsTo: #relativePath) ifTrue: [ aPath relativePath ]).
-			operation ifNotNil: [ self setProperty: aRelationName on: aPath to: operation ] ]
+			operation ifNotNil: [ self setProperty: aRelationName on: aPath to: operation.
+				"self haltIf: [ aPath parameters isNotNil and: [operation parameters isEmptyOrNil ]]."
+				
+				 ] ]
 ]
 
 { #category : 'visiting' }
