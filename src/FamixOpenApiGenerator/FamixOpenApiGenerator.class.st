@@ -1,11 +1,12 @@
 Class {
-	#name : #FamixOpenApiGenerator,
-	#superclass : #FamixMetamodelGenerator,
+	#name : 'FamixOpenApiGenerator',
+	#superclass : 'FamixMetamodelGenerator',
 	#instVars : [
 		'entities',
 		'traits'
 	],
-	#category : 'FamixOpenApiGenerator'
+	#category : 'FamixOpenApiGenerator',
+	#package : 'FamixOpenApiGenerator'
 }
 
 { #category : 'accessing' }
@@ -18,24 +19,9 @@ FamixOpenApiGenerator class >> prefix [
     ^ #'OP'
 ]
 
-{ #category : 'private' }
-FamixOpenApiGenerator >> entityNamed: aSymbol [
-    ^ entities at: aSymbol
-]
-
-{ #category : 'private' }
-FamixOpenApiGenerator >> traitNamed: aSymbol [
-    ^ traits at: aSymbol
-]
-
-{ #category : 'private' }
-FamixOpenApiGenerator >> defineEntityNamed: aSymbol [
-    entities at: aSymbol put: (builder newClassNamed: aSymbol comment: 'Generated from openapi2.ecore')
-]
-
-{ #category : 'definition' }
-FamixOpenApiGenerator >> defineTraitNamed: aSymbol [
-    traits at: aSymbol put: (builder newTraitNamed: aSymbol comment: 'Generated from openapi2.ecore')
+{ #category : 'accessing' }
+FamixOpenApiGenerator class >> submetamodels [ 
+	^ { FamixMooseQueryGenerator . FamixGenerator }
 ]
 
 { #category : 'definition' }
@@ -70,18 +56,9 @@ FamixOpenApiGenerator >> defineClasses [
     self defineEntityNamed: #RequiredSecurityScheme.
 ]
 
-{ #category : 'definition' }
-FamixOpenApiGenerator >> defineTraits [
-    super defineTraits.
-    traits := Dictionary new.
-    self defineTraitNamed: #JSONSchemaSubset.
-    self defineTraitNamed: #ParameterContainer.
-    self defineTraitNamed: #SchemaContainer.
-    self defineTraitNamed: #ResponseContainer.
-    self defineTraitNamed: #ExternalDocsContainer.
-    self defineTraitNamed: #ArrayContainer.
-    self defineTraitNamed: #SecurityContainer.
-    self defineTraitNamed: #JSONPointer.
+{ #category : 'private' }
+FamixOpenApiGenerator >> defineEntityNamed: aSymbol [
+    entities at: aSymbol put: (builder newClassNamed: aSymbol comment: 'Generated from openapi2.ecore')
 ]
 
 { #category : 'definition' }
@@ -89,6 +66,7 @@ FamixOpenApiGenerator >> defineHierarchy [
     super defineHierarchy.
     (self entityNamed: #Api) --|> (self traitNamed: #ExternalDocsContainer).
     (self entityNamed: #Api) --|> (self traitNamed: #SecurityContainer).
+	 (self entityNamed: #Api) --|> #TNamedEntity.
     (self entityNamed: #Path) --|> (self traitNamed: #ParameterContainer).
     (self entityNamed: #Operation) --|> (self traitNamed: #ParameterContainer).
     (self entityNamed: #Operation) --|> (self traitNamed: #ExternalDocsContainer).
@@ -114,59 +92,6 @@ FamixOpenApiGenerator >> defineHierarchy [
     (self entityNamed: #SchemaEntry) --|> (self traitNamed: #SchemaContainer).
     (self entityNamed: #ResponseDefinitionEntry) --|> (self traitNamed: #ResponseContainer).
     (self entityNamed: #ParameterEntry) --|> (self traitNamed: #ParameterContainer).
-]
-
-{ #category : 'definition' }
-FamixOpenApiGenerator >> defineRelations [
-    super defineRelations.
-    (((self entityNamed: #ContainedCollections) property: #paramters) comment: 'Reference paramters from ContainedCollections to Parameter [0..*].') <>-* (self entityNamed: #Parameter).
-    (((self entityNamed: #ContainedCollections) property: #schemas) comment: 'Reference schemas from ContainedCollections to Schema [0..*].') <>-* (self entityNamed: #Schema).
-    (((self entityNamed: #ContainedCollections) property: #responses) comment: 'Reference responses from ContainedCollections to Response [0..*].') <>-* (self entityNamed: #Response).
-    (((self entityNamed: #Api) property: #info) comment: 'Reference info from API to Info [0..1].') <>- (self entityNamed: #Info).
-    (((self entityNamed: #Api) property: #paths) comment: 'Reference paths from API to Path [0..*].') <>-* (((self entityNamed: #Path) property: #api) comment: 'Opposite reference api from Path to API [0..1].').
-    (((self entityNamed: #Api) property: #definitions) comment: 'Reference definitions from API to SchemaEntry [0..*].') <>-* (self entityNamed: #SchemaEntry).
-    (((self entityNamed: #Api) property: #responses) comment: 'Reference responses from API to ResponseDefinitionEntry [0..*].') <>-* (self entityNamed: #ResponseDefinitionEntry).
-    (((self entityNamed: #Api) property: #securityDefinitions) comment: 'Reference securityDefinitions from API to SecuritySchemeEntry [0..*].') <>-* (self entityNamed: #SecuritySchemeEntry).
-    (((self entityNamed: #Api) property: #tags) comment: 'Reference tags from API to Tag [0..*].') <>-* ((self entityNamed: #Tag) property: #anApi).
-    (((self entityNamed: #Api) property: #parameters) comment: 'Reference parameters from API to ParameterEntry [0..*].') <>-* (self entityNamed: #ParameterEntry).
-    (((self entityNamed: #Api) property: #containedCollections) comment: 'Reference containedCollections from API to ContainedCollections [0..1].') <>- (self entityNamed: #ContainedCollections).
-    (((self entityNamed: #Info) property: #contact) comment: 'Reference contact from Info to Contact [0..1].') <>- (self entityNamed: #Contact).
-    (((self entityNamed: #Info) property: #license) comment: 'Reference license from Info to License [0..1].') <>- (self entityNamed: #License).
-    (((self entityNamed: #Path) property: #get) comment: 'Reference get from Path to Operation [0..1].') <>- (self entityNamed: #Operation).
-    ((((self entityNamed: #Path) property: #put) comment: 'Reference put from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #post) comment: 'Reference post from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #delete) comment: 'Reference delete from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #options) comment: 'Reference options from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #head) comment: 'Reference head from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #patch) comment: 'Reference patch from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    (((self entityNamed: #Path) property: #parameters) comment: 'Reference parameters from Path to Parameter [0..*].') -* (self entityNamed: #Parameter).
-    (((self entityNamed: #Operation) property: #responses) comment: 'Reference responses from Operation to ResponseEntry [1..*].') <>-* (self entityNamed: #ResponseEntry).
-    (((self entityNamed: #Operation) property: #parameters) comment: 'Reference parameters from Operation to Parameter [0..*].') -* (self entityNamed: #Parameter).
-    (((self entityNamed: #Parameter) property: #declaringContext) comment: 'Reference declaringContext from Parameter to ParameterContainer [0..1].') - (self traitNamed: #ParameterContainer).
-    (((self entityNamed: #Parameter) property: #schema) comment: 'Reference schema from Parameter to Schema [0..1].') - (self entityNamed: #Schema).
-    (((self entityNamed: #Schema) property: #properties) comment: 'Reference properties from Schema to Property [0..*].') <>-* (((self entityNamed: #Property) property: #schema) comment: 'Opposite reference schema from Property to Schema [0..1].').
-    (((self entityNamed: #Schema) property: #allOf) comment: 'Reference allOf from Schema to Schema [0..*].') -* (self entityNamed: #Schema).
-    (((self entityNamed: #Schema) property: #items) comment: 'Reference items from Schema to Schema [0..1].') - (self entityNamed: #Schema).
-    (((self entityNamed: #Schema) property: #xml) comment: 'Reference xml from Schema to XMLElement [0..1].') <>- (self entityNamed: #XMLElement).
-    (((self entityNamed: #Schema) property: #additonalProperties) comment: 'Reference additonalProperties from Schema to Schema [0..1].') - (self entityNamed: #Schema).
-    (((self entityNamed: #Schema) property: #declaringContext) comment: 'Reference declaringContext from Schema to SchemaContainer [0..1].') - (self traitNamed: #SchemaContainer).
-    (((self entityNamed: #Schema) property: #tupleItems) comment: 'Reference tupleItems from Schema to Schema [0..*].') -* (self entityNamed: #Schema).
-    (((self entityNamed: #Response) property: #headers) comment: 'Reference headers from Response to Header [0..*].') <>-* (self entityNamed: #Header).
-    (((self entityNamed: #Response) property: #examples) comment: 'Reference examples from Response to Example [0..*].') <>-* (self entityNamed: #Example).
-    (((self entityNamed: #Response) property: #declaringContext) comment: 'Reference declaringContext from Response to ResponseContainer [0..1].') - (self traitNamed: #ResponseContainer).
-    (((self entityNamed: #Response) property: #schema) comment: 'Reference schema from Response to Schema [0..1].') - (self entityNamed: #Schema).
-    (((self entityNamed: #SecurityScheme) property: #scopes) comment: 'Reference scopes from SecurityScheme to SecurityScope [0..*].') <>-* (self entityNamed: #SecurityScope).
-    (((self traitNamed: #ExternalDocsContainer) property: #externalDocs) comment: 'Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].') <>- (self entityNamed: #ExternalDocs).
-    (((self traitNamed: #ArrayContainer) property: #items) comment: 'Reference items from ArrayContainer to ItemsDefinition [0..1].') <>- (self entityNamed: #ItemsDefinition).
-    (((self entityNamed: #SecurityRequirement) property: #securitySchemes) comment: 'Reference securitySchemes from SecurityRequirement to RequiredSecurityScheme [0..*].') <>-* (self entityNamed: #RequiredSecurityScheme).
-    (((self entityNamed: #ResponseEntry) property: #value) comment: 'Reference value from ResponseEntry to Response [0..1].') - (self entityNamed: #Response).
-    (((self entityNamed: #SchemaEntry) property: #value) comment: 'Reference value from SchemaEntry to Schema [0..1].') - (self entityNamed: #Schema).
-    (((self entityNamed: #ResponseDefinitionEntry) property: #value) comment: 'Reference value from ResponseDefinitionEntry to Response [0..1].') - (self entityNamed: #Response).
-    (((self entityNamed: #ParameterEntry) property: #value) comment: 'Reference value from ParameterEntry to Parameter [0..1].') - (self entityNamed: #Parameter).
-    (((self traitNamed: #SecurityContainer) property: #security) comment: 'Reference security from SecurityContainer to SecurityRequirement [0..*].') <>-* (self entityNamed: #SecurityRequirement).
-    (((self entityNamed: #SecuritySchemeEntry) property: #value) comment: 'Reference value from SecuritySchemeEntry to SecurityScheme [0..1].') <>- (self entityNamed: #SecurityScheme).
-    (((self entityNamed: #RequiredSecurityScheme) property: #securityScopes) comment: 'Reference securityScopes from RequiredSecurityScheme to SecurityScope [0..*].') -* (self entityNamed: #SecurityScope).
-    (((self entityNamed: #RequiredSecurityScheme) property: #securityScheme) comment: 'Reference securityScheme from RequiredSecurityScheme to SecurityScheme [0..1].') - (self entityNamed: #SecurityScheme).
 ]
 
 { #category : 'definition' }
@@ -254,4 +179,86 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #ResponseDefinitionEntry) property: #key type: #String) comment: 'Attribute key from ResponseDefinitionEntry [1]').
     (((self entityNamed: #ParameterEntry) property: #key type: #String) comment: 'Attribute key from ParameterEntry [1]').
     (((self entityNamed: #SecuritySchemeEntry) property: #key type: #String) comment: 'Attribute key from SecuritySchemeEntry [1]').
+]
+
+{ #category : 'definition' }
+FamixOpenApiGenerator >> defineRelations [
+    super defineRelations.
+    (((self entityNamed: #ContainedCollections) property: #paramters) comment: 'Reference paramters from ContainedCollections to Parameter [0..*].') <>-* (self entityNamed: #Parameter).
+    (((self entityNamed: #ContainedCollections) property: #schemas) comment: 'Reference schemas from ContainedCollections to Schema [0..*].') <>-* (self entityNamed: #Schema).
+    (((self entityNamed: #ContainedCollections) property: #responses) comment: 'Reference responses from ContainedCollections to Response [0..*].') <>-* (self entityNamed: #Response).
+    (((self entityNamed: #Api) property: #info) comment: 'Reference info from API to Info [0..1].') <>- (self entityNamed: #Info).
+    (((self entityNamed: #Api) property: #paths) comment: 'Reference paths from API to Path [0..*].') <>-* (((self entityNamed: #Path) property: #api) comment: 'Opposite reference api from Path to API [0..1].').
+    (((self entityNamed: #Api) property: #definitions) comment: 'Reference definitions from API to SchemaEntry [0..*].') <>-* (self entityNamed: #SchemaEntry).
+    (((self entityNamed: #Api) property: #responses) comment: 'Reference responses from API to ResponseDefinitionEntry [0..*].') <>-* (self entityNamed: #ResponseDefinitionEntry).
+    (((self entityNamed: #Api) property: #securityDefinitions) comment: 'Reference securityDefinitions from API to SecuritySchemeEntry [0..*].') <>-* (self entityNamed: #SecuritySchemeEntry).
+    (((self entityNamed: #Api) property: #tags) comment: 'Reference tags from API to Tag [0..*].') <>-* ((self entityNamed: #Tag) property: #anApi).
+    (((self entityNamed: #Api) property: #parameters) comment: 'Reference parameters from API to ParameterEntry [0..*].') <>-* (self entityNamed: #ParameterEntry).
+    (((self entityNamed: #Api) property: #containedCollections) comment: 'Reference containedCollections from API to ContainedCollections [0..1].') <>- (self entityNamed: #ContainedCollections).
+    (((self entityNamed: #Info) property: #contact) comment: 'Reference contact from Info to Contact [0..1].') <>- (self entityNamed: #Contact).
+    (((self entityNamed: #Info) property: #license) comment: 'Reference license from Info to License [0..1].') <>- (self entityNamed: #License).
+    (((self entityNamed: #Path) property: #get) comment: 'Reference get from Path to Operation [0..1].') <>- (self entityNamed: #Operation).
+    ((((self entityNamed: #Path) property: #put) comment: 'Reference put from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
+    ((((self entityNamed: #Path) property: #post) comment: 'Reference post from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
+    ((((self entityNamed: #Path) property: #delete) comment: 'Reference delete from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
+    ((((self entityNamed: #Path) property: #options) comment: 'Reference options from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
+    ((((self entityNamed: #Path) property: #head) comment: 'Reference head from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
+    ((((self entityNamed: #Path) property: #patch) comment: 'Reference patch from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
+    (((self entityNamed: #Path) property: #parameters) comment: 'Reference parameters from Path to Parameter [0..*].') -* (self entityNamed: #Parameter).
+    (((self entityNamed: #Operation) property: #responses) comment: 'Reference responses from Operation to ResponseEntry [1..*].') <>-* (self entityNamed: #ResponseEntry).
+    (((self entityNamed: #Operation) property: #parameters) comment: 'Reference parameters from Operation to Parameter [0..*].') -* (self entityNamed: #Parameter).
+    (((self entityNamed: #Parameter) property: #declaringContext) comment: 'Reference declaringContext from Parameter to ParameterContainer [0..1].') - (self traitNamed: #ParameterContainer).
+    (((self entityNamed: #Parameter) property: #schema) comment: 'Reference schema from Parameter to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #Schema) property: #properties) comment: 'Reference properties from Schema to Property [0..*].') <>-* (((self entityNamed: #Property) property: #schema) comment: 'Opposite reference schema from Property to Schema [0..1].').
+    (((self entityNamed: #Schema) property: #allOf) comment: 'Reference allOf from Schema to Schema [0..*].') -* (self entityNamed: #Schema).
+    (((self entityNamed: #Schema) property: #items) comment: 'Reference items from Schema to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #Schema) property: #xml) comment: 'Reference xml from Schema to XMLElement [0..1].') <>- (self entityNamed: #XMLElement).
+    (((self entityNamed: #Schema) property: #additonalProperties) comment: 'Reference additonalProperties from Schema to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #Schema) property: #declaringContext) comment: 'Reference declaringContext from Schema to SchemaContainer [0..1].') - (self traitNamed: #SchemaContainer).
+    (((self entityNamed: #Schema) property: #tupleItems) comment: 'Reference tupleItems from Schema to Schema [0..*].') -* (self entityNamed: #Schema).
+    (((self entityNamed: #Response) property: #headers) comment: 'Reference headers from Response to Header [0..*].') <>-* (self entityNamed: #Header).
+    (((self entityNamed: #Response) property: #examples) comment: 'Reference examples from Response to Example [0..*].') <>-* (self entityNamed: #Example).
+    (((self entityNamed: #Response) property: #declaringContext) comment: 'Reference declaringContext from Response to ResponseContainer [0..1].') - (self traitNamed: #ResponseContainer).
+    (((self entityNamed: #Response) property: #schema) comment: 'Reference schema from Response to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #SecurityScheme) property: #scopes) comment: 'Reference scopes from SecurityScheme to SecurityScope [0..*].') <>-* (self entityNamed: #SecurityScope).
+    (((self traitNamed: #ExternalDocsContainer) property: #externalDocs) comment: 'Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].') <>- (self entityNamed: #ExternalDocs).
+    (((self traitNamed: #ArrayContainer) property: #items) comment: 'Reference items from ArrayContainer to ItemsDefinition [0..1].') <>- (self entityNamed: #ItemsDefinition).
+    (((self entityNamed: #SecurityRequirement) property: #securitySchemes) comment: 'Reference securitySchemes from SecurityRequirement to RequiredSecurityScheme [0..*].') <>-* (self entityNamed: #RequiredSecurityScheme).
+    (((self entityNamed: #ResponseEntry) property: #value) comment: 'Reference value from ResponseEntry to Response [0..1].') - (self entityNamed: #Response).
+    (((self entityNamed: #SchemaEntry) property: #value) comment: 'Reference value from SchemaEntry to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #ResponseDefinitionEntry) property: #value) comment: 'Reference value from ResponseDefinitionEntry to Response [0..1].') - (self entityNamed: #Response).
+    (((self entityNamed: #ParameterEntry) property: #value) comment: 'Reference value from ParameterEntry to Parameter [0..1].') - (self entityNamed: #Parameter).
+    (((self traitNamed: #SecurityContainer) property: #security) comment: 'Reference security from SecurityContainer to SecurityRequirement [0..*].') <>-* (self entityNamed: #SecurityRequirement).
+    (((self entityNamed: #SecuritySchemeEntry) property: #value) comment: 'Reference value from SecuritySchemeEntry to SecurityScheme [0..1].') <>- (self entityNamed: #SecurityScheme).
+    (((self entityNamed: #RequiredSecurityScheme) property: #securityScopes) comment: 'Reference securityScopes from RequiredSecurityScheme to SecurityScope [0..*].') -* (self entityNamed: #SecurityScope).
+    (((self entityNamed: #RequiredSecurityScheme) property: #securityScheme) comment: 'Reference securityScheme from RequiredSecurityScheme to SecurityScheme [0..1].') - (self entityNamed: #SecurityScheme).
+]
+
+{ #category : 'definition' }
+FamixOpenApiGenerator >> defineTraitNamed: aSymbol [
+    traits at: aSymbol put: (builder newTraitNamed: aSymbol comment: 'Generated from openapi2.ecore')
+]
+
+{ #category : 'definition' }
+FamixOpenApiGenerator >> defineTraits [
+    super defineTraits.
+    traits := Dictionary new.
+    self defineTraitNamed: #JSONSchemaSubset.
+    self defineTraitNamed: #ParameterContainer.
+    self defineTraitNamed: #SchemaContainer.
+    self defineTraitNamed: #ResponseContainer.
+    self defineTraitNamed: #ExternalDocsContainer.
+    self defineTraitNamed: #ArrayContainer.
+    self defineTraitNamed: #SecurityContainer.
+    self defineTraitNamed: #JSONPointer.
+]
+
+{ #category : 'private' }
+FamixOpenApiGenerator >> entityNamed: aSymbol [
+    ^ entities at: aSymbol
+]
+
+{ #category : 'private' }
+FamixOpenApiGenerator >> traitNamed: aSymbol [
+    ^ traits at: aSymbol
 ]
