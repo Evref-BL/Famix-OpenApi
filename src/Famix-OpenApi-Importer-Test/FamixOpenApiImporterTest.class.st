@@ -85,7 +85,7 @@ FamixOpenApiImporterTest >> testImportCreatesPathAndOperationEntities [
 
 { #category : 'tests' }
 FamixOpenApiImporterTest >> testImportOpenApi3ComponentsAndRequestBody [
-	| api apiClass components componentsClass mediaTypeEntryClass model operation operationClass requestBodyClass requestBodyEntry response responseClass |
+	| api apiClass components componentsClass mediaTypeEntry mediaTypeEntryClass model operation operationClass petSchemaEntry requestBodyClass requestBodyEntry response |
 	model := FamixOpenApiImporter new modelFromJsonString: self minimalOpenApi3Json.
 
 	apiClass := self generatedClassNamed: #Api.
@@ -93,12 +93,11 @@ FamixOpenApiImporterTest >> testImportOpenApi3ComponentsAndRequestBody [
 	operationClass := self generatedClassNamed: #Operation.
 	requestBodyClass := self generatedClassNamed: #RequestBody.
 	mediaTypeEntryClass := self generatedClassNamed: #MediaTypeEntry.
-	responseClass := self generatedClassNamed: #Response.
 
 	api := (model allWithType: apiClass) anyOne.
 	components := (model allWithType: componentsClass) anyOne.
 	operation := (model allWithType: operationClass) anyOne.
-	response := (model allWithType: responseClass) anyOne.
+	response := operation responses anyOne value.
 
 	self assert: api openapi equals: '3.0.4'.
 	self assert: (model allWithType: componentsClass) size equals: 1.
@@ -108,22 +107,30 @@ FamixOpenApiImporterTest >> testImportOpenApi3ComponentsAndRequestBody [
 	self assert: requestBodyEntry value description equals: 'payload'.
 	self assert: requestBodyEntry value required equals: true.
 	self assert: operation requestBody notNil.
+	self assert: operation requestBody == requestBodyEntry value.
 	self assert: operation requestBody ref equals: '#/components/requestBodies/PetPayload'.
 	self assert: response content size > 0.
+	petSchemaEntry := components schemas detect: [ :each | each key = 'Pet' ].
+	mediaTypeEntry := response content detect: [ :each | each key = 'application/json' ].
+	self assert: mediaTypeEntry value schema == petSchemaEntry value.
 	self assert: (model allWithType: requestBodyClass) size >= 2.
 	self assert: (model allWithType: mediaTypeEntryClass) size > 0
 ]
 
 { #category : 'tests' }
 FamixOpenApiImporterTest >> testImportOpenApi3PathAndOperationParameters [
-	| model operation operationClass path pathClass |
+	| componentParameter components componentsClass model operation operationClass path pathClass |
 	model := FamixOpenApiImporter new modelFromJsonString: self minimalOpenApi3Json.
 	pathClass := self generatedClassNamed: #Path.
 	operationClass := self generatedClassNamed: #Operation.
+	componentsClass := self generatedClassNamed: #Components.
 	path := (model allWithType: pathClass) anyOne.
 	operation := (model allWithType: operationClass) anyOne.
+	components := (model allWithType: componentsClass) anyOne.
+	componentParameter := (components parameters detect: [ :each | each key = 'TraceId' ]) value.
 
 	self assert: path parameters size equals: 1.
+	self assert: (path parameters anyOne) == componentParameter.
 	self assert: (path parameters anyOne) ref equals: '#/components/parameters/TraceId'.
 	self assert: operation parameters size equals: 1.
 	self assert: (operation parameters anyOne) name equals: 'limit'.
