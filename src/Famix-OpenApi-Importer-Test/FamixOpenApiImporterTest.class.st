@@ -52,6 +52,27 @@ FamixOpenApiImporterTest >> testImportCreatesPathAndOperationEntities [
 ]
 
 { #category : 'tests' }
+FamixOpenApiImporterTest >> testImportCreatesResponseAndResponseEntryEntities [
+	| model responseClass responseEntryClass |
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.
+	responseClass := self generatedClassNamed: #Response.
+	responseEntryClass := self generatedClassNamed: #ResponseEntry.
+	self assert: (model allWithType: responseClass) size equals: 1.
+	self assert: (model allWithType: responseEntryClass) size equals: 1
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterTest >> testImportFromJsonFileReturnsModel [
+	| fileReference model |
+	fileReference := FileSystem memory / 'minimal-openapi.json'.
+	fileReference
+		writeStreamDo: [ :stream | stream nextPutAll: self minimalSwaggerJson ].
+
+	model := FamixOpenApiImporter new modelFromJsonFile: fileReference.
+	self assert: model notNil
+]
+
+{ #category : 'tests' }
 FamixOpenApiImporterTest >> testImportFromJsonStringReturnsModel [
 	| model |
 	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.

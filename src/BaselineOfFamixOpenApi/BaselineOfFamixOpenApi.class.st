@@ -10,6 +10,7 @@ BaselineOfFamixOpenApi >> baseline: spec [
 	<baseline>
 	spec for: #common do: [
 
+		self forceHttpsForIcebergIfPresent.
 		self defineDependencies: spec.
 		self definePackages: spec.
 		self defineGroups: spec.
@@ -51,4 +52,14 @@ BaselineOfFamixOpenApi >> definePackages: spec [
 	spec package: 'Famix-OpenApi-Importer' with: [ spec requires: #( 'FamixOpenApiGenerator' 'NeoJSON' ) ].
 	spec package: 'Famix-OpenApi-Importer-Test' with: [ spec requires: #( 'Famix-OpenApi-Importer' ) ]
 
+]
+
+{ #category : 'private' }
+BaselineOfFamixOpenApi >> forceHttpsForIcebergIfPresent [
+	| icebergClass |
+	icebergClass := self class environment
+		at: #Iceberg
+		ifAbsent: [ ^ self ].
+	(icebergClass class respondsTo: #remoteTypeSelector:)
+		ifTrue: [ icebergClass remoteTypeSelector: #httpsUrl ]
 ]

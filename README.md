@@ -8,6 +8,8 @@ The baseline also loads Moose because `FamixOpenApiGenerator` inherits from `Fam
 ## Load from GitHub repository
 
 ```smalltalk
+Iceberg remoteTypeSelector: #httpsUrl.
+
 Metacello new
   baseline: 'FamixOpenApiGenerator';
   repository: 'github://Evref-BL/Famix-OpenApi:main/src';

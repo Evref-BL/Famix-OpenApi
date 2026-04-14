@@ -2,116 +2,66 @@ Class {
 	#name : 'FamixOpenApiImporter',
 	#superclass : 'Object',
 	#instVars : [
-		'generalReader',
-		'model'
+		'model',
+		'visitor'
 	],
 	#category : 'Famix-OpenApi-Importer',
 	#package : 'Famix-OpenApi-Importer'
 }
 
-{ #category : 'import - api' }
-FamixOpenApiImporter >> configureReaderForApi: reader [
-
-	reader mapInstVarsFor: OPApi .
-	
-	reader
-		for: #ArrayOfApi
-		customDo: [ :customMappting |
-		customMappting listOfElementSchema: OPApi ].
-	
-]
-
-{ #category : 'import - api' }
-FamixOpenApiImporter >> configureReaderForPath: reader [
-
-	reader mapInstVarsFor: OPPath .
-	
-	reader
-		for: #ArrayOfPath
-		customDo: [ :customMappting |
-		customMappting listOfElementSchema: OPPath ]
+{ #category : 'private - model' }
+FamixOpenApiImporter >> generatedClassNamed: anEntityName [
+	| generatedClassName |
+	generatedClassName := (FamixOpenApiGenerator prefix asString , anEntityName asString) asSymbol.
+	^ Smalltalk globals
+		at: generatedClassName
+		ifAbsent: [ self error: 'Missing generated class: ', generatedClassName asString ]
 ]
 
 { #category : 'importing' }
 FamixOpenApiImporter >> importApiFromJsonString: aJsonString [
-
-	| api |
-	api :=  self parseApiJsonString: aJsonString.
-	
-	(self importPaths: (NeoJSONWriter toString: api paths) ofApi: api).
-	
-	^ api 
-]
-
-{ #category : 'import - path' }
-FamixOpenApiImporter >> importPaths: aJsonString ofApi: anOPApi [ 
-	
-	| data |
-	data := NeoJSONReader fromString: aJsonString.
-"	paths := self parsePathJsonString: aJsonString. "
-	data keysAndValuesDo: [ :k :v | 
-			|path|
-			"path := model newPath name: k."
-		].
-	
-
-	
-	
-	
-	 
-]
-
-{ #category : 'initialization' }
-FamixOpenApiImporter >> initReader [
-
-	| configurators |
-	generalReader := NeoJSONReader new.
-	
-	configurators := (self class allSelectors select: [ :m |
-		                  m beginsWith: #configureReaderFor ]) asSet.
-
-	configurators do: [ :configureReader |
-		self perform: configureReader with: generalReader ]
+	| apiClass |
+	self modelFromJsonString: aJsonString.
+	apiClass := self generatedClassNamed: #Api.
+	^ (model allWithType: apiClass)
+		ifEmpty: [ nil ]
+		ifNotEmpty: [ :apis | apis first ]
 ]
 
 { #category : 'initialization' }
 FamixOpenApiImporter >> initialize [
 	super initialize.
-	self initReader.
+	visitor := FamixOpenApiJsonVisitor new
 ]
 
 { #category : 'accessing' }
 FamixOpenApiImporter >> model [
-	^ model 
+	^ model
 ]
 
 { #category : 'accessing' }
 FamixOpenApiImporter >> model: aModelInstance [
-	model := aModelInstance 
+	model := aModelInstance
+]
+
+{ #category : 'importing' }
+FamixOpenApiImporter >> modelFromJsonFile: aPathOrFileReference [
+	model := visitor modelFromJsonFile: aPathOrFileReference.
+	^ model
 ]
 
 { #category : 'importing' }
 FamixOpenApiImporter >> modelFromJsonString: aJsonString [
-
-	self model: OPModel new.
-	self model add: (self importApiFromJsonString: aJsonString).
-	^ self model
+	model := visitor modelFromJsonString: aJsonString.
+	^ model
 ]
 
-{ #category : 'parsing' }
-FamixOpenApiImporter >> parseApiJsonString: aResult [
-
-	| reader |
-	reader := generalReader on: aResult readStream.
-
-	^ reader nextAs: OPApi 
+{ #category : 'accessing' }
+FamixOpenApiImporter >> visitor [
+	^ visitor
 ]
 
-{ #category : 'parsing' }
-FamixOpenApiImporter >> parsePathJsonString: aResult [ 
-	
-	| reader |
-	reader := generalReader on: aResult readStream.
-
-	^ reader nextAs: OPPath 
+{ #category : 'accessing' }
+FamixOpenApiImporter >> visitor: aVisitor [
+	visitor := aVisitor
 ]
