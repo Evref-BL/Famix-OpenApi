@@ -48,7 +48,7 @@ FamixOpenApiImporterTest >> minimalSwaggerJsonWithReferences [
 
 { #category : 'private' }
 FamixOpenApiImporterTest >> minimalOpenApi3Json [
-	^ '{"openapi":"3.0.4","info":{"title":"Sample OpenAPI 3 API","version":"1.0.0"},"paths":{"/pets":{"post":{"operationId":"createPet","requestBody":{"$ref":"#/components/requestBodies/PetPayload"},"responses":{"201":{"description":"created","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}}}}},"components":{"schemas":{"Pet":{"type":"object","description":"A pet schema"}},"requestBodies":{"PetPayload":{"description":"payload","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}},"responses":{"GenericError":{"description":"generic error"}},"parameters":{"TraceId":{"name":"traceId","in":"header","required":false,"schema":{"type":"string"}}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","name":"X-API-Key","in":"header"}}}}'
+	^ '{"openapi":"3.0.4","info":{"title":"Sample OpenAPI 3 API","version":"1.0.0"},"paths":{"/pets":{"parameters":[{"$ref":"#/components/parameters/TraceId"}],"post":{"operationId":"createPet","parameters":[{"name":"limit","in":"query","required":false,"schema":{"type":"integer"}}],"requestBody":{"$ref":"#/components/requestBodies/PetPayload"},"responses":{"201":{"description":"created","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}}}}},"components":{"schemas":{"Pet":{"type":"object","description":"A pet schema","required":["id"],"properties":{"id":{"type":"string"},"name":{"type":"string"}}}},"requestBodies":{"PetPayload":{"description":"payload","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}},"responses":{"GenericError":{"description":"generic error"}},"parameters":{"TraceId":{"name":"traceId","in":"header","required":false,"schema":{"type":"string"}}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","name":"X-API-Key","in":"header"}}}}'
 ]
 
 { #category : 'running' }
@@ -112,6 +112,38 @@ FamixOpenApiImporterTest >> testImportOpenApi3ComponentsAndRequestBody [
 	self assert: response content size > 0.
 	self assert: (model allWithType: requestBodyClass) size >= 2.
 	self assert: (model allWithType: mediaTypeEntryClass) size > 0
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterTest >> testImportOpenApi3PathAndOperationParameters [
+	| model operation operationClass path pathClass |
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalOpenApi3Json.
+	pathClass := self generatedClassNamed: #Path.
+	operationClass := self generatedClassNamed: #Operation.
+	path := (model allWithType: pathClass) anyOne.
+	operation := (model allWithType: operationClass) anyOne.
+
+	self assert: path parameters size equals: 1.
+	self assert: (path parameters anyOne) ref equals: '#/components/parameters/TraceId'.
+	self assert: operation parameters size equals: 1.
+	self assert: (operation parameters anyOne) name equals: 'limit'.
+	self assert: (operation parameters anyOne) location equals: 'query'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterTest >> testImportOpenApi3SchemaProperties [
+	| components componentsClass idProperty model nameProperty petSchema schemaEntry |
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalOpenApi3Json.
+	componentsClass := self generatedClassNamed: #Components.
+	components := (model allWithType: componentsClass) anyOne.
+	schemaEntry := components schemas detect: [ :each | each key = 'Pet' ].
+	petSchema := schemaEntry value.
+	idProperty := petSchema properties detect: [ :each | each name = 'id' ].
+	nameProperty := petSchema properties detect: [ :each | each name = 'name' ].
+
+	self assert: petSchema properties size equals: 2.
+	self assert: idProperty required equals: true.
+	self assert: nameProperty required equals: false
 ]
 
 { #category : 'tests' }

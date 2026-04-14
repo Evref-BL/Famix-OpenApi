@@ -305,6 +305,47 @@ FamixOpenApiJsonVisitor >> visitMapNode: aMapNode forOwner: anOwner ownerPropert
 		self add: entry toManyProperty: anOwnerProperty of: anOwner ]
 ]
 
+{ #category : 'private - visiting' }
+FamixOpenApiJsonVisitor >> visitParametersNode: aParametersNode forOwner: anOwner [
+	(self isSequenceLike: aParametersNode) ifFalse: [ ^ self ].
+
+	aParametersNode do: [ :parameterNode |
+		| parameter |
+		parameter := self visitParameterNode: parameterNode named: nil.
+		parameter ifNotNil: [
+			self add: parameter toManyProperty: #parameters of: anOwner.
+			self setProperty: #declaringContext on: parameter to: anOwner ] ]
+]
+
+{ #category : 'private - visiting' }
+FamixOpenApiJsonVisitor >> visitPropertiesNode: aPropertiesNode requiredNames: requiredNames forSchema: aSchema [
+	(self isDictionaryLike: aPropertiesNode) ifFalse: [ ^ self ].
+
+	aPropertiesNode keysAndValuesDo: [ :propertyName :propertyNode |
+		| property |
+		property := self
+			visitPropertyNode: propertyNode
+			named: propertyName asString
+			isRequired: (requiredNames includes: propertyName asString).
+		property ifNotNil: [
+			self add: property toManyProperty: #properties of: aSchema.
+			self setProperty: #schema on: property to: aSchema ] ]
+]
+
+{ #category : 'private - visiting' }
+FamixOpenApiJsonVisitor >> schemaRequiredPropertyNamesFrom: aSchemaNode [
+	| requiredNames |
+	requiredNames := Set new.
+	self
+		valueAt: 'required'
+		in: aSchemaNode
+		ifPresent: [ :requiredNode |
+			(self isSequenceLike: requiredNode) ifTrue: [
+				requiredNode do: [ :requiredName |
+					requiredNames add: requiredName asString ] ] ].
+	^ requiredNames
+]
+
 { #category : 'visiting' }
 FamixOpenApiJsonVisitor >> visitCallbackNode: aCallbackNode named: aCallbackName [
 	| callback |
@@ -575,6 +616,23 @@ FamixOpenApiJsonVisitor >> visitParameterNode: aParameterNode named: aParameterN
 ]
 
 { #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitPropertyNode: aPropertyNode named: aPropertyName isRequired: aBoolean [
+	| property |
+	(self isDictionaryLike: aPropertyNode) ifFalse: [ ^ nil ].
+
+	property := self newEntityNamed: #Property.
+	self setProperty: #required on: property to: aBoolean.
+	self
+		setNameOn: property
+		fromCandidates: {
+				aPropertyName.
+				(self jsonValueAt: 'title' in: aPropertyNode ifAbsent: [ nil ]).
+				(self jsonValueAt: '$ref' in: aPropertyNode ifAbsent: [ nil ]).
+				'Property' }.
+	^ property
+]
+
+{ #category : 'visiting' }
 FamixOpenApiJsonVisitor >> visitRequestBodyNode: aRequestBodyNode named: aRequestBodyName [
 	| requestBody |
 	(self isDictionaryLike: aRequestBodyNode) ifFalse: [ ^ nil ].
@@ -599,7 +657,7 @@ FamixOpenApiJsonVisitor >> visitRequestBodyNode: aRequestBodyNode named: aReques
 
 { #category : 'visiting' }
 FamixOpenApiJsonVisitor >> visitSchemaNode: aSchemaNode named: aSchemaName [
-	| schema |
+	| requiredPropertyNames schema |
 	(self isDictionaryLike: aSchemaNode) ifFalse: [ ^ nil ].
 
 	schema := self newEntityNamed: #Schema.
@@ -610,6 +668,15 @@ FamixOpenApiJsonVisitor >> visitSchemaNode: aSchemaNode named: aSchemaName [
 	self copyValueAt: 'description' from: aSchemaNode to: schema property: #description.
 	self copyValueAt: 'readOnly' from: aSchemaNode to: schema property: #readOnly.
 	self copyValueAt: 'example' from: aSchemaNode to: schema property: #example.
+	requiredPropertyNames := self schemaRequiredPropertyNamesFrom: aSchemaNode.
+	self
+		valueAt: 'properties'
+		in: aSchemaNode
+		ifPresent: [ :propertiesNode |
+			self
+				visitPropertiesNode: propertiesNode
+				requiredNames: requiredPropertyNames
+				forSchema: schema ].
 	self
 		setNameOn: schema
 		fromCandidates: {
@@ -678,6 +745,12 @@ FamixOpenApiJsonVisitor >> visitOperationNode: anOperationNode httpMethod: anHtt
 	self copyValueAt: 'deprecated' from: anOperationNode to: operation property: #deprecated.
 
 	self
+		valueAt: 'parameters'
+		in: anOperationNode
+		ifPresent: [ :parametersNode |
+			self visitParametersNode: parametersNode forOwner: operation ].
+
+	self
 		valueAt: 'responses'
 		in: anOperationNode
 		ifPresent: [ :responsesNode | self visitResponsesNode: responsesNode forOperation: operation ].
@@ -724,6 +797,12 @@ FamixOpenApiJsonVisitor >> visitPathNode: aPathNode relativePath: aRelativePath 
 	self copyValueAt: 'summary' from: aPathNode to: path property: #summary.
 	self copyValueAt: 'description' from: aPathNode to: path property: #description.
 	self setNameOn: path fromCandidates: { aRelativePath. 'Path' }.
+
+	self
+		valueAt: 'parameters'
+		in: aPathNode
+		ifPresent: [ :parametersNode |
+			self visitParametersNode: parametersNode forOwner: path ].
 
 	self visitOperationIn: aPathNode httpMethod: 'get' relation: #get forPath: path.
 	self visitOperationIn: aPathNode httpMethod: 'put' relation: #put forPath: path.
