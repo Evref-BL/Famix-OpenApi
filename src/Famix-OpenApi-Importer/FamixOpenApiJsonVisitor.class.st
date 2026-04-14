@@ -1072,6 +1072,13 @@ FamixOpenApiJsonVisitor >> visitSchemaNode: aSchemaNode named: aSchemaName [
 				requiredNames: requiredPropertyNames
 				forSchema: schema ].
 	self
+		valueAt: 'items'
+		in: aSchemaNode
+		ifPresent: [ :itemsNode |
+			| itemsSchema |
+			itemsSchema := self visitSchemaNode: itemsNode named: nil.
+			itemsSchema ifNotNil: [ self setProperty: #items on: schema to: itemsSchema ] ].
+	self
 		setNameOn: schema
 		fromCandidates: {
 				(self jsonValueAt: 'title' in: aSchemaNode ifAbsent: [ nil ]).
