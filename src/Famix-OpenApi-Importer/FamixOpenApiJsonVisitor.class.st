@@ -37,6 +37,17 @@ FamixOpenApiJsonVisitor >> copyReferenceFrom: aDictionary to: anEntity [
 	self copyValueAt: '$ref' from: aDictionary to: anEntity property: #ref
 ]
 
+{ #category : 'private - model' }
+FamixOpenApiJsonVisitor >> createEntryNamed: anEntryName key: aKey value: aValue [
+	| entry keyString |
+	keyString := aKey asString.
+	entry := self newEntityNamed: anEntryName.
+	self setProperty: #key on: entry to: keyString.
+	self setNameOn: entry fromCandidates: { keyString. anEntryName asString }.
+	aValue ifNotNil: [ self setProperty: #value on: entry to: aValue ].
+	^ entry
+]
+
 { #category : 'private - naming' }
 FamixOpenApiJsonVisitor >> firstNormalizedNameCandidateIn: aCollection [
 	aCollection do: [ :each |
@@ -167,6 +178,7 @@ FamixOpenApiJsonVisitor >> visitApiNode: anApiNode [
 	(self isDictionaryLike: anApiNode) ifFalse: [ ^ nil ].
 
 	api := self newEntityNamed: #Api.
+	self copyValueAt: 'openapi' from: anApiNode to: api property: #openapi.
 	self copyValueAt: 'host' from: anApiNode to: api property: #host.
 	self copyValueAt: 'basePath' from: anApiNode to: api property: #basePath.
 	self copyValueAt: 'schemes' from: anApiNode to: api property: #schemes.
@@ -192,6 +204,11 @@ FamixOpenApiJsonVisitor >> visitApiNode: anApiNode [
 		valueAt: 'tags'
 		in: anApiNode
 		ifPresent: [ :tagsNode | self visitTagsNode: tagsNode forApi: api ].
+
+	self
+		valueAt: 'components'
+		in: anApiNode
+		ifPresent: [ :componentsNode | self visitComponentsNode: componentsNode forApi: api ].
 
 	self
 		setNameOn: api
@@ -277,6 +294,360 @@ FamixOpenApiJsonVisitor >> visitLicenseNode: aLicenseNode [
 	^ license
 ]
 
+{ #category : 'private - visiting' }
+FamixOpenApiJsonVisitor >> visitMapNode: aMapNode forOwner: anOwner ownerProperty: anOwnerProperty entryNamed: anEntryName parseValueWith: aBlock [
+	(self isDictionaryLike: aMapNode) ifFalse: [ ^ self ].
+
+	aMapNode keysAndValuesDo: [ :rawKey :rawValue |
+		| entry value |
+		value := aBlock value: rawValue value: rawKey asString.
+		entry := self createEntryNamed: anEntryName key: rawKey value: value.
+		self add: entry toManyProperty: anOwnerProperty of: anOwner ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitCallbackNode: aCallbackNode named: aCallbackName [
+	| callback |
+	(self isDictionaryLike: aCallbackNode) ifFalse: [ ^ nil ].
+
+	callback := self newEntityNamed: #Callback.
+	self copyReferenceFrom: aCallbackNode to: callback.
+	self
+		setNameOn: callback
+		fromCandidates: {
+				aCallbackName.
+				(self jsonValueAt: '$ref' in: aCallbackNode ifAbsent: [ nil ]).
+				'Callback' }.
+	^ callback
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitComponentsNode: aComponentsNode forApi: anApi [
+	| components |
+	(self isDictionaryLike: aComponentsNode) ifFalse: [ ^ nil ].
+
+	components := self newEntityNamed: #Components.
+	self setProperty: #api on: components to: anApi.
+	self setProperty: #components on: anApi to: components.
+	self setNameOn: components fromCandidates: { 'components' }.
+
+	self
+		valueAt: 'schemas'
+		in: aComponentsNode
+		ifPresent: [ :schemasNode |
+			self
+				visitMapNode: schemasNode
+				forOwner: components
+				ownerProperty: #schemas
+				entryNamed: #SchemaEntry
+				parseValueWith: [ :schemaNode :schemaName |
+					self visitSchemaNode: schemaNode named: schemaName ] ].
+
+	self
+		valueAt: 'responses'
+		in: aComponentsNode
+		ifPresent: [ :responsesNode |
+			self
+				visitMapNode: responsesNode
+				forOwner: components
+				ownerProperty: #responses
+				entryNamed: #ResponseDefinitionEntry
+				parseValueWith: [ :responseNode :responseName |
+					self visitResponseNode: responseNode responseKey: responseName ] ].
+
+	self
+		valueAt: 'parameters'
+		in: aComponentsNode
+		ifPresent: [ :parametersNode |
+			self
+				visitMapNode: parametersNode
+				forOwner: components
+				ownerProperty: #parameters
+				entryNamed: #ParameterEntry
+				parseValueWith: [ :parameterNode :parameterName |
+					self visitParameterNode: parameterNode named: parameterName ] ].
+
+	self
+		valueAt: 'requestBodies'
+		in: aComponentsNode
+		ifPresent: [ :requestBodiesNode |
+			self
+				visitMapNode: requestBodiesNode
+				forOwner: components
+				ownerProperty: #requestBodies
+				entryNamed: #RequestBodyEntry
+				parseValueWith: [ :requestBodyNode :requestBodyName |
+					self visitRequestBodyNode: requestBodyNode named: requestBodyName ] ].
+
+	self
+		valueAt: 'securitySchemes'
+		in: aComponentsNode
+		ifPresent: [ :securitySchemesNode |
+			self
+				visitMapNode: securitySchemesNode
+				forOwner: components
+				ownerProperty: #securitySchemes
+				entryNamed: #SecuritySchemeEntry
+				parseValueWith: [ :securitySchemeNode :securitySchemeName |
+					self visitSecuritySchemeNode: securitySchemeNode named: securitySchemeName ] ].
+
+	self
+		valueAt: 'headers'
+		in: aComponentsNode
+		ifPresent: [ :headersNode |
+			self
+				visitMapNode: headersNode
+				forOwner: components
+				ownerProperty: #headers
+				entryNamed: #HeaderEntry
+				parseValueWith: [ :headerNode :headerName |
+					self visitHeaderNode: headerNode named: headerName ] ].
+
+	self
+		valueAt: 'examples'
+		in: aComponentsNode
+		ifPresent: [ :examplesNode |
+			self
+				visitMapNode: examplesNode
+				forOwner: components
+				ownerProperty: #examples
+				entryNamed: #ExampleEntry
+				parseValueWith: [ :exampleNode :exampleName |
+					self visitExampleNode: exampleNode named: exampleName ] ].
+
+	self
+		valueAt: 'links'
+		in: aComponentsNode
+		ifPresent: [ :linksNode |
+			self
+				visitMapNode: linksNode
+				forOwner: components
+				ownerProperty: #links
+				entryNamed: #LinkEntry
+				parseValueWith: [ :linkNode :linkName |
+					self visitLinkNode: linkNode named: linkName ] ].
+
+	self
+		valueAt: 'callbacks'
+		in: aComponentsNode
+		ifPresent: [ :callbacksNode |
+			self
+				visitMapNode: callbacksNode
+				forOwner: components
+				ownerProperty: #callbacks
+				entryNamed: #CallbackEntry
+				parseValueWith: [ :callbackNode :callbackName |
+					self visitCallbackNode: callbackNode named: callbackName ] ].
+
+	^ components
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitContentNode: aContentNode forContainer: aContainer [
+	self
+		visitMapNode: aContentNode
+		forOwner: aContainer
+		ownerProperty: #content
+		entryNamed: #MediaTypeEntry
+		parseValueWith: [ :mediaTypeNode :mediaTypeName |
+			self visitMediaTypeNode: mediaTypeNode mediaType: mediaTypeName ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitExampleNode: anExampleNode named: anExampleName [
+	| example |
+	(self isDictionaryLike: anExampleNode) ifFalse: [ ^ nil ].
+
+	example := self newEntityNamed: #Example.
+	self copyReferenceFrom: anExampleNode to: example.
+	self copyValueAt: 'value' from: anExampleNode to: example property: #value.
+	self
+		setNameOn: example
+		fromCandidates: {
+				anExampleName.
+				(self jsonValueAt: 'summary' in: anExampleNode ifAbsent: [ nil ]).
+				(self jsonValueAt: '$ref' in: anExampleNode ifAbsent: [ nil ]).
+				'Example' }.
+	^ example
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitHeaderNode: aHeaderNode named: aHeaderName [
+	| header |
+	(self isDictionaryLike: aHeaderNode) ifFalse: [ ^ nil ].
+
+	header := self newEntityNamed: #Header.
+	self copyReferenceFrom: aHeaderNode to: header.
+	self copyValueAt: 'description' from: aHeaderNode to: header property: #description.
+	self
+		valueAt: 'schema'
+		in: aHeaderNode
+		ifPresent: [ :schemaNode |
+			| schema |
+			schema := self visitSchemaNode: schemaNode named: nil.
+			schema ifNotNil: [ self setProperty: #schema on: header to: schema ] ].
+	self
+		setNameOn: header
+		fromCandidates: {
+				aHeaderName.
+				(self jsonValueAt: '$ref' in: aHeaderNode ifAbsent: [ nil ]).
+				'Header' }.
+	^ header
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitLinkNode: aLinkNode named: aLinkName [
+	| link |
+	(self isDictionaryLike: aLinkNode) ifFalse: [ ^ nil ].
+
+	link := self newEntityNamed: #Link.
+	self copyReferenceFrom: aLinkNode to: link.
+	self copyValueAt: 'operationRef' from: aLinkNode to: link property: #operationRef.
+	self copyValueAt: 'operationId' from: aLinkNode to: link property: #operationId.
+	self copyValueAt: 'requestBody' from: aLinkNode to: link property: #requestBody.
+	self copyValueAt: 'description' from: aLinkNode to: link property: #description.
+	self
+		setNameOn: link
+		fromCandidates: {
+				aLinkName.
+				(self jsonValueAt: 'operationId' in: aLinkNode ifAbsent: [ nil ]).
+				(self jsonValueAt: 'operationRef' in: aLinkNode ifAbsent: [ nil ]).
+				(self jsonValueAt: '$ref' in: aLinkNode ifAbsent: [ nil ]).
+				'Link' }.
+	^ link
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitMediaTypeNode: aMediaTypeNode mediaType: aMediaTypeName [
+	| mediaType |
+	(self isDictionaryLike: aMediaTypeNode) ifFalse: [ ^ nil ].
+
+	mediaType := self newEntityNamed: #MediaType.
+	self copyValueAt: 'example' from: aMediaTypeNode to: mediaType property: #example.
+	self
+		valueAt: 'schema'
+		in: aMediaTypeNode
+		ifPresent: [ :schemaNode |
+			| schema |
+			schema := self visitSchemaNode: schemaNode named: nil.
+			schema ifNotNil: [ self setProperty: #schema on: mediaType to: schema ] ].
+	self
+		valueAt: 'examples'
+		in: aMediaTypeNode
+		ifPresent: [ :examplesNode |
+			self
+				visitMapNode: examplesNode
+				forOwner: mediaType
+				ownerProperty: #examples
+				entryNamed: #ExampleEntry
+				parseValueWith: [ :exampleNode :exampleName |
+					self visitExampleNode: exampleNode named: exampleName ] ].
+	self setNameOn: mediaType fromCandidates: { aMediaTypeName. 'MediaType' }.
+	^ mediaType
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitParameterNode: aParameterNode named: aParameterName [
+	| parameter |
+	(self isDictionaryLike: aParameterNode) ifFalse: [ ^ nil ].
+
+	parameter := self newEntityNamed: #Parameter.
+	self copyReferenceFrom: aParameterNode to: parameter.
+	self copyValueAt: 'name' from: aParameterNode to: parameter property: #name.
+	self copyValueAt: 'in' from: aParameterNode to: parameter property: #location.
+	self copyValueAt: 'required' from: aParameterNode to: parameter property: #required.
+	self copyValueAt: 'description' from: aParameterNode to: parameter property: #description.
+	self
+		valueAt: 'schema'
+		in: aParameterNode
+		ifPresent: [ :schemaNode |
+			| schema |
+			schema := self visitSchemaNode: schemaNode named: nil.
+			schema ifNotNil: [ self setProperty: #schema on: parameter to: schema ] ].
+	self
+		setNameOn: parameter
+		fromCandidates: {
+				(self jsonValueAt: 'name' in: aParameterNode ifAbsent: [ nil ]).
+				aParameterName.
+				(self jsonValueAt: '$ref' in: aParameterNode ifAbsent: [ nil ]).
+				'Parameter' }.
+	^ parameter
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitRequestBodyNode: aRequestBodyNode named: aRequestBodyName [
+	| requestBody |
+	(self isDictionaryLike: aRequestBodyNode) ifFalse: [ ^ nil ].
+
+	requestBody := self newEntityNamed: #RequestBody.
+	self copyReferenceFrom: aRequestBodyNode to: requestBody.
+	self copyValueAt: 'description' from: aRequestBodyNode to: requestBody property: #description.
+	self copyValueAt: 'required' from: aRequestBodyNode to: requestBody property: #required.
+	self
+		valueAt: 'content'
+		in: aRequestBodyNode
+		ifPresent: [ :contentNode | self visitContentNode: contentNode forContainer: requestBody ].
+	self
+		setNameOn: requestBody
+		fromCandidates: {
+				aRequestBodyName.
+				(self jsonValueAt: 'description' in: aRequestBodyNode ifAbsent: [ nil ]).
+				(self jsonValueAt: '$ref' in: aRequestBodyNode ifAbsent: [ nil ]).
+				'RequestBody' }.
+	^ requestBody
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitSchemaNode: aSchemaNode named: aSchemaName [
+	| schema |
+	(self isDictionaryLike: aSchemaNode) ifFalse: [ ^ nil ].
+
+	schema := self newEntityNamed: #Schema.
+	self copyReferenceFrom: aSchemaNode to: schema.
+	self copyValueAt: 'title' from: aSchemaNode to: schema property: #title.
+	self copyValueAt: 'type' from: aSchemaNode to: schema property: #type.
+	self copyValueAt: 'format' from: aSchemaNode to: schema property: #format.
+	self copyValueAt: 'description' from: aSchemaNode to: schema property: #description.
+	self copyValueAt: 'readOnly' from: aSchemaNode to: schema property: #readOnly.
+	self copyValueAt: 'example' from: aSchemaNode to: schema property: #example.
+	self
+		setNameOn: schema
+		fromCandidates: {
+				(self jsonValueAt: 'title' in: aSchemaNode ifAbsent: [ nil ]).
+				aSchemaName.
+				(self jsonValueAt: '$ref' in: aSchemaNode ifAbsent: [ nil ]).
+				'Schema' }.
+	^ schema
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitSecuritySchemeNode: aSecuritySchemeNode named: aSecuritySchemeName [
+	| securityScheme |
+	(self isDictionaryLike: aSecuritySchemeNode) ifFalse: [ ^ nil ].
+
+	securityScheme := self newEntityNamed: #SecurityScheme.
+	self copyReferenceFrom: aSecuritySchemeNode to: securityScheme.
+	self copyValueAt: 'name' from: aSecuritySchemeNode to: securityScheme property: #name.
+	self copyValueAt: 'type' from: aSecuritySchemeNode to: securityScheme property: #type.
+	self copyValueAt: 'description' from: aSecuritySchemeNode to: securityScheme property: #description.
+	self copyValueAt: 'in' from: aSecuritySchemeNode to: securityScheme property: #location.
+	self copyValueAt: 'scheme' from: aSecuritySchemeNode to: securityScheme property: #scheme.
+	self copyValueAt: 'bearerFormat' from: aSecuritySchemeNode to: securityScheme property: #bearerFormat.
+	self copyValueAt: 'openIdConnectUrl' from: aSecuritySchemeNode to: securityScheme property: #openIdConnectUrl.
+	self copyValueAt: 'flow' from: aSecuritySchemeNode to: securityScheme property: #flow.
+	self copyValueAt: 'authorizationUrl' from: aSecuritySchemeNode to: securityScheme property: #authorizationUrl.
+	self copyValueAt: 'tokenUrl' from: aSecuritySchemeNode to: securityScheme property: #tokenUrl.
+	self
+		setNameOn: securityScheme
+		fromCandidates: {
+				(self jsonValueAt: 'name' in: aSecuritySchemeNode ifAbsent: [ nil ]).
+				aSecuritySchemeName.
+				(self jsonValueAt: 'type' in: aSecuritySchemeNode ifAbsent: [ nil ]).
+				(self jsonValueAt: '$ref' in: aSecuritySchemeNode ifAbsent: [ nil ]).
+				'SecurityScheme' }.
+	^ securityScheme
+]
+
 { #category : 'visiting' }
 FamixOpenApiJsonVisitor >> visitOperationIn: aPathNode httpMethod: anHttpMethod relation: aRelationName forPath: aPath [
 	self
@@ -312,6 +683,26 @@ FamixOpenApiJsonVisitor >> visitOperationNode: anOperationNode httpMethod: anHtt
 		ifPresent: [ :responsesNode | self visitResponsesNode: responsesNode forOperation: operation ].
 
 	self
+		valueAt: 'requestBody'
+		in: anOperationNode
+		ifPresent: [ :requestBodyNode |
+			| requestBody |
+			requestBody := self visitRequestBodyNode: requestBodyNode named: nil.
+			requestBody ifNotNil: [ self setProperty: #requestBody on: operation to: requestBody ] ].
+
+	self
+		valueAt: 'callbacks'
+		in: anOperationNode
+		ifPresent: [ :callbacksNode |
+			self
+				visitMapNode: callbacksNode
+				forOwner: operation
+				ownerProperty: #callbacks
+				entryNamed: #CallbackEntry
+				parseValueWith: [ :callbackNode :callbackName |
+					self visitCallbackNode: callbackNode named: callbackName ] ].
+
+	self
 		setNameOn: operation
 		fromCandidates: {
 				(self jsonValueAt: 'operationId' in: anOperationNode ifAbsent: [ nil ]).
@@ -341,6 +732,7 @@ FamixOpenApiJsonVisitor >> visitPathNode: aPathNode relativePath: aRelativePath 
 	self visitOperationIn: aPathNode httpMethod: 'options' relation: #options forPath: path.
 	self visitOperationIn: aPathNode httpMethod: 'head' relation: #head forPath: path.
 	self visitOperationIn: aPathNode httpMethod: 'patch' relation: #patch forPath: path.
+	self visitOperationIn: aPathNode httpMethod: 'trace' relation: #trace forPath: path.
 
 	^ path
 ]
@@ -366,6 +758,10 @@ FamixOpenApiJsonVisitor >> visitResponseNode: aResponseNode responseKey: aRespon
 	self copyReferenceFrom: aResponseNode to: response.
 	self copyValueAt: 'description' from: aResponseNode to: response property: #description.
 	self
+		valueAt: 'content'
+		in: aResponseNode
+		ifPresent: [ :contentNode | self visitContentNode: contentNode forContainer: response ].
+	self
 		setNameOn: response
 		fromCandidates: {
 				(self jsonValueAt: 'description' in: aResponseNode ifAbsent: [ nil ]).
@@ -379,13 +775,9 @@ FamixOpenApiJsonVisitor >> visitResponsesNode: aResponsesNode forOperation: anOp
 	(self isDictionaryLike: aResponsesNode) ifFalse: [ ^ self ].
 
 	aResponsesNode keysAndValuesDo: [ :responseKey :responseNode |
-		| entry keyString response |
-		keyString := responseKey asString.
-		entry := self newEntityNamed: #ResponseEntry.
-		self setProperty: #key on: entry to: keyString.
-		self setNameOn: entry fromCandidates: { keyString. 'ResponseEntry' }.
-		response := self visitResponseNode: responseNode responseKey: keyString.
-		response ifNotNil: [ self setProperty: #value on: entry to: response ].
+		| entry response |
+		response := self visitResponseNode: responseNode responseKey: responseKey asString.
+		entry := self createEntryNamed: #ResponseEntry key: responseKey value: response.
 		self add: entry toManyProperty: #responses of: anOperation ]
 ]
 

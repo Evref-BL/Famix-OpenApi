@@ -21,7 +21,7 @@ FamixOpenApiGeneratorInstantiationTest >> setUp [
 { #category : 'tests' }
 FamixOpenApiGeneratorInstantiationTest >> testCanInstantiateGeneratedEntities [
 	| entityNames |
-	entityNames := #(Api Path Operation Schema Property Response).
+	entityNames := #(Api Components Path Operation RequestBody MediaType Schema Property Response).
 	entityNames do: [ :entityName |
 		| generatedClass instance |
 		generatedClass := self generatedClassNamed: entityName.
@@ -40,7 +40,7 @@ FamixOpenApiGeneratorInstantiationTest >> testUsesCurrentPrefixForGeneratedEntit
 { #category : 'tests' }
 FamixOpenApiGeneratorInstantiationTest >> testReferenceableEntitiesExposeRefAccessor [
 	| referenceableEntities |
-	referenceableEntities := #(Path Parameter Schema Response Header Example SecurityScheme).
+	referenceableEntities := #(Path Parameter Schema Response Header Example SecurityScheme RequestBody Link Callback).
 	referenceableEntities do: [ :entityName |
 		| generatedClass instance |
 		generatedClass := self generatedClassNamed: entityName.

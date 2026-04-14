@@ -46,6 +46,11 @@ FamixOpenApiImporterTest >> minimalSwaggerJsonWithReferences [
 	^ '{"swagger":"2.0","info":{"title":"Sample API","version":"1.0.0"},"paths":{"/pets":{"$ref":"#/paths/~1pets","get":{"operationId":"listPets","responses":{"default":{"$ref":"#/responses/GenericError"}}}}}}'
 ]
 
+{ #category : 'private' }
+FamixOpenApiImporterTest >> minimalOpenApi3Json [
+	^ '{"openapi":"3.0.4","info":{"title":"Sample OpenAPI 3 API","version":"1.0.0"},"paths":{"/pets":{"post":{"operationId":"createPet","requestBody":{"$ref":"#/components/requestBodies/PetPayload"},"responses":{"201":{"description":"created","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}}}}},"components":{"schemas":{"Pet":{"type":"object","description":"A pet schema"}},"requestBodies":{"PetPayload":{"description":"payload","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}},"responses":{"GenericError":{"description":"generic error"}},"parameters":{"TraceId":{"name":"traceId","in":"header","required":false,"schema":{"type":"string"}}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","name":"X-API-Key","in":"header"}}}}'
+]
+
 { #category : 'running' }
 FamixOpenApiImporterTest >> setUp [
 	super setUp.
@@ -76,6 +81,37 @@ FamixOpenApiImporterTest >> testImportCreatesPathAndOperationEntities [
 	operationClass := self generatedClassNamed: #Operation.
 	self assert: (model allWithType: pathClass) size equals: 1.
 	self assert: (model allWithType: operationClass) size equals: 1
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterTest >> testImportOpenApi3ComponentsAndRequestBody [
+	| api apiClass components componentsClass mediaTypeEntryClass model operation operationClass requestBodyClass requestBodyEntry response responseClass |
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalOpenApi3Json.
+
+	apiClass := self generatedClassNamed: #Api.
+	componentsClass := self generatedClassNamed: #Components.
+	operationClass := self generatedClassNamed: #Operation.
+	requestBodyClass := self generatedClassNamed: #RequestBody.
+	mediaTypeEntryClass := self generatedClassNamed: #MediaTypeEntry.
+	responseClass := self generatedClassNamed: #Response.
+
+	api := (model allWithType: apiClass) anyOne.
+	components := (model allWithType: componentsClass) anyOne.
+	operation := (model allWithType: operationClass) anyOne.
+	response := (model allWithType: responseClass) anyOne.
+
+	self assert: api openapi equals: '3.0.4'.
+	self assert: (model allWithType: componentsClass) size equals: 1.
+	self assert: components requestBodies size equals: 1.
+	requestBodyEntry := components requestBodies anyOne.
+	self assert: requestBodyEntry key equals: 'PetPayload'.
+	self assert: requestBodyEntry value description equals: 'payload'.
+	self assert: requestBodyEntry value required equals: true.
+	self assert: operation requestBody notNil.
+	self assert: operation requestBody ref equals: '#/components/requestBodies/PetPayload'.
+	self assert: response content size > 0.
+	self assert: (model allWithType: requestBodyClass) size >= 2.
+	self assert: (model allWithType: mediaTypeEntryClass) size > 0
 ]
 
 { #category : 'tests' }
