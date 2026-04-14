@@ -41,6 +41,11 @@ FamixOpenApiImporterTest >> minimalSwaggerJson [
 	^ '{"swagger":"2.0","info":{"title":"Sample API","version":"1.0.0"},"paths":{"/pets":{"summary":"Pets path","description":"Operations about pets","get":{"operationId":"listPets","responses":{"200":{"description":"ok"}}}}}}'
 ]
 
+{ #category : 'private' }
+FamixOpenApiImporterTest >> minimalSwaggerJsonWithReferences [
+	^ '{"swagger":"2.0","info":{"title":"Sample API","version":"1.0.0"},"paths":{"/pets":{"$ref":"#/paths/~1pets","get":{"operationId":"listPets","responses":{"default":{"$ref":"#/responses/GenericError"}}}}}}'
+]
+
 { #category : 'running' }
 FamixOpenApiImporterTest >> setUp [
 	super setUp.
@@ -71,6 +76,18 @@ FamixOpenApiImporterTest >> testImportCreatesPathAndOperationEntities [
 	operationClass := self generatedClassNamed: #Operation.
 	self assert: (model allWithType: pathClass) size equals: 1.
 	self assert: (model allWithType: operationClass) size equals: 1
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterTest >> testImportCopiesRefOnReferenceableEntities [
+	| model path pathClass response responseClass |
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJsonWithReferences.
+	pathClass := self generatedClassNamed: #Path.
+	responseClass := self generatedClassNamed: #Response.
+	path := (model allWithType: pathClass) anyOne.
+	response := (model allWithType: responseClass) anyOne.
+	self assert: path ref equals: '#/paths/~1pets'.
+	self assert: response ref equals: '#/responses/GenericError'
 ]
 
 { #category : 'tests' }

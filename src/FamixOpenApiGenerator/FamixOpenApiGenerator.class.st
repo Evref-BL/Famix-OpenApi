@@ -74,6 +74,7 @@ FamixOpenApiGenerator >> defineHierarchy [
     (self entityNamed: #Api) --|> (self traitNamed: #ExternalDocsContainer).
     (self entityNamed: #Api) --|> (self traitNamed: #SecurityContainer).
     (self entityNamed: #Path) --|> (self traitNamed: #ParameterContainer).
+    (self entityNamed: #Path) --|> (self traitNamed: #Referenceable).
     (self entityNamed: #Operation) --|> (self traitNamed: #ParameterContainer).
     (self entityNamed: #Operation) --|> (self traitNamed: #ExternalDocsContainer).
     (self entityNamed: #Operation) --|> (self traitNamed: #SecurityContainer).
@@ -81,19 +82,21 @@ FamixOpenApiGenerator >> defineHierarchy [
     (self entityNamed: #Parameter) --|> (self traitNamed: #SchemaContainer).
     (self entityNamed: #Parameter) --|> (self traitNamed: #JSONSchemaSubset).
     (self entityNamed: #Parameter) --|> (self traitNamed: #ArrayContainer).
-    (self entityNamed: #Parameter) --|> (self traitNamed: #JSONPointer).
+    (self entityNamed: #Parameter) --|> (self traitNamed: #Referenceable).
     (self entityNamed: #ItemsDefinition) --|> (self traitNamed: #JSONSchemaSubset).
     (self entityNamed: #ItemsDefinition) --|> (self traitNamed: #ArrayContainer).
     (self entityNamed: #Schema) --|> (self traitNamed: #JSONSchemaSubset).
     (self entityNamed: #Schema) --|> (self traitNamed: #SchemaContainer).
     (self entityNamed: #Schema) --|> (self traitNamed: #ExternalDocsContainer).
-    (self entityNamed: #Schema) --|> (self traitNamed: #JSONPointer).
+    (self entityNamed: #Schema) --|> (self traitNamed: #Referenceable).
     (self entityNamed: #Response) --|> (self traitNamed: #SchemaContainer).
-    (self entityNamed: #Response) --|> (self traitNamed: #JSONPointer).
+    (self entityNamed: #Response) --|> (self traitNamed: #Referenceable).
     (self entityNamed: #Header) --|> (self traitNamed: #JSONSchemaSubset).
     (self entityNamed: #Header) --|> (self traitNamed: #ArrayContainer).
+    (self entityNamed: #Header) --|> (self traitNamed: #Referenceable).
     (self entityNamed: #Tag) --|> (self traitNamed: #ExternalDocsContainer).
-    (self entityNamed: #Property) --|> (self traitNamed: #JSONPointer).
+    (self entityNamed: #Example) --|> (self traitNamed: #Referenceable).
+    (self entityNamed: #SecurityScheme) --|> (self traitNamed: #Referenceable).
     (self entityNamed: #Property) --|> (self traitNamed: #SchemaContainer).
     (self entityNamed: #SchemaEntry) --|> (self traitNamed: #SchemaContainer).
     (self entityNamed: #ResponseDefinitionEntry) --|> (self traitNamed: #ResponseContainer).
@@ -171,7 +174,7 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #XMLElement) property: #wrapped type: #Boolean) comment: 'Attribute wrapped from XMLElement [1]').
     (((self entityNamed: #SecurityScope) property: #description type: #String) comment: 'Attribute description from SecurityScope [1]').
     (((self traitNamed: #ArrayContainer) property: #collectionFormat type: #String) comment: 'Attribute collectionFormat from ArrayContainer [1]').
-    (((self traitNamed: #JSONPointer) property: #ref type: #String) comment: 'Attribute ref from JSONPointer [1]').
+    (((self traitNamed: #Referenceable) property: #ref type: #String) comment: 'Attribute ref from Reference Object [1]').
     (((self entityNamed: #Property) property: #required type: #Boolean) comment: 'Attribute required from Property [1]').
     (((self entityNamed: #ResponseEntry) property: #key type: #String) comment: 'Attribute key from ResponseEntry [1]').
     (((self entityNamed: #SchemaEntry) property: #key type: #String) comment: 'Attribute key from SchemaEntry [1]').
@@ -249,7 +252,7 @@ FamixOpenApiGenerator >> defineTraits [
     self defineTraitNamed: #ExternalDocsContainer.
     self defineTraitNamed: #ArrayContainer.
     self defineTraitNamed: #SecurityContainer.
-    self defineTraitNamed: #JSONPointer.
+    self defineTraitNamed: #Referenceable.
 ]
 
 { #category : 'private' }

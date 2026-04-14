@@ -36,3 +36,17 @@ FamixOpenApiGeneratorInstantiationTest >> testUsesCurrentPrefixForGeneratedEntit
 	generatedApiClass := self generatedClassNamed: #Api.
 	self assert: generatedApiClass name equals: generatedApiClassName
 ]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testReferenceableEntitiesExposeRefAccessor [
+	| referenceableEntities |
+	referenceableEntities := #(Path Parameter Schema Response Header Example SecurityScheme).
+	referenceableEntities do: [ :entityName |
+		| generatedClass instance |
+		generatedClass := self generatedClassNamed: entityName.
+		instance := generatedClass new.
+		self assert: (instance respondsTo: #ref).
+		self assert: (instance respondsTo: #ref:).
+		instance ref: '#/components/schemas/Pet'.
+		self assert: instance ref equals: '#/components/schemas/Pet' ]
+]

@@ -32,6 +32,11 @@ FamixOpenApiJsonVisitor >> copyValueAt: aJsonKey from: aDictionary to: anEntity 
 		ifPresent: [ :value | self setProperty: aPropertyName on: anEntity to: value ]
 ]
 
+{ #category : 'private - json' }
+FamixOpenApiJsonVisitor >> copyReferenceFrom: aDictionary to: anEntity [
+	self copyValueAt: '$ref' from: aDictionary to: anEntity property: #ref
+]
+
 { #category : 'private - naming' }
 FamixOpenApiJsonVisitor >> firstNormalizedNameCandidateIn: aCollection [
 	aCollection do: [ :each |
@@ -323,6 +328,7 @@ FamixOpenApiJsonVisitor >> visitPathNode: aPathNode relativePath: aRelativePath 
 	(self isDictionaryLike: aPathNode) ifFalse: [ ^ nil ].
 
 	path := self newEntityNamed: #Path.
+	self copyReferenceFrom: aPathNode to: path.
 	self setProperty: #relativePath on: path to: aRelativePath.
 	self copyValueAt: 'summary' from: aPathNode to: path property: #summary.
 	self copyValueAt: 'description' from: aPathNode to: path property: #description.
@@ -357,6 +363,7 @@ FamixOpenApiJsonVisitor >> visitResponseNode: aResponseNode responseKey: aRespon
 	(self isDictionaryLike: aResponseNode) ifFalse: [ ^ nil ].
 
 	response := self newEntityNamed: #Response.
+	self copyReferenceFrom: aResponseNode to: response.
 	self copyValueAt: 'description' from: aResponseNode to: response property: #description.
 	self
 		setNameOn: response
