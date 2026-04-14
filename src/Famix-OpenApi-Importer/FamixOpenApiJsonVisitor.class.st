@@ -32,6 +32,15 @@ FamixOpenApiJsonVisitor >> copyValueAt: aJsonKey from: aDictionary to: anEntity 
 		ifPresent: [ :value | self setProperty: aPropertyName on: anEntity to: value ]
 ]
 
+{ #category : 'private - naming' }
+FamixOpenApiJsonVisitor >> firstNormalizedNameCandidateIn: aCollection [
+	aCollection do: [ :each |
+		| candidate |
+		candidate := self normalizedNameCandidateFrom: each.
+		candidate ifNotNil: [ ^ candidate ] ].
+	^ nil
+]
+
 { #category : 'private - testing' }
 FamixOpenApiJsonVisitor >> isDictionaryLike: anObject [
 	^ anObject respondsTo: #keysAndValuesDo:
@@ -69,6 +78,7 @@ FamixOpenApiJsonVisitor >> newEntityNamed: anEntityName [
 	| entity |
 	entity := (self entityClassNamed: anEntityName) new.
 	model add: entity.
+	self setProperty: #name on: entity to: anEntityName asString.
 	^ entity
 ]
 
@@ -82,6 +92,33 @@ FamixOpenApiJsonVisitor >> setProperty: aPropertyName on: anEntity to: aValue [
 	| setter |
 	setter := (aPropertyName asString , ':') asSymbol.
 	(anEntity respondsTo: setter) ifTrue: [ anEntity perform: setter with: aValue ]
+]
+
+{ #category : 'private - naming' }
+FamixOpenApiJsonVisitor >> normalizedNameCandidateFrom: aValue [
+	| candidate |
+	aValue ifNil: [ ^ nil ].
+	candidate := aValue asString trimBoth.
+	candidate isEmpty ifTrue: [ ^ nil ].
+	^ candidate
+]
+
+{ #category : 'private - naming' }
+FamixOpenApiJsonVisitor >> operationNameForHttpMethod: anHttpMethod relativePath: aRelativePath [
+	| normalizedMethod normalizedPath |
+	normalizedMethod := self normalizedNameCandidateFrom: anHttpMethod.
+	normalizedPath := self normalizedNameCandidateFrom: aRelativePath.
+	normalizedMethod ifNotNil: [ normalizedMethod := normalizedMethod asUppercase ].
+	normalizedMethod ifNil: [ ^ normalizedPath ].
+	normalizedPath ifNil: [ ^ normalizedMethod ].
+	^ normalizedMethod , ' ' , normalizedPath
+]
+
+{ #category : 'private - naming' }
+FamixOpenApiJsonVisitor >> setNameOn: anEntity fromCandidates: aCollection [
+	| candidate |
+	candidate := self firstNormalizedNameCandidateIn: aCollection.
+	candidate ifNotNil: [ self setProperty: #name on: anEntity to: candidate ]
 ]
 
 { #category : 'private - json' }
@@ -121,7 +158,7 @@ FamixOpenApiJsonVisitor >> modelFromJsonString: aJsonString [
 
 { #category : 'visiting' }
 FamixOpenApiJsonVisitor >> visitApiNode: anApiNode [
-	| api |
+	| api infoTitle |
 	(self isDictionaryLike: anApiNode) ifFalse: [ ^ nil ].
 
 	api := self newEntityNamed: #Api.
@@ -137,7 +174,9 @@ FamixOpenApiJsonVisitor >> visitApiNode: anApiNode [
 		ifPresent: [ :infoNode |
 			| info |
 			info := self visitInfoNode: infoNode.
-			info ifNotNil: [ self setProperty: #info on: api to: info ] ].
+			info ifNotNil: [
+				self setProperty: #info on: api to: info.
+				infoTitle := (info respondsTo: #title) ifTrue: [ info title ] ] ].
 
 	self
 		valueAt: 'paths'
@@ -148,6 +187,14 @@ FamixOpenApiJsonVisitor >> visitApiNode: anApiNode [
 		valueAt: 'tags'
 		in: anApiNode
 		ifPresent: [ :tagsNode | self visitTagsNode: tagsNode forApi: api ].
+
+	self
+		setNameOn: api
+		fromCandidates: {
+				infoTitle.
+				(self jsonValueAt: 'host' in: anApiNode ifAbsent: [ nil ]).
+				(self jsonValueAt: 'basePath' in: anApiNode ifAbsent: [ nil ]).
+				'Api' }.
 
 	^ api
 ]
@@ -161,6 +208,13 @@ FamixOpenApiJsonVisitor >> visitContactNode: aContactNode [
 	self copyValueAt: 'name' from: aContactNode to: contact property: #name.
 	self copyValueAt: 'url' from: aContactNode to: contact property: #url.
 	self copyValueAt: 'email' from: aContactNode to: contact property: #email.
+	self
+		setNameOn: contact
+		fromCandidates: {
+				(self jsonValueAt: 'name' in: aContactNode ifAbsent: [ nil ]).
+				(self jsonValueAt: 'url' in: aContactNode ifAbsent: [ nil ]).
+				(self jsonValueAt: 'email' in: aContactNode ifAbsent: [ nil ]).
+				'Contact' }.
 	^ contact
 ]
 
@@ -191,6 +245,13 @@ FamixOpenApiJsonVisitor >> visitInfoNode: anInfoNode [
 			license := self visitLicenseNode: licenseNode.
 			license ifNotNil: [ self setProperty: #license on: info to: license ] ].
 
+	self
+		setNameOn: info
+		fromCandidates: {
+				(self jsonValueAt: 'title' in: anInfoNode ifAbsent: [ nil ]).
+				(self jsonValueAt: 'version' in: anInfoNode ifAbsent: [ nil ]).
+				'Info' }.
+
 	^ info
 ]
 
@@ -202,6 +263,12 @@ FamixOpenApiJsonVisitor >> visitLicenseNode: aLicenseNode [
 	license := self newEntityNamed: #License.
 	self copyValueAt: 'name' from: aLicenseNode to: license property: #name.
 	self copyValueAt: 'url' from: aLicenseNode to: license property: #url.
+	self
+		setNameOn: license
+		fromCandidates: {
+				(self jsonValueAt: 'name' in: aLicenseNode ifAbsent: [ nil ]).
+				(self jsonValueAt: 'url' in: aLicenseNode ifAbsent: [ nil ]).
+				'License' }.
 	^ license
 ]
 
@@ -212,12 +279,15 @@ FamixOpenApiJsonVisitor >> visitOperationIn: aPathNode httpMethod: anHttpMethod 
 		in: aPathNode
 		ifPresent: [ :operationNode |
 			| operation |
-			operation := self visitOperationNode: operationNode.
+			operation := self
+				visitOperationNode: operationNode
+				httpMethod: anHttpMethod
+				relativePath: ((aPath respondsTo: #relativePath) ifTrue: [ aPath relativePath ]).
 			operation ifNotNil: [ self setProperty: aRelationName on: aPath to: operation ] ]
 ]
 
 { #category : 'visiting' }
-FamixOpenApiJsonVisitor >> visitOperationNode: anOperationNode [
+FamixOpenApiJsonVisitor >> visitOperationNode: anOperationNode httpMethod: anHttpMethod relativePath: aRelativePath [
 	| operation |
 	(self isDictionaryLike: anOperationNode) ifFalse: [ ^ nil ].
 
@@ -236,6 +306,14 @@ FamixOpenApiJsonVisitor >> visitOperationNode: anOperationNode [
 		in: anOperationNode
 		ifPresent: [ :responsesNode | self visitResponsesNode: responsesNode forOperation: operation ].
 
+	self
+		setNameOn: operation
+		fromCandidates: {
+				(self jsonValueAt: 'operationId' in: anOperationNode ifAbsent: [ nil ]).
+				(self jsonValueAt: 'summary' in: anOperationNode ifAbsent: [ nil ]).
+				(self operationNameForHttpMethod: anHttpMethod relativePath: aRelativePath).
+				'Operation' }.
+
 	^ operation
 ]
 
@@ -246,6 +324,9 @@ FamixOpenApiJsonVisitor >> visitPathNode: aPathNode relativePath: aRelativePath 
 
 	path := self newEntityNamed: #Path.
 	self setProperty: #relativePath on: path to: aRelativePath.
+	self copyValueAt: 'summary' from: aPathNode to: path property: #summary.
+	self copyValueAt: 'description' from: aPathNode to: path property: #description.
+	self setNameOn: path fromCandidates: { aRelativePath. 'Path' }.
 
 	self visitOperationIn: aPathNode httpMethod: 'get' relation: #get forPath: path.
 	self visitOperationIn: aPathNode httpMethod: 'put' relation: #put forPath: path.
@@ -271,12 +352,18 @@ FamixOpenApiJsonVisitor >> visitPathsNode: aPathsNode forApi: anApi [
 ]
 
 { #category : 'visiting' }
-FamixOpenApiJsonVisitor >> visitResponseNode: aResponseNode [
+FamixOpenApiJsonVisitor >> visitResponseNode: aResponseNode responseKey: aResponseKey [
 	| response |
 	(self isDictionaryLike: aResponseNode) ifFalse: [ ^ nil ].
 
 	response := self newEntityNamed: #Response.
 	self copyValueAt: 'description' from: aResponseNode to: response property: #description.
+	self
+		setNameOn: response
+		fromCandidates: {
+				(self jsonValueAt: 'description' in: aResponseNode ifAbsent: [ nil ]).
+				aResponseKey.
+				'Response' }.
 	^ response
 ]
 
@@ -285,10 +372,12 @@ FamixOpenApiJsonVisitor >> visitResponsesNode: aResponsesNode forOperation: anOp
 	(self isDictionaryLike: aResponsesNode) ifFalse: [ ^ self ].
 
 	aResponsesNode keysAndValuesDo: [ :responseKey :responseNode |
-		| entry response |
+		| entry keyString response |
+		keyString := responseKey asString.
 		entry := self newEntityNamed: #ResponseEntry.
-		self setProperty: #key on: entry to: responseKey asString.
-		response := self visitResponseNode: responseNode.
+		self setProperty: #key on: entry to: keyString.
+		self setNameOn: entry fromCandidates: { keyString. 'ResponseEntry' }.
+		response := self visitResponseNode: responseNode responseKey: keyString.
 		response ifNotNil: [ self setProperty: #value on: entry to: response ].
 		self add: entry toManyProperty: #responses of: anOperation ]
 ]
@@ -301,6 +390,12 @@ FamixOpenApiJsonVisitor >> visitTagNode: aTagNode [
 	tag := self newEntityNamed: #Tag.
 	self copyValueAt: 'name' from: aTagNode to: tag property: #name.
 	self copyValueAt: 'description' from: aTagNode to: tag property: #description.
+	self
+		setNameOn: tag
+		fromCandidates: {
+				(self jsonValueAt: 'name' in: aTagNode ifAbsent: [ nil ]).
+				(self jsonValueAt: 'description' in: aTagNode ifAbsent: [ nil ]).
+				'Tag' }.
 	^ tag
 ]
 

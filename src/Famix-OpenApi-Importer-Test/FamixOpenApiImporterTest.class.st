@@ -10,8 +10,15 @@ FamixOpenApiImporterTest >> generatedClassNamed: anEntityName [
 	| generatedClassName |
 	generatedClassName := (FamixOpenApiGenerator prefix asString , anEntityName asString) asSymbol.
 	^ Smalltalk globals
-			at: generatedClassName
-			ifAbsent: [ self fail: 'Missing generated class: ', generatedClassName asString ]
+				at: generatedClassName
+				ifAbsent: [ self fail: 'Missing generated class: ', generatedClassName asString ]
+]
+
+{ #category : 'private' }
+FamixOpenApiImporterTest >> assertEntityHasNonEmptyName: anEntity [
+	self assert: (anEntity respondsTo: #name).
+	self assert: anEntity name notNil.
+	self assert: anEntity name asString isEmpty not
 ]
 
 { #category : 'private' }
@@ -31,7 +38,7 @@ FamixOpenApiImporterTest >> githubOfficialOpenApiJsonUrl [
 
 { #category : 'private' }
 FamixOpenApiImporterTest >> minimalSwaggerJson [
-	^ '{"swagger":"2.0","info":{"title":"Sample API","version":"1.0.0"},"paths":{"/pets":{"get":{"operationId":"listPets","responses":{"200":{"description":"ok"}}}}}}'
+	^ '{"swagger":"2.0","info":{"title":"Sample API","version":"1.0.0"},"paths":{"/pets":{"summary":"Pets path","description":"Operations about pets","get":{"operationId":"listPets","responses":{"200":{"description":"ok"}}}}}}'
 ]
 
 { #category : 'running' }
@@ -67,6 +74,16 @@ FamixOpenApiImporterTest >> testImportCreatesPathAndOperationEntities [
 ]
 
 { #category : 'tests' }
+FamixOpenApiImporterTest >> testImportCopiesSummaryAndDescriptionOnPath [
+	| model path pathClass |
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.
+	pathClass := self generatedClassNamed: #Path.
+	path := (model allWithType: pathClass) anyOne.
+	self assert: path summary equals: 'Pets path'.
+	self assert: path description equals: 'Operations about pets'
+]
+
+{ #category : 'tests' }
 FamixOpenApiImporterTest >> testImportCreatesResponseAndResponseEntryEntities [
 	| model responseClass responseEntryClass |
 	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.
@@ -95,13 +112,45 @@ FamixOpenApiImporterTest >> testImportFromJsonStringReturnsModel [
 ]
 
 { #category : 'tests' }
+FamixOpenApiImporterTest >> testImportNamesAreInstantiated [
+	| api apiClass model operation operationClass path pathClass response responseClass responseEntry responseEntryClass |
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.
+
+	apiClass := self generatedClassNamed: #Api.
+	pathClass := self generatedClassNamed: #Path.
+	operationClass := self generatedClassNamed: #Operation.
+	responseClass := self generatedClassNamed: #Response.
+	responseEntryClass := self generatedClassNamed: #ResponseEntry.
+
+	api := (model allWithType: apiClass) anyOne.
+	path := (model allWithType: pathClass) anyOne.
+	operation := (model allWithType: operationClass) anyOne.
+	response := (model allWithType: responseClass) anyOne.
+	responseEntry := (model allWithType: responseEntryClass) anyOne.
+
+	self assert: api name equals: 'Sample API'.
+	self assert: path name equals: '/pets'.
+	self assert: operation name equals: 'listPets'.
+	self assert: responseEntry name equals: '200'.
+	self assert: response name equals: 'ok'
+]
+
+{ #category : 'tests' }
 FamixOpenApiImporterTest >> testImportOfficialGithubOpenApiJson [
-	| model apiClass pathClass operationClass |
+	| api apiClass model operation operationClass path pathClass |
 	model := FamixOpenApiImporter new modelFromJsonString: self githubOfficialOpenApiJson.
 	apiClass := self generatedClassNamed: #Api.
 	pathClass := self generatedClassNamed: #Path.
 	operationClass := self generatedClassNamed: #Operation.
 	self assert: (model allWithType: apiClass) size equals: 1.
 	self assert: (model allWithType: pathClass) size > 0.
-	self assert: (model allWithType: operationClass) size > 0
+	self assert: (model allWithType: operationClass) size > 0.
+
+	api := (model allWithType: apiClass) anyOne.
+	path := (model allWithType: pathClass) anyOne.
+	operation := (model allWithType: operationClass) anyOne.
+
+	self assertEntityHasNonEmptyName: api.
+	self assertEntityHasNonEmptyName: path.
+	self assertEntityHasNonEmptyName: operation
 ]

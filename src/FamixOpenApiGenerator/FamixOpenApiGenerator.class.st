@@ -64,9 +64,15 @@ FamixOpenApiGenerator >> defineEntityNamed: aSymbol [
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineHierarchy [
     super defineHierarchy.
+    #(
+        ContainedCollections Api Info Contact License Path Operation ExternalDocs
+        Parameter ItemsDefinition Schema Response Header Tag SecurityScheme
+        Example XMLElement SecurityScope SecurityRequirement Property ResponseEntry
+        SchemaEntry ResponseDefinitionEntry ParameterEntry SecuritySchemeEntry
+        RequiredSecurityScheme)
+        do: [ :entityName | (self entityNamed: entityName) --|> #TNamedEntity ].
     (self entityNamed: #Api) --|> (self traitNamed: #ExternalDocsContainer).
     (self entityNamed: #Api) --|> (self traitNamed: #SecurityContainer).
-	 (self entityNamed: #Api) --|> #TNamedEntity.
     (self entityNamed: #Path) --|> (self traitNamed: #ParameterContainer).
     (self entityNamed: #Operation) --|> (self traitNamed: #ParameterContainer).
     (self entityNamed: #Operation) --|> (self traitNamed: #ExternalDocsContainer).
@@ -122,12 +128,12 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #Info) property: #description type: #String) comment: 'Attribute description from Info [1]').
     (((self entityNamed: #Info) property: #termsOfService type: #String) comment: 'Attribute termsOfService from Info [1]').
     (((self entityNamed: #Info) property: #version type: #String) comment: 'Attribute version from Info [1]').
-    (((self entityNamed: #Contact) property: #name type: #String) comment: 'Attribute name from Contact [1]').
     (((self entityNamed: #Contact) property: #url type: #String) comment: 'Attribute url from Contact [1]').
     (((self entityNamed: #Contact) property: #email type: #String) comment: 'Attribute email from Contact [1]').
-    (((self entityNamed: #License) property: #name type: #String) comment: 'Attribute name from License [1]').
     (((self entityNamed: #License) property: #url type: #String) comment: 'Attribute url from License [1]').
     (((self entityNamed: #Path) property: #relativePath type: #String) comment: 'Attribute relativePath from Path [1]').
+    (((self entityNamed: #Path) property: #summary type: #String) comment: 'Attribute summary from Path [1]').
+    (((self entityNamed: #Path) property: #description type: #String) comment: 'Attribute description from Path [1]').
     (((self entityNamed: #Operation) property: #tagReferences type: #Object) comment: 'Attribute tagReferences from Operation [*]').
     (((self entityNamed: #Operation) property: #summary type: #String) comment: 'Attribute summary from Operation [1]').
     (((self entityNamed: #Operation) property: #description type: #String) comment: 'Attribute description from Operation [1]').
@@ -138,7 +144,6 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #Operation) property: #deprecated type: #Boolean) comment: 'Attribute deprecated from Operation [1]').
     (((self entityNamed: #ExternalDocs) property: #description type: #String) comment: 'Attribute description from ExternalDocs [1]').
     (((self entityNamed: #ExternalDocs) property: #url type: #String) comment: 'Attribute url from ExternalDocs [1]').
-    (((self entityNamed: #Parameter) property: #name type: #String) comment: 'Attribute name from Parameter [1]').
     (((self entityNamed: #Parameter) property: #location type: #String) comment: 'Attribute location from Parameter [1]').
     (((self entityNamed: #Parameter) property: #required type: #Boolean) comment: 'Attribute required from Parameter [1]').
     (((self entityNamed: #Parameter) property: #allowEmplyValue type: #Boolean) comment: 'Attribute allowEmplyValue from Parameter [1]').
@@ -151,29 +156,23 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #Schema) property: #readOnly type: #Boolean) comment: 'Attribute readOnly from Schema [1]').
     (((self entityNamed: #Schema) property: #additonalPropertiesAllowed type: #Boolean) comment: 'Attribute additonalPropertiesAllowed from Schema [1]').
     (((self entityNamed: #Response) property: #description type: #String) comment: 'Attribute description from Response [1]').
-    (((self entityNamed: #Header) property: #name type: #String) comment: 'Attribute name from Header [1]').
-    (((self entityNamed: #Tag) property: #name type: #String) comment: 'Attribute name from Tag [1]').
     (((self entityNamed: #Tag) property: #description type: #String) comment: 'Attribute description from Tag [1]').
     (((self entityNamed: #SecurityScheme) property: #type type: #String) comment: 'Attribute type from SecurityScheme [1]').
     (((self entityNamed: #SecurityScheme) property: #description type: #String) comment: 'Attribute description from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #name type: #String) comment: 'Attribute name from SecurityScheme [1]').
     (((self entityNamed: #SecurityScheme) property: #location type: #String) comment: 'Attribute location from SecurityScheme [1]').
     (((self entityNamed: #SecurityScheme) property: #flow type: #String) comment: 'Attribute flow from SecurityScheme [1]').
     (((self entityNamed: #SecurityScheme) property: #authorizationUrl type: #String) comment: 'Attribute authorizationUrl from SecurityScheme [1]').
     (((self entityNamed: #SecurityScheme) property: #tokenUrl type: #String) comment: 'Attribute tokenUrl from SecurityScheme [1]').
     (((self entityNamed: #Example) property: #mimeType type: #String) comment: 'Attribute mimeType from Example [1]').
     (((self entityNamed: #Example) property: #value type: #String) comment: 'Attribute value from Example [1]').
-    (((self entityNamed: #XMLElement) property: #name type: #String) comment: 'Attribute name from XMLElement [1]').
     (((self entityNamed: #XMLElement) property: #namespace type: #String) comment: 'Attribute namespace from XMLElement [1]').
     (((self entityNamed: #XMLElement) property: #prefix type: #String) comment: 'Attribute prefix from XMLElement [1]').
     (((self entityNamed: #XMLElement) property: #attribute type: #Boolean) comment: 'Attribute attribute from XMLElement [1]').
     (((self entityNamed: #XMLElement) property: #wrapped type: #Boolean) comment: 'Attribute wrapped from XMLElement [1]').
-    (((self entityNamed: #SecurityScope) property: #name type: #String) comment: 'Attribute name from SecurityScope [1]').
     (((self entityNamed: #SecurityScope) property: #description type: #String) comment: 'Attribute description from SecurityScope [1]').
     (((self traitNamed: #ArrayContainer) property: #collectionFormat type: #String) comment: 'Attribute collectionFormat from ArrayContainer [1]').
     (((self traitNamed: #JSONPointer) property: #ref type: #String) comment: 'Attribute ref from JSONPointer [1]').
     (((self entityNamed: #Property) property: #required type: #Boolean) comment: 'Attribute required from Property [1]').
-    (((self entityNamed: #Property) property: #name type: #String) comment: 'Attribute name from Property [1]').
     (((self entityNamed: #ResponseEntry) property: #key type: #String) comment: 'Attribute key from ResponseEntry [1]').
     (((self entityNamed: #SchemaEntry) property: #key type: #String) comment: 'Attribute key from SchemaEntry [1]').
     (((self entityNamed: #ResponseDefinitionEntry) property: #key type: #String) comment: 'Attribute key from ResponseDefinitionEntry [1]').
