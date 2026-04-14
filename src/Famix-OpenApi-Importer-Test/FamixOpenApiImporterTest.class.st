@@ -10,8 +10,23 @@ FamixOpenApiImporterTest >> generatedClassNamed: anEntityName [
 	| generatedClassName |
 	generatedClassName := (FamixOpenApiGenerator prefix asString , anEntityName asString) asSymbol.
 	^ Smalltalk globals
-		at: generatedClassName
-		ifAbsent: [ self fail: 'Missing generated class: ', generatedClassName asString ]
+			at: generatedClassName
+			ifAbsent: [ self fail: 'Missing generated class: ', generatedClassName asString ]
+]
+
+{ #category : 'private' }
+FamixOpenApiImporterTest >> githubOfficialOpenApiJson [
+	| response |
+	[ response := ZnEasy get: self githubOfficialOpenApiJsonUrl ]
+		on: Error
+		do: [ :error |
+			self fail: 'Failed to download GitHub official OpenAPI JSON: ', error messageText ].
+	^ response contents
+]
+
+{ #category : 'private' }
+FamixOpenApiImporterTest >> githubOfficialOpenApiJsonUrl [
+	^ 'https://raw.githubusercontent.com/github/rest-api-description/main/descriptions/api.github.com/api.github.com.json'
 ]
 
 { #category : 'private' }
@@ -77,4 +92,16 @@ FamixOpenApiImporterTest >> testImportFromJsonStringReturnsModel [
 	| model |
 	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.
 	self assert: model notNil
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterTest >> testImportOfficialGithubOpenApiJson [
+	| model apiClass pathClass operationClass |
+	model := FamixOpenApiImporter new modelFromJsonString: self githubOfficialOpenApiJson.
+	apiClass := self generatedClassNamed: #Api.
+	pathClass := self generatedClassNamed: #Path.
+	operationClass := self generatedClassNamed: #Operation.
+	self assert: (model allWithType: apiClass) size equals: 1.
+	self assert: (model allWithType: pathClass) size > 0.
+	self assert: (model allWithType: operationClass) size > 0
 ]
