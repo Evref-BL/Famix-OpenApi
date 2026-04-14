@@ -84,6 +84,15 @@ FamixOpenApiGenerator >> defineHierarchy [
         RequestBodyEntry HeaderEntry ExampleEntry LinkEntry CallbackEntry
         RequiredSecurityScheme)
         do: [ :entityName | (self entityNamed: entityName) --|> #TNamedEntity ].
+    #(
+        ContainedCollections Api Components Info Contact License Path Operation
+        ExternalDocs Parameter ItemsDefinition Schema Response Header Tag
+        SecurityScheme Example RequestBody MediaType Link Callback XMLElement
+        SecurityScope SecurityRequirement Property ResponseEntry SchemaEntry
+        ResponseDefinitionEntry ParameterEntry SecuritySchemeEntry MediaTypeEntry
+        RequestBodyEntry HeaderEntry ExampleEntry LinkEntry CallbackEntry
+        RequiredSecurityScheme)
+        do: [ :entityName | (self entityNamed: entityName) --|> (self traitNamed: #SourceText) ].
     (self entityNamed: #Api) --|> (self traitNamed: #ExternalDocsContainer).
     (self entityNamed: #Api) --|> (self traitNamed: #SecurityContainer).
     (self entityNamed: #Path) --|> (self traitNamed: #ParameterContainer).
@@ -204,6 +213,7 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #SecurityScope) property: #description type: #String) comment: 'Attribute description from SecurityScope [1]').
     (((self traitNamed: #ArrayContainer) property: #collectionFormat type: #String) comment: 'Attribute collectionFormat from ArrayContainer [1]').
     (((self traitNamed: #Referenceable) property: #ref type: #String) comment: 'Attribute ref from Reference Object [1]').
+    (((self traitNamed: #SourceText) property: #sourceText type: #String) comment: 'Attribute sourceText from original JSON node [1]').
     (((self entityNamed: #Property) property: #required type: #Boolean) comment: 'Attribute required from Property [1]').
     (((self entityNamed: #ResponseEntry) property: #key type: #String) comment: 'Attribute key from ResponseEntry [1]').
     (((self entityNamed: #SchemaEntry) property: #key type: #String) comment: 'Attribute key from SchemaEntry [1]').
@@ -312,6 +322,7 @@ FamixOpenApiGenerator >> defineTraits [
     self defineTraitNamed: #SecurityContainer.
     self defineTraitNamed: #ContentContainer.
     self defineTraitNamed: #Referenceable.
+    self defineTraitNamed: #SourceText.
 ]
 
 { #category : 'private' }
