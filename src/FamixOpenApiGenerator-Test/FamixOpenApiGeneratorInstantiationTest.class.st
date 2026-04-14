@@ -64,8 +64,19 @@ FamixOpenApiGeneratorInstantiationTest >> testReferenceableEntitiesExposeRefAcce
 		instance := generatedClass new.
 		self assert: (instance respondsTo: #ref).
 		self assert: (instance respondsTo: #ref:).
-			instance ref: '#/components/schemas/Pet'.
-			self assert: instance ref equals: '#/components/schemas/Pet' ]
+				instance ref: '#/components/schemas/Pet'.
+				self assert: instance ref equals: '#/components/schemas/Pet' ]
+]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testPropertyEntityExposesEnumAccessor [
+	| generatedClass instance |
+	generatedClass := self generatedClassNamed: #Property.
+	instance := generatedClass new.
+	self assert: (instance respondsTo: #enum).
+	self assert: (instance respondsTo: #enum:).
+	instance enum: #('cat' 'dog').
+	self assert: instance enum asArray equals: #('cat' 'dog')
 ]
 
 { #category : 'tests' }

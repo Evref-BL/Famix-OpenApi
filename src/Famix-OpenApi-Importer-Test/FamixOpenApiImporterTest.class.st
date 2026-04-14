@@ -45,7 +45,7 @@ FamixOpenApiImporterTest >> githubOfficialOpenApiJsonUrl [
 
 { #category : 'private' }
 FamixOpenApiImporterTest >> minimalOpenApi3Json [
-	^ '{"openapi":"3.0.4","info":{"title":"Sample OpenAPI 3 API","version":"1.0.0"},"paths":{"/pets":{"parameters":[{"$ref":"#/components/parameters/TraceId"}],"post":{"operationId":"createPet","parameters":[{"name":"limit","in":"query","required":false,"schema":{"type":"integer"}}],"requestBody":{"$ref":"#/components/requestBodies/PetPayload"},"responses":{"201":{"description":"created","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}}}}},"components":{"schemas":{"Pet":{"type":"object","description":"A pet schema","required":["id"],"properties":{"id":{"type":"string"},"name":{"type":"string"}}},"PetList":{"type":"array","items":{"$ref":"#/components/schemas/Pet"}},"TagList":{"type":"array","items":{"type":"string"}}},"requestBodies":{"PetPayload":{"description":"payload","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}},"responses":{"GenericError":{"description":"generic error"}},"parameters":{"TraceId":{"name":"traceId","in":"header","required":false,"schema":{"type":"string"}}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","name":"X-API-Key","in":"header"}}}}'
+	^ '{"openapi":"3.0.4","info":{"title":"Sample OpenAPI 3 API","version":"1.0.0"},"paths":{"/pets":{"parameters":[{"$ref":"#/components/parameters/TraceId"}],"post":{"operationId":"createPet","parameters":[{"name":"limit","in":"query","required":false,"schema":{"type":"integer"}}],"requestBody":{"$ref":"#/components/requestBodies/PetPayload"},"responses":{"201":{"description":"created","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}}}}},"components":{"schemas":{"Pet":{"type":"object","description":"A pet schema","required":["id"],"properties":{"id":{"type":"string"},"name":{"type":"string","enum":["cat","dog"]}}},"PetList":{"type":"array","items":{"$ref":"#/components/schemas/Pet"}},"TagList":{"type":"array","items":{"type":"string"}}},"requestBodies":{"PetPayload":{"description":"payload","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}},"responses":{"GenericError":{"description":"generic error"}},"parameters":{"TraceId":{"name":"traceId","in":"header","required":false,"schema":{"type":"string"}}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","name":"X-API-Key","in":"header"}}}}'
 ]
 
 { #category : 'private' }
@@ -251,7 +251,8 @@ FamixOpenApiImporterTest >> testImportOpenApi3SchemaProperties [
 
 	self assert: petSchema properties size equals: 2.
 	self assert: idProperty required equals: true.
-	self assert: nameProperty required equals: false
+	self assert: nameProperty required equals: false.
+	self assert: nameProperty enum asArray equals: #('cat' 'dog')
 ]
 
 { #category : 'tests' }

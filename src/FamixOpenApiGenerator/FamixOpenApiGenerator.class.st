@@ -214,6 +214,7 @@ FamixOpenApiGenerator >> defineProperties [
     (((self traitNamed: #ArrayContainer) property: #collectionFormat type: #String) comment: 'Attribute collectionFormat from ArrayContainer [1]').
     (((self traitNamed: #Referenceable) property: #ref type: #String) comment: 'Attribute ref from Reference Object [1]').
     (((self traitNamed: #SourceText) property: #sourceText type: #String) comment: 'Attribute sourceText from original JSON node [1]').
+    (((self entityNamed: #Property) property: #enum type: #Object) comment: 'Attribute enum from Property [*] (array of strings)').
     (((self entityNamed: #Property) property: #required type: #Boolean) comment: 'Attribute required from Property [1]').
     (((self entityNamed: #ResponseEntry) property: #key type: #String) comment: 'Attribute key from ResponseEntry [1]').
     (((self entityNamed: #SchemaEntry) property: #key type: #String) comment: 'Attribute key from SchemaEntry [1]').

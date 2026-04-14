@@ -365,6 +365,12 @@ FamixOpenApiJsonVisitor >> setSourceTextOn: anEntity fromJsonNode: aJsonNode [
 ]
 
 { #category : 'private - json' }
+FamixOpenApiJsonVisitor >> stringArrayFromJsonNode: aJsonNode [
+	(self isSequenceLike: aJsonNode) ifFalse: [ ^ nil ].
+	^ (aJsonNode collect: [ :each | each asString ]) asArray
+]
+
+{ #category : 'private - json' }
 FamixOpenApiJsonVisitor >> sourceTextFromJsonNode: aJsonNode [
 	aJsonNode ifNil: [ ^ nil ].
 	^ [ NeoJSONWriter toString: aJsonNode ]
@@ -978,6 +984,13 @@ FamixOpenApiJsonVisitor >> visitPropertyNode: aPropertyNode named: aPropertyName
 
 	property := self newEntityNamed: #Property fromJsonNode: aPropertyNode.
 	self setProperty: #required on: property to: aBoolean.
+	self
+		valueAt: 'enum'
+		in: aPropertyNode
+		ifPresent: [ :enumNode |
+			| enumValues |
+			enumValues := self stringArrayFromJsonNode: enumNode.
+			enumValues ifNotNil: [ self setProperty: #enum on: property to: enumValues ] ].
 	self
 		setNameOn: property
 		fromCandidates: {
