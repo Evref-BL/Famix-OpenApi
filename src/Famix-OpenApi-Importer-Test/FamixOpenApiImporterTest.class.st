@@ -22,6 +22,13 @@ FamixOpenApiImporterTest >> assertEntityHasNonEmptyName: anEntity [
 ]
 
 { #category : 'private' }
+FamixOpenApiImporterTest >> assertEntityHasNonEmptySourceText: anEntity [
+	self assert: (anEntity respondsTo: #sourceText).
+	self assert: anEntity sourceText notNil.
+	self assert: anEntity sourceText asString isEmpty not
+]
+
+{ #category : 'private' }
 FamixOpenApiImporterTest >> githubOfficialOpenApiJson [
 	| response |
 	[ response := ZnEasy get: self githubOfficialOpenApiJsonUrl ]
@@ -151,6 +158,29 @@ FamixOpenApiImporterTest >> testImportOpenApi3SchemaProperties [
 	self assert: petSchema properties size equals: 2.
 	self assert: idProperty required equals: true.
 	self assert: nameProperty required equals: false
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterTest >> testImportStoresSourceTextOnCreatedEntities [
+	| api apiClass components componentsClass model operation operationClass path pathClass schemaEntry |
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalOpenApi3Json.
+	apiClass := self generatedClassNamed: #Api.
+	pathClass := self generatedClassNamed: #Path.
+	operationClass := self generatedClassNamed: #Operation.
+	componentsClass := self generatedClassNamed: #Components.
+
+	api := (model allWithType: apiClass) anyOne.
+	path := (model allWithType: pathClass) anyOne.
+	operation := (model allWithType: operationClass) anyOne.
+	components := (model allWithType: componentsClass) anyOne.
+	schemaEntry := components schemas detect: [ :each | each key = 'Pet' ].
+
+	self assertEntityHasNonEmptySourceText: api.
+	self assertEntityHasNonEmptySourceText: path.
+	self assertEntityHasNonEmptySourceText: operation.
+	self assertEntityHasNonEmptySourceText: components.
+	self assertEntityHasNonEmptySourceText: schemaEntry.
+	self assertEntityHasNonEmptySourceText: schemaEntry value
 ]
 
 { #category : 'tests' }

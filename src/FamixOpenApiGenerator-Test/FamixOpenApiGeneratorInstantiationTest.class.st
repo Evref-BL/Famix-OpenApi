@@ -9,8 +9,20 @@ FamixOpenApiGeneratorInstantiationTest >> generatedClassNamed: anEntityName [
 	| generatedClassName |
 	generatedClassName := (FamixOpenApiGenerator prefix asString , anEntityName asString) asSymbol.
 	^ Smalltalk globals
-		at: generatedClassName
-		ifAbsent: [ self fail: 'Missing generated class: ', generatedClassName asString ]
+			at: generatedClassName
+			ifAbsent: [ self fail: 'Missing generated class: ', generatedClassName asString ]
+]
+
+{ #category : 'private' }
+FamixOpenApiGeneratorInstantiationTest >> allGeneratedEntityNames [
+	^ #(
+		ContainedCollections Api Components Info Contact License Path Operation
+		ExternalDocs Parameter ItemsDefinition Schema Response Header Tag
+		SecurityScheme Example RequestBody MediaType Link Callback XMLElement
+		SecurityScope SecurityRequirement Property ResponseEntry SchemaEntry
+		ResponseDefinitionEntry ParameterEntry SecuritySchemeEntry MediaTypeEntry
+		RequestBodyEntry HeaderEntry ExampleEntry LinkEntry CallbackEntry
+		RequiredSecurityScheme)
 ]
 
 { #category : 'running' }
@@ -47,6 +59,18 @@ FamixOpenApiGeneratorInstantiationTest >> testReferenceableEntitiesExposeRefAcce
 		instance := generatedClass new.
 		self assert: (instance respondsTo: #ref).
 		self assert: (instance respondsTo: #ref:).
-		instance ref: '#/components/schemas/Pet'.
-		self assert: instance ref equals: '#/components/schemas/Pet' ]
+			instance ref: '#/components/schemas/Pet'.
+			self assert: instance ref equals: '#/components/schemas/Pet' ]
+]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testAllEntitiesExposeSourceTextAccessor [
+	self allGeneratedEntityNames do: [ :entityName |
+		| generatedClass instance |
+		generatedClass := self generatedClassNamed: entityName.
+		instance := generatedClass new.
+		self assert: (instance respondsTo: #sourceText).
+		self assert: (instance respondsTo: #sourceText:).
+		instance sourceText: '{"node":true}'.
+		self assert: instance sourceText equals: '{"node":true}' ]
 ]

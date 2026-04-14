@@ -46,9 +46,15 @@ FamixOpenApiJsonVisitor >> copyReferenceFrom: aDictionary to: anEntity [
 
 { #category : 'private - model' }
 FamixOpenApiJsonVisitor >> createEntryNamed: anEntryName key: aKey value: aValue [
+	^ self createEntryNamed: anEntryName key: aKey value: aValue sourceNode: nil
+]
+
+{ #category : 'private - model' }
+FamixOpenApiJsonVisitor >> createEntryNamed: anEntryName key: aKey value: aValue sourceNode: aSourceNode [
 	| entry keyString |
 	keyString := aKey asString.
 	entry := self newEntityNamed: anEntryName.
+	self setSourceTextOn: entry fromJsonNode: aSourceNode.
 	self setProperty: #key on: entry to: keyString.
 	self setNameOn: entry fromCandidates: { keyString. anEntryName asString }.
 	aValue ifNotNil: [ self setProperty: #value on: entry to: aValue ].
@@ -272,6 +278,14 @@ FamixOpenApiJsonVisitor >> newEntityNamed: anEntityName [
 ]
 
 { #category : 'private - model' }
+FamixOpenApiJsonVisitor >> newEntityNamed: anEntityName fromJsonNode: aJsonNode [
+	| entity |
+	entity := self newEntityNamed: anEntityName.
+	self setSourceTextOn: entity fromJsonNode: aJsonNode.
+	^ entity
+]
+
+{ #category : 'private - model' }
 FamixOpenApiJsonVisitor >> newModel [
 	model := (self entityClassNamed: #Model) new.
 	referenceIndex := Dictionary new
@@ -282,6 +296,21 @@ FamixOpenApiJsonVisitor >> setProperty: aPropertyName on: anEntity to: aValue [
 	| setter |
 	setter := (aPropertyName asString , ':') asSymbol.
 	(anEntity respondsTo: setter) ifTrue: [ anEntity perform: setter with: aValue ]
+]
+
+{ #category : 'private - json' }
+FamixOpenApiJsonVisitor >> sourceTextFromJsonNode: aJsonNode [
+	aJsonNode ifNil: [ ^ nil ].
+	^ [ NeoJSONWriter toString: aJsonNode ]
+		on: Error
+		do: [ nil ]
+]
+
+{ #category : 'private - json' }
+FamixOpenApiJsonVisitor >> setSourceTextOn: anEntity fromJsonNode: aJsonNode [
+	| sourceText |
+	sourceText := self sourceTextFromJsonNode: aJsonNode.
+	sourceText ifNotNil: [ self setProperty: #sourceText on: anEntity to: sourceText ]
 ]
 
 { #category : 'private - naming' }
@@ -351,7 +380,7 @@ FamixOpenApiJsonVisitor >> visitApiNode: anApiNode [
 	| api infoTitle |
 	(self isDictionaryLike: anApiNode) ifFalse: [ ^ nil ].
 
-	api := self newEntityNamed: #Api.
+	api := self newEntityNamed: #Api fromJsonNode: anApiNode.
 	self copyValueAt: 'openapi' from: anApiNode to: api property: #openapi.
 	self copyValueAt: 'host' from: anApiNode to: api property: #host.
 	self copyValueAt: 'basePath' from: anApiNode to: api property: #basePath.
@@ -400,7 +429,7 @@ FamixOpenApiJsonVisitor >> visitContactNode: aContactNode [
 	| contact |
 	(self isDictionaryLike: aContactNode) ifFalse: [ ^ nil ].
 
-	contact := self newEntityNamed: #Contact.
+	contact := self newEntityNamed: #Contact fromJsonNode: aContactNode.
 	self copyValueAt: 'name' from: aContactNode to: contact property: #name.
 	self copyValueAt: 'url' from: aContactNode to: contact property: #url.
 	self copyValueAt: 'email' from: aContactNode to: contact property: #email.
@@ -419,7 +448,7 @@ FamixOpenApiJsonVisitor >> visitInfoNode: anInfoNode [
 	| info |
 	(self isDictionaryLike: anInfoNode) ifFalse: [ ^ nil ].
 
-	info := self newEntityNamed: #Info.
+	info := self newEntityNamed: #Info fromJsonNode: anInfoNode.
 	self copyValueAt: 'title' from: anInfoNode to: info property: #title.
 	self copyValueAt: 'description' from: anInfoNode to: info property: #description.
 	self copyValueAt: 'termsOfService' from: anInfoNode to: info property: #termsOfService.
@@ -456,7 +485,7 @@ FamixOpenApiJsonVisitor >> visitLicenseNode: aLicenseNode [
 	| license |
 	(self isDictionaryLike: aLicenseNode) ifFalse: [ ^ nil ].
 
-	license := self newEntityNamed: #License.
+	license := self newEntityNamed: #License fromJsonNode: aLicenseNode.
 	self copyValueAt: 'name' from: aLicenseNode to: license property: #name.
 	self copyValueAt: 'url' from: aLicenseNode to: license property: #url.
 	self
@@ -475,7 +504,7 @@ FamixOpenApiJsonVisitor >> visitMapNode: aMapNode forOwner: anOwner ownerPropert
 	aMapNode keysAndValuesDo: [ :rawKey :rawValue |
 		| entry value |
 		value := aBlock value: rawValue value: rawKey asString.
-		entry := self createEntryNamed: anEntryName key: rawKey value: value.
+		entry := self createEntryNamed: anEntryName key: rawKey value: value sourceNode: rawValue.
 		self add: entry toManyProperty: anOwnerProperty of: anOwner ]
 ]
 
@@ -488,7 +517,7 @@ FamixOpenApiJsonVisitor >> visitMapNode: aMapNode forOwner: anOwner ownerPropert
 		keyString := rawKey asString.
 		value := aBlock value: rawValue value: keyString.
 		value ifNotNil: [ self registerComponentValue: value section: aSectionName key: keyString ].
-		entry := self createEntryNamed: anEntryName key: rawKey value: value.
+		entry := self createEntryNamed: anEntryName key: rawKey value: value sourceNode: rawValue.
 		self add: entry toManyProperty: anOwnerProperty of: anOwner ]
 ]
 
@@ -542,7 +571,7 @@ FamixOpenApiJsonVisitor >> visitCallbackNode: aCallbackNode named: aCallbackName
 	resolvedReference := self resolveReferenceIn: aCallbackNode expectedEntity: #Callback.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	callback := self newEntityNamed: #Callback.
+	callback := self newEntityNamed: #Callback fromJsonNode: aCallbackNode.
 	self copyReferenceFrom: aCallbackNode to: callback.
 	self
 		setNameOn: callback
@@ -558,7 +587,7 @@ FamixOpenApiJsonVisitor >> visitComponentsNode: aComponentsNode forApi: anApi [
 	| components |
 	(self isDictionaryLike: aComponentsNode) ifFalse: [ ^ nil ].
 
-	components := self newEntityNamed: #Components.
+	components := self newEntityNamed: #Components fromJsonNode: aComponentsNode.
 	self setProperty: #api on: components to: anApi.
 	self setProperty: #components on: anApi to: components.
 	self setNameOn: components fromCandidates: { 'components' }.
@@ -701,7 +730,7 @@ FamixOpenApiJsonVisitor >> visitExampleNode: anExampleNode named: anExampleName 
 	resolvedReference := self resolveReferenceIn: anExampleNode expectedEntity: #Example.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	example := self newEntityNamed: #Example.
+	example := self newEntityNamed: #Example fromJsonNode: anExampleNode.
 	self copyReferenceFrom: anExampleNode to: example.
 	self copyValueAt: 'value' from: anExampleNode to: example property: #value.
 	self
@@ -721,7 +750,7 @@ FamixOpenApiJsonVisitor >> visitHeaderNode: aHeaderNode named: aHeaderName [
 	resolvedReference := self resolveReferenceIn: aHeaderNode expectedEntity: #Header.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	header := self newEntityNamed: #Header.
+	header := self newEntityNamed: #Header fromJsonNode: aHeaderNode.
 	self copyReferenceFrom: aHeaderNode to: header.
 	self copyValueAt: 'description' from: aHeaderNode to: header property: #description.
 	self
@@ -747,7 +776,7 @@ FamixOpenApiJsonVisitor >> visitLinkNode: aLinkNode named: aLinkName [
 	resolvedReference := self resolveReferenceIn: aLinkNode expectedEntity: #Link.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	link := self newEntityNamed: #Link.
+	link := self newEntityNamed: #Link fromJsonNode: aLinkNode.
 	self copyReferenceFrom: aLinkNode to: link.
 	self copyValueAt: 'operationRef' from: aLinkNode to: link property: #operationRef.
 	self copyValueAt: 'operationId' from: aLinkNode to: link property: #operationId.
@@ -769,7 +798,7 @@ FamixOpenApiJsonVisitor >> visitMediaTypeNode: aMediaTypeNode mediaType: aMediaT
 	| mediaType |
 	(self isDictionaryLike: aMediaTypeNode) ifFalse: [ ^ nil ].
 
-	mediaType := self newEntityNamed: #MediaType.
+	mediaType := self newEntityNamed: #MediaType fromJsonNode: aMediaTypeNode.
 	self copyValueAt: 'example' from: aMediaTypeNode to: mediaType property: #example.
 	self
 		valueAt: 'schema'
@@ -800,7 +829,7 @@ FamixOpenApiJsonVisitor >> visitParameterNode: aParameterNode named: aParameterN
 	resolvedReference := self resolveReferenceIn: aParameterNode expectedEntity: #Parameter.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	parameter := self newEntityNamed: #Parameter.
+	parameter := self newEntityNamed: #Parameter fromJsonNode: aParameterNode.
 	self copyReferenceFrom: aParameterNode to: parameter.
 	self copyValueAt: 'name' from: aParameterNode to: parameter property: #name.
 	self copyValueAt: 'in' from: aParameterNode to: parameter property: #location.
@@ -828,7 +857,7 @@ FamixOpenApiJsonVisitor >> visitPropertyNode: aPropertyNode named: aPropertyName
 	| property |
 	(self isDictionaryLike: aPropertyNode) ifFalse: [ ^ nil ].
 
-	property := self newEntityNamed: #Property.
+	property := self newEntityNamed: #Property fromJsonNode: aPropertyNode.
 	self setProperty: #required on: property to: aBoolean.
 	self
 		setNameOn: property
@@ -847,7 +876,7 @@ FamixOpenApiJsonVisitor >> visitRequestBodyNode: aRequestBodyNode named: aReques
 	resolvedReference := self resolveReferenceIn: aRequestBodyNode expectedEntity: #RequestBody.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	requestBody := self newEntityNamed: #RequestBody.
+	requestBody := self newEntityNamed: #RequestBody fromJsonNode: aRequestBodyNode.
 	self copyReferenceFrom: aRequestBodyNode to: requestBody.
 	self copyValueAt: 'description' from: aRequestBodyNode to: requestBody property: #description.
 	self copyValueAt: 'required' from: aRequestBodyNode to: requestBody property: #required.
@@ -872,7 +901,7 @@ FamixOpenApiJsonVisitor >> visitSchemaNode: aSchemaNode named: aSchemaName [
 	resolvedReference := self resolveReferenceIn: aSchemaNode expectedEntity: #Schema.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	schema := self newEntityNamed: #Schema.
+	schema := self newEntityNamed: #Schema fromJsonNode: aSchemaNode.
 	self copyReferenceFrom: aSchemaNode to: schema.
 	self copyValueAt: 'title' from: aSchemaNode to: schema property: #title.
 	self copyValueAt: 'type' from: aSchemaNode to: schema property: #type.
@@ -906,7 +935,7 @@ FamixOpenApiJsonVisitor >> visitSecuritySchemeNode: aSecuritySchemeNode named: a
 	resolvedReference := self resolveReferenceIn: aSecuritySchemeNode expectedEntity: #SecurityScheme.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	securityScheme := self newEntityNamed: #SecurityScheme.
+	securityScheme := self newEntityNamed: #SecurityScheme fromJsonNode: aSecuritySchemeNode.
 	self copyReferenceFrom: aSecuritySchemeNode to: securityScheme.
 	self copyValueAt: 'name' from: aSecuritySchemeNode to: securityScheme property: #name.
 	self copyValueAt: 'type' from: aSecuritySchemeNode to: securityScheme property: #type.
@@ -948,7 +977,7 @@ FamixOpenApiJsonVisitor >> visitOperationNode: anOperationNode httpMethod: anHtt
 	| operation |
 	(self isDictionaryLike: anOperationNode) ifFalse: [ ^ nil ].
 
-	operation := self newEntityNamed: #Operation.
+	operation := self newEntityNamed: #Operation fromJsonNode: anOperationNode.
 	self copyValueAt: 'tags' from: anOperationNode to: operation property: #tagReferences.
 	self copyValueAt: 'summary' from: anOperationNode to: operation property: #summary.
 	self copyValueAt: 'description' from: anOperationNode to: operation property: #description.
@@ -1007,7 +1036,7 @@ FamixOpenApiJsonVisitor >> visitPathNode: aPathNode relativePath: aRelativePath 
 	resolvedReference := self resolveReferenceIn: aPathNode expectedEntity: #Path.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	path := self newEntityNamed: #Path.
+	path := self newEntityNamed: #Path fromJsonNode: aPathNode.
 	self copyReferenceFrom: aPathNode to: path.
 	self setProperty: #relativePath on: path to: aRelativePath.
 	self copyValueAt: 'summary' from: aPathNode to: path property: #summary.
@@ -1055,7 +1084,7 @@ FamixOpenApiJsonVisitor >> visitResponseNode: aResponseNode responseKey: aRespon
 	resolvedReference := self resolveReferenceIn: aResponseNode expectedEntity: #Response.
 	resolvedReference ifNotNil: [ ^ resolvedReference ].
 
-	response := self newEntityNamed: #Response.
+	response := self newEntityNamed: #Response fromJsonNode: aResponseNode.
 	self copyReferenceFrom: aResponseNode to: response.
 	self copyValueAt: 'description' from: aResponseNode to: response property: #description.
 	self
@@ -1078,7 +1107,7 @@ FamixOpenApiJsonVisitor >> visitResponsesNode: aResponsesNode forOperation: anOp
 	aResponsesNode keysAndValuesDo: [ :responseKey :responseNode |
 		| entry response |
 		response := self visitResponseNode: responseNode responseKey: responseKey asString.
-		entry := self createEntryNamed: #ResponseEntry key: responseKey value: response.
+		entry := self createEntryNamed: #ResponseEntry key: responseKey value: response sourceNode: responseNode.
 		self add: entry toManyProperty: #responses of: anOperation ]
 ]
 
@@ -1087,7 +1116,7 @@ FamixOpenApiJsonVisitor >> visitTagNode: aTagNode [
 	| tag |
 	(self isDictionaryLike: aTagNode) ifFalse: [ ^ nil ].
 
-	tag := self newEntityNamed: #Tag.
+	tag := self newEntityNamed: #Tag fromJsonNode: aTagNode.
 	self copyValueAt: 'name' from: aTagNode to: tag property: #name.
 	self copyValueAt: 'description' from: aTagNode to: tag property: #description.
 	self
