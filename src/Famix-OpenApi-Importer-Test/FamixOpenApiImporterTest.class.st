@@ -1,7 +1,8 @@
 Class {
-	#name : #FamixOpenApiImporterTest,
-	#superclass : #TestCase,
-	#category : 'Famix-OpenApi-Importer-Test'
+	#name : 'FamixOpenApiImporterTest',
+	#superclass : 'TestCase',
+	#category : 'Famix-OpenApi-Importer-Test',
+	#package : 'Famix-OpenApi-Importer-Test'
 }
 
 { #category : 'private' }
@@ -21,29 +22,29 @@ FamixOpenApiImporterTest >> minimalSwaggerJson [
 { #category : 'running' }
 FamixOpenApiImporterTest >> setUp [
 	super setUp.
-	FamixOpenApiGenerator generate
+
 ]
 
 { #category : 'tests' }
 FamixOpenApiImporterTest >> testGeneratedClassLookupUsesCurrentPrefix [
 	| generatedApiClass expectedApiClassName |
-	expectedApiClassName := (FamixOpenApiGenerator prefix asString , 'API') asSymbol.
-	generatedApiClass := self generatedClassNamed: #API.
+	expectedApiClassName := (FamixOpenApiGenerator prefix asString , 'Api') asSymbol.
+	generatedApiClass := self generatedClassNamed: #Api.
 	self assert: generatedApiClass name equals: expectedApiClassName
 ]
 
 { #category : 'tests' }
 FamixOpenApiImporterTest >> testImportCreatesOneApiEntity [
 	| model apiClass |
-	model := FamixOpenApiImporter new importFromJsonString: self minimalSwaggerJson.
-	apiClass := self generatedClassNamed: #API.
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.
+	apiClass := self generatedClassNamed: #Api.
 	self assert: (model allWithType: apiClass) size equals: 1
 ]
 
 { #category : 'tests' }
 FamixOpenApiImporterTest >> testImportCreatesPathAndOperationEntities [
 	| model pathClass operationClass |
-	model := FamixOpenApiImporter new importFromJsonString: self minimalSwaggerJson.
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.
 	pathClass := self generatedClassNamed: #Path.
 	operationClass := self generatedClassNamed: #Operation.
 	self assert: (model allWithType: pathClass) size equals: 1.
@@ -53,6 +54,6 @@ FamixOpenApiImporterTest >> testImportCreatesPathAndOperationEntities [
 { #category : 'tests' }
 FamixOpenApiImporterTest >> testImportFromJsonStringReturnsModel [
 	| model |
-	model := FamixOpenApiImporter new importFromJsonString: self minimalSwaggerJson.
+	model := FamixOpenApiImporter new modelFromJsonString: self minimalSwaggerJson.
 	self assert: model notNil
 ]

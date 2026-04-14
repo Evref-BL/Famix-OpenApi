@@ -1,6 +1,7 @@
 Class {
-	#name : #BaselineOfFamixOpenApi,
-	#superclass : #BaselineOf,
+	#name : 'BaselineOfFamixOpenApi',
+	#superclass : 'BaselineOf',
+	#category : 'BaselineOfFamixOpenApi',
 	#package : 'BaselineOfFamixOpenApi'
 }
 
@@ -15,21 +16,19 @@ BaselineOfFamixOpenApi >> baseline: spec [
 	]
 ]
 
-
-
-{ #category : #baselines }
+{ #category : 'baselines' }
 BaselineOfFamixOpenApi >> customProjectAttributes [
     self class environment at: #MooseEntity ifAbsent: [ ^ #(#WithoutFamix) ].
     ^ #()
 ]
 
-{ #category : #baselines }
-BaselineOfFamixOpenApi >> defineGroups: spec [
-		"spec group: 'default' with: #('FamixOpenApiGenerator')"
-]
-
-{ #category : #baselines }
+{ #category : 'baselines' }
 BaselineOfFamixOpenApi >> defineDependencies: spec [
+	
+	spec
+		baseline: 'NeoJSON'
+		with: [ spec repository: 'github://svenvc/NeoJSON/repository' ].
+	
 	spec for: #( #WithoutFamix ) do: [
 			spec
 				baseline: 'Moose'
@@ -39,14 +38,17 @@ BaselineOfFamixOpenApi >> defineDependencies: spec [
 		]
 ]
 
+{ #category : 'baselines' }
+BaselineOfFamixOpenApi >> defineGroups: spec [
+		"spec group: 'default' with: #('FamixOpenApiGenerator')"
+]
 
-{ #category : #baselines }
+{ #category : 'baselines' }
 BaselineOfFamixOpenApi >> definePackages: spec [
 	"generic"
 	"spec package: 'FamixOpenApi'."
 	spec package: 'FamixOpenApiGenerator-Test' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ].
-	spec package: 'Famix-OpenApi-Importer' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ].
+	spec package: 'Famix-OpenApi-Importer' with: [ spec requires: #( 'FamixOpenApiGenerator' 'NeoJSON' ) ].
 	spec package: 'Famix-OpenApi-Importer-Test' with: [ spec requires: #( 'Famix-OpenApi-Importer' ) ]
 
 ]
-
