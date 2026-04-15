@@ -261,7 +261,14 @@ FamixOpenApiOperationDependencyGraphBuilder >> collectPropertyNamesFromSchema: a
 					normalizedNameFrom: ((property respondsTo: #name)
 						ifTrue: [ property name ]
 						ifFalse: [ nil ]).
-				normalizedName ifNotNil: [ aSet add: normalizedName ] ] ] ].
+				normalizedName ifNotNil: [ aSet add: normalizedName ].
+				(property respondsTo: #valueSchema) ifTrue: [
+					property valueSchema ifNotNil: [ :valueSchema |
+						self
+							collectPropertyNamesFromSchema: valueSchema
+							into: aSet
+							requiredOnly: requiredOnly
+							visited: visitedSchemas ] ] ] ] ].
 
 	(aSchema respondsTo: #items) ifTrue: [
 		aSchema items ifNotNil: [ :itemsSchema |

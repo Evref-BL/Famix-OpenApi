@@ -80,6 +80,19 @@ FamixOpenApiGeneratorInstantiationTest >> testPropertyEntityExposesEnumAccessor 
 ]
 
 { #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testPropertyEntityExposesValueSchemaAccessor [
+	| generatedClass instance schemaClass schemaInstance |
+	generatedClass := self generatedClassNamed: #Property.
+	schemaClass := self generatedClassNamed: #Schema.
+	instance := generatedClass new.
+	schemaInstance := schemaClass new.
+	self assert: (instance respondsTo: #valueSchema).
+	self assert: (instance respondsTo: #valueSchema:).
+	instance valueSchema: schemaInstance.
+	self assert: instance valueSchema == schemaInstance
+]
+
+{ #category : 'tests' }
 FamixOpenApiGeneratorInstantiationTest >> testUsesCurrentPrefixForGeneratedEntities [
 	| generatedApiClassName generatedApiClass |
 	generatedApiClassName := (FamixOpenApiGenerator prefix asString , 'Api') asSymbol.

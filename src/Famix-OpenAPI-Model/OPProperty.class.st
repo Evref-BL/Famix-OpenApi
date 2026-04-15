@@ -8,6 +8,7 @@ Generated from openapi2.ecore
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `schema` | `OPProperty` | `properties` | `OPSchema` | Opposite reference schema from Property to Schema [0..1].|
+| `valueSchema` | `OPProperty` | `-` | `OPSchema` | Reference valueSchema from Property to Schema [0..1].|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
@@ -34,7 +35,8 @@ Class {
 	#instVars : [
 		'#enum => FMProperty',
 		'#required => FMProperty',
-		'#schema => FMOne type: #OPSchema opposite: #properties'
+		'#schema => FMOne type: #OPSchema opposite: #properties',
+		'#valueSchema => FMOne type: #OPSchema'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -102,4 +104,27 @@ OPProperty >> schemaGroup [
 	<generated>
 	<navigation: 'Schema'>
 	^ MooseSpecializedGroup with: self schema
+]
+
+{ #category : 'accessing' }
+OPProperty >> valueSchema [
+	"Relation named: #valueSchema type: #OPSchema opposite: #none"
+
+	<generated>
+	<FMComment: 'Reference valueSchema from Property to Schema [0..1].'>
+	^ valueSchema
+]
+
+{ #category : 'accessing' }
+OPProperty >> valueSchema: anObject [
+
+	<generated>
+	valueSchema := anObject
+]
+
+{ #category : 'navigation' }
+OPProperty >> valueSchemaGroup [
+	<generated>
+	<navigation: 'ValueSchema'>
+	^ MooseSpecializedGroup with: self valueSchema
 ]

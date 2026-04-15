@@ -25,6 +25,11 @@ FamixOpenApiOperationDependencyGraphBuilderTest >> normalizerFixtureJson [
 ]
 
 { #category : 'private' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> nestedInlineResponseFixtureJson [
+	^ '{"openapi":"3.0.4","info":{"title":"Nested Inline API","version":"1.0.0"},"paths":{"/movies":{"get":{"operationId":"searchMovies","responses":{"200":{"description":"ok","content":{"application/json":{"schema":{"type":"object","properties":{"results":{"type":"array","items":{"type":"object","properties":{"id":{"type":"integer"},"title":{"type":"string"}}}}}}}}}}}},"/movie/details":{"get":{"operationId":"movieDetails","parameters":[{"name":"id","in":"query","required":true,"schema":{"type":"integer"}}],"responses":{"200":{"description":"ok"}}}}}}'
+]
+
+{ #category : 'private' }
 FamixOpenApiOperationDependencyGraphBuilderTest >> operationWithId: anOperationId inModel: aModel [
 	| operationClass |
 	operationClass := self generatedClassNamed: #Operation.
@@ -57,6 +62,18 @@ FamixOpenApiOperationDependencyGraphBuilderTest >> testBuildGraphDoesNotCreateEd
 	missingTarget := self operationWithId: 'archiveUser' inModel: model.
 
 	self deny: ((graph at: source) includes: missingTarget)
+]
+
+{ #category : 'tests' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> testBuildGraphUsesNestedInlineResponseProperties [
+	| builder graph model source target |
+	model := FamixOpenApiImporter new modelFromJsonString: self nestedInlineResponseFixtureJson.
+	builder := FamixOpenApiOperationDependencyGraphBuilder new.
+	graph := builder buildFromModel: model.
+	source := self operationWithId: 'searchMovies' inModel: model.
+	target := self operationWithId: 'movieDetails' inModel: model.
+
+	self assert: ((graph at: source) includes: target)
 ]
 
 { #category : 'tests' }

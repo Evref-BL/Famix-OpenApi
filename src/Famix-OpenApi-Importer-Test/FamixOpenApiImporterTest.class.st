@@ -48,9 +48,14 @@ FamixOpenApiImporterTest >> minimalOpenApi3Json [
 	^ '{"openapi":"3.0.4","info":{"title":"Sample OpenAPI 3 API","version":"1.0.0"},"paths":{"/pets":{"parameters":[{"$ref":"#/components/parameters/TraceId"}],"post":{"operationId":"createPet","parameters":[{"name":"limit","in":"query","required":false,"schema":{"type":"integer"}}],"requestBody":{"$ref":"#/components/requestBodies/PetPayload"},"responses":{"201":{"description":"created","content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}}}}},"components":{"schemas":{"Pet":{"type":"object","description":"A pet schema","required":["id"],"properties":{"id":{"type":"string"},"name":{"type":"string","enum":["cat","dog"]}}},"PetList":{"type":"array","items":{"$ref":"#/components/schemas/Pet"}},"TagList":{"type":"array","items":{"type":"string"}}},"requestBodies":{"PetPayload":{"description":"payload","required":true,"content":{"application/json":{"schema":{"$ref":"#/components/schemas/Pet"}}}}},"responses":{"GenericError":{"description":"generic error"}},"parameters":{"TraceId":{"name":"traceId","in":"header","required":false,"schema":{"type":"string"}}},"securitySchemes":{"ApiKeyAuth":{"type":"apiKey","name":"X-API-Key","in":"header"}}}}'
 ]
 
-{ #category : 'as yet unclassified' }
-FamixOpenApiImporterTest >> minimalOpenApi3JsonWithPathParametersOnly [ 
+{ #category : 'private' }
+FamixOpenApiImporterTest >> minimalOpenApi3JsonWithPathParametersOnly [
 	^ '{"openapi":"3.0.4","info":{"title":"Sample OpenAPI 3 API","version":"1.0.0"},"paths":{"/pets":{"parameters":[{"$ref":"#/components/parameters/TraceId"}],"get":{"operationId":"listPets","responses":{"200":{"description":"ok"}}}}},"components":{"parameters":{"TraceId":{"name":"traceId","in":"header","required":false,"schema":{"type":"string"}}}}}'
+]
+
+{ #category : 'private' }
+FamixOpenApiImporterTest >> minimalOpenApi3JsonWithResponseInlineComplexProperty [
+	^ '{"openapi":"3.0.4","info":{"title":"Inline Response API","version":"1.0.0"},"paths":{"/movies":{"get":{"operationId":"searchMovie","responses":{"200":{"description":"ok","content":{"application/json":{"schema":{"type":"object","properties":{"results":{"type":"array","items":{"type":"object","properties":{"id":{"type":"integer"},"title":{"type":"string"}}}}}}}}}}}}}}'
 ]
 
 { #category : 'private' }
@@ -294,7 +299,31 @@ FamixOpenApiImporterTest >> testImportOpenApi3SchemaProperties [
 	self assert: petSchema properties size equals: 2.
 	self assert: idProperty required equals: true.
 	self assert: nameProperty required equals: false.
-	self assert: nameProperty enum asArray equals: #('cat' 'dog')
+	self assert: nameProperty enum asArray equals: #('cat' 'dog').
+	self assert: idProperty valueSchema type equals: 'string'.
+	self assert: nameProperty valueSchema type equals: 'string'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterTest >> testImportResponseInlineComplexPropertyCreatesValueSchemaTree [
+	| idProperty itemsSchema model operation operationClass response resultsProperty rootSchema titleProperty |
+	model := FamixOpenApiImporter new
+		modelFromJsonString: self minimalOpenApi3JsonWithResponseInlineComplexProperty.
+	operationClass := self generatedClassNamed: #Operation.
+	operation := (model allWithType: operationClass) anyOne.
+	response := (operation responses detect: [ :each | each key = '200' ]) value.
+	rootSchema := ((response content detect: [ :each | each key = 'application/json' ]) value) schema.
+	resultsProperty := rootSchema properties detect: [ :each | each name = 'results' ].
+	itemsSchema := resultsProperty valueSchema items.
+	idProperty := itemsSchema properties detect: [ :each | each name = 'id' ].
+	titleProperty := itemsSchema properties detect: [ :each | each name = 'title' ].
+
+	self assert: resultsProperty valueSchema notNil.
+	self assert: resultsProperty valueSchema type equals: 'array'.
+	self assert: itemsSchema notNil.
+	self assert: idProperty valueSchema notNil.
+	self assert: idProperty valueSchema type equals: 'integer'.
+	self assert: titleProperty valueSchema type equals: 'string'
 ]
 
 { #category : 'tests' }

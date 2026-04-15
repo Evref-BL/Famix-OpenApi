@@ -981,11 +981,13 @@ FamixOpenApiJsonVisitor >> visitPropertiesNode: aPropertiesNode requiredNames: r
 
 { #category : 'visiting' }
 FamixOpenApiJsonVisitor >> visitPropertyNode: aPropertyNode named: aPropertyName isRequired: aBoolean [
-	| property |
+	| property propertySchema |
 	(self isDictionaryLike: aPropertyNode) ifFalse: [ ^ nil ].
 
 	property := self newEntityNamed: #Property fromJsonNode: aPropertyNode.
 	self setProperty: #required on: property to: aBoolean.
+	propertySchema := self visitSchemaNode: aPropertyNode named: aPropertyName.
+	propertySchema ifNotNil: [ self setProperty: #valueSchema on: property to: propertySchema ].
 	self
 		valueAt: 'enum'
 		in: aPropertyNode
