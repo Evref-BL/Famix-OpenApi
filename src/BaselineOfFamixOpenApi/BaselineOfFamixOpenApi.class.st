@@ -35,6 +35,7 @@ BaselineOfFamixOpenApi >> defineDependencies: spec [
 				baseline: 'Moose'
 				with: [
 				spec repository: 'github://moosetechnology/Moose:development/src' ].
+				spec package: 'FamixOpenApiGenerator' with: [ spec requires: #( 'Moose' ) ]
 			
 		]
 ]
@@ -48,7 +49,7 @@ BaselineOfFamixOpenApi >> defineGroups: spec [
 BaselineOfFamixOpenApi >> definePackages: spec [
 	"generic"
 	"spec package: 'FamixOpenApi'."
-	spec package: 'FamixOpenApiGenerator' with: [ spec requires: #( 'Moose' ) ].
+	spec package: 'FamixOpenApiGenerator' .
 	spec package: 'FamixOpenApiGenerator-Test' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ].
 	spec package: 'Famix-OpenApi-Importer' with: [ spec requires: #( 'FamixOpenApiGenerator' 'NeoJSON' ) ].
 	spec package: 'Famix-OpenApi-Importer-Test' with: [ spec requires: #( 'Famix-OpenApi-Importer' ) ].
