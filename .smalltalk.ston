@@ -2,7 +2,7 @@ SmalltalkCISpec {
   #loading : [
     SCIMetacelloLoadSpec {
 
-      #baseline : 'FamixOpenApiGenerator',
+      #baseline : 'FamixOpenApi',
       #directory : 'src',
       #ignoreImage : true,
       #onConflict : #useIncoming,
@@ -11,7 +11,7 @@ SmalltalkCISpec {
   ],
   #testing : {
     #coverage : {
-      #packages : [ 'FamixOpenApiGenerator.*' ],
+      #packages : [ 'FamixOpenApiGenerator.*' 'Famix-OpenApi.*' ],
       #format : #lcov
     }
   }
