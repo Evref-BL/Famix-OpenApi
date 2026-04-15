@@ -257,8 +257,9 @@ FamixOpenApiImporterTest >> testImportOpenApi3PathParametersAreCopiedToOperation
 
 	self assert: path parameters size equals: 1.
 	self assert: (path parameters anyOne) == traceIdParameter.
-	self assert: operation parameters size equals: 1.
-	self assert: (operation parameters anyOne) == traceIdParameter
+	self assert: operation parameters size equals: 0.
+	self assert: operation allParameters size equals: 1.
+	self assert: (operation allParameters anyOne) == traceIdParameter
 ]
 
 { #category : 'tests' }
