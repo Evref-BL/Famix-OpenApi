@@ -811,7 +811,6 @@ FamixOpenApiJsonVisitor >> visitOperationIn: aPathNode httpMethod: anHttpMethod 
 				httpMethod: anHttpMethod
 				relativePath: ((aPath respondsTo: #relativePath) ifTrue: [ aPath relativePath ]).
 			operation ifNotNil: [ self setProperty: aRelationName on: aPath to: operation.
-				"self haltIf: [ aPath parameters isNotNil and: [operation parameters isEmptyOrNil ]]."
 				
 				 ] ]
 ]
