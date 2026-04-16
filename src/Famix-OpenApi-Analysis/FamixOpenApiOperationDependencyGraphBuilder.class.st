@@ -140,6 +140,53 @@ FamixOpenApiOperationDependencyGraphBuilder >> operationsInModel: aModel [
 ]
 
 { #category : 'private - extraction' }
+FamixOpenApiOperationDependencyGraphBuilder >> operationParametersInModel: aModel [
+	| operationParameters parameters |
+	parameters := OrderedCollection new.
+	(self operationsInModel: aModel) do: [ :operation |
+		operationParameters := self parametersForOperation: operation.
+		operationParameters ifNotNil: [ parameters addAll: operationParameters ] ].
+	^ parameters
+]
+
+{ #category : 'private - extraction' }
+FamixOpenApiOperationDependencyGraphBuilder >> parametersForOperation: anOperation [
+	^ (anOperation respondsTo: #allParameters)
+		ifTrue: [ anOperation allParameters ]
+		ifFalse: [
+			(anOperation respondsTo: #parameters)
+				ifTrue: [ anOperation parameters ]
+				ifFalse: [ nil ] ]
+]
+
+{ #category : 'private - extraction' }
+FamixOpenApiOperationDependencyGraphBuilder >> requiredParameterNamesForOperation: anOperation [
+	| requiredParameterNames |
+	requiredParameterNames := Set new.
+	(self parametersForOperation: anOperation) ifNotNil: [ :parameters |
+		parameters do: [ :parameter |
+			(self isRequiredParameter: parameter) ifTrue: [
+				| normalizedName |
+				normalizedName := self
+					normalizedNameFrom: ((parameter respondsTo: #name)
+						ifTrue: [ parameter name ]
+						ifFalse: [ nil ]).
+				normalizedName ifNotNil: [ requiredParameterNames add: normalizedName ] ] ] ].
+	^ requiredParameterNames
+]
+
+{ #category : 'private - extraction' }
+FamixOpenApiOperationDependencyGraphBuilder >> mediaTypesWithSchemaInModel: aModel [
+	| mediaTypeClass |
+	aModel ifNil: [ ^ #() ].
+	mediaTypeClass := self entityClassNamed: #MediaType.
+	^ ((aModel allWithType: mediaTypeClass)
+		select: [ :mediaType |
+			(mediaType respondsTo: #schema)
+				and: [ mediaType schema notNil ] ]) asOrderedCollection
+]
+
+{ #category : 'private - extraction' }
 FamixOpenApiOperationDependencyGraphBuilder >> producedOutputsForOperation: anOperation [
 	| outputs |
 	outputs := Set new.
@@ -161,20 +208,7 @@ FamixOpenApiOperationDependencyGraphBuilder >> producedOutputsForOperation: anOp
 { #category : 'private - extraction' }
 FamixOpenApiOperationDependencyGraphBuilder >> requiredInputsForOperation: anOperation [
 	| requiredInputs |
-	requiredInputs := Set new.
-
-	(anOperation respondsTo: #parameters) ifTrue: [
-		| parameters |
-		parameters := anOperation parameters.
-		parameters ifNotNil: [
-			parameters do: [ :parameter |
-				(self isRequiredParameter: parameter) ifTrue: [
-					| normalizedName |
-					normalizedName := self
-						normalizedNameFrom: ((parameter respondsTo: #name)
-							ifTrue: [ parameter name ]
-							ifFalse: [ nil ]).
-					normalizedName ifNotNil: [ requiredInputs add: normalizedName ] ] ] ] ].
+	requiredInputs := self requiredParameterNamesForOperation: anOperation.
 
 	(self requiredRequestBody: anOperation) ifNotNil: [ :requestBody |
 		(self requestBodySchemasFor: requestBody) do: [ :schema |

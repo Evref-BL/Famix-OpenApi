@@ -25,6 +25,26 @@ FamixOpenApiOperationDependencyGraphBuilderTest >> normalizerFixtureJson [
 ]
 
 { #category : 'private' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> mediaTypesFixtureJson [
+	^ '{"openapi":"3.0.4","info":{"title":"Media Types API","version":"1.0.0"},"paths":{"/items":{"get":{"operationId":"listItems","responses":{"200":{"description":"ok","content":{"application/json":{"schema":{"type":"object","properties":{"id":{"type":"string"}}}},"text/plain":{"example":"ok"}}}}},"post":{"operationId":"createItem","requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","required":["name"],"properties":{"name":{"type":"string"}}}},"application/xml":{}}},"responses":{"201":{"description":"created"}}}}}}'
+]
+
+{ #category : 'private' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> pathParametersFixtureJson [
+	^ '{"openapi":"3.0.4","info":{"title":"Path Parameters API","version":"1.0.0"},"paths":{"/pets/{id}":{"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"get":{"operationId":"getPet","responses":{"200":{"description":"ok"}}}}}}'
+]
+
+{ #category : 'private' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> pathParameterDependencyFixtureJson [
+	^ '{"openapi":"3.0.4","info":{"title":"Path Dependency API","version":"1.0.0"},"paths":{"/users":{"get":{"operationId":"listUsers","responses":{"200":{"description":"ok","content":{"application/json":{"schema":{"type":"object","properties":{"id":{"type":"string"}}}}}}}}},"/pets/{id}":{"parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"get":{"operationId":"getPetById","responses":{"200":{"description":"ok"}}}}}}'
+]
+
+{ #category : 'private' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> nonSuccessfulResponseFixtureJson [
+	^ '{"openapi":"3.0.4","info":{"title":"Non Successful Response API","version":"1.0.0"},"paths":{"/users":{"get":{"operationId":"listUsersError","responses":{"400":{"description":"bad request","content":{"application/json":{"schema":{"type":"object","properties":{"id":{"type":"string"}}}}}}}}},"/activate":{"post":{"operationId":"activateUser","parameters":[{"name":"id","in":"query","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"ok"}}}}}}'
+]
+
+{ #category : 'private' }
 FamixOpenApiOperationDependencyGraphBuilderTest >> operationWithId: anOperationId inModel: aModel [
 	| operationClass |
 	operationClass := self generatedClassNamed: #Operation.
@@ -75,4 +95,77 @@ FamixOpenApiOperationDependencyGraphBuilderTest >> testNameNormalizerCanBeCustom
 			(rawName asString asLowercase copyReplaceAll: '_' with: '') ].
 	graph := builder buildFromModel: model.
 	self assert: ((graph at: source) includes: target)
+]
+
+{ #category : 'tests' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> testMediaTypesWithSchemaInModelReturnsOnlyMediaTypesHavingSchema [
+	| allMediaTypes builder mediaTypeClass mediaTypesWithSchema model |
+	model := FamixOpenApiImporter new modelFromJsonString: self mediaTypesFixtureJson.
+	builder := FamixOpenApiOperationDependencyGraphBuilder new.
+
+	mediaTypeClass := self generatedClassNamed: #MediaType.
+	allMediaTypes := model allWithType: mediaTypeClass.
+	mediaTypesWithSchema := builder mediaTypesWithSchemaInModel: model.
+
+	self assert: allMediaTypes size equals: 4.
+	self assert: mediaTypesWithSchema size equals: 2.
+	self assert: (mediaTypesWithSchema allSatisfy: [ :each |
+		(each respondsTo: #schema)
+			and: [ each schema notNil ] ])
+]
+
+{ #category : 'tests' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> testOperationParametersInModelReturnsAllOperationParameters [
+	| builder model parameterNames parameters |
+	model := FamixOpenApiImporter new modelFromJsonString: self dependencyGraphFixtureJson.
+	builder := FamixOpenApiOperationDependencyGraphBuilder new.
+
+	parameters := builder operationParametersInModel: model.
+	parameterNames := (parameters collect: [ :each |
+		(each respondsTo: #name)
+			ifTrue: [ each name ]
+			ifFalse: [ nil ] ]) asSet.
+
+	self assert: parameters size equals: 2.
+	self assert: parameterNames equals: (Set with: 'id' with: 'token')
+]
+
+{ #category : 'tests' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> testOperationParametersInModelIncludesPathLevelParameters [
+	| builder model parameterNames parameters |
+	model := FamixOpenApiImporter new modelFromJsonString: self pathParametersFixtureJson.
+	builder := FamixOpenApiOperationDependencyGraphBuilder new.
+
+	parameters := builder operationParametersInModel: model.
+	parameterNames := (parameters collect: [ :each |
+		(each respondsTo: #name)
+			ifTrue: [ each name ]
+			ifFalse: [ nil ] ]) asSet.
+
+	self assert: parameters size equals: 1.
+	self assert: parameterNames equals: (Set with: 'id')
+]
+
+{ #category : 'tests' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> testBuildGraphCreatesDependencyUsingRequiredPathParameter [
+	| builder graph model source target |
+	model := FamixOpenApiImporter new modelFromJsonString: self pathParameterDependencyFixtureJson.
+	builder := FamixOpenApiOperationDependencyGraphBuilder new.
+	graph := builder buildFromModel: model.
+	source := self operationWithId: 'listUsers' inModel: model.
+	target := self operationWithId: 'getPetById' inModel: model.
+
+	self assert: ((graph at: source) includes: target)
+]
+
+{ #category : 'tests' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> testBuildGraphIgnoresNonSuccessfulResponsesWhenMatchingParameters [
+	| builder graph model source target |
+	model := FamixOpenApiImporter new modelFromJsonString: self nonSuccessfulResponseFixtureJson.
+	builder := FamixOpenApiOperationDependencyGraphBuilder new.
+	graph := builder buildFromModel: model.
+	source := self operationWithId: 'listUsersError' inModel: model.
+	target := self operationWithId: 'activateUser' inModel: model.
+
+	self deny: ((graph at: source) includes: target)
 ]
