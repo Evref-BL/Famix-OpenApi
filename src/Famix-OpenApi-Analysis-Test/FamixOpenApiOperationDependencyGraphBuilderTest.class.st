@@ -45,6 +45,11 @@ FamixOpenApiOperationDependencyGraphBuilderTest >> nonSuccessfulResponseFixtureJ
 ]
 
 { #category : 'private' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> nestedSchemaDependencyFixtureJson [
+	^ '{"openapi":"3.0.4","info":{"title":"Nested Dependency API","version":"1.0.0"},"paths":{"/search":{"get":{"operationId":"searchMovies","responses":{"200":{"description":"ok","content":{"application/json":{"schema":{"type":"object","properties":{"results":{"type":"array","items":{"type":"object","properties":{"id":{"type":"string"},"title":{"type":"string"}}}}}}}}}}}},"/movie/{id}":{"get":{"operationId":"getMovieById","parameters":[{"name":"id","in":"path","required":true,"schema":{"type":"string"}}],"responses":{"200":{"description":"ok"}}}}}}'
+]
+
+{ #category : 'private' }
 FamixOpenApiOperationDependencyGraphBuilderTest >> operationWithId: anOperationId inModel: aModel [
 	| operationClass |
 	operationClass := self generatedClassNamed: #Operation.
@@ -166,6 +171,31 @@ FamixOpenApiOperationDependencyGraphBuilderTest >> testBuildGraphIgnoresNonSucce
 	graph := builder buildFromModel: model.
 	source := self operationWithId: 'listUsersError' inModel: model.
 	target := self operationWithId: 'activateUser' inModel: model.
+
+	self deny: ((graph at: source) includes: target)
+]
+
+{ #category : 'tests' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> testBuildGraphWithDeepNestedTraversalFindsDependencyInNestedSchemas [
+	| builder graph model source target |
+	model := FamixOpenApiImporter new modelFromJsonString: self nestedSchemaDependencyFixtureJson.
+	builder := FamixOpenApiOperationDependencyGraphBuilder new.
+	builder useDeepNestedPropertyTraversal.
+	graph := builder buildFromModel: model.
+	source := self operationWithId: 'searchMovies' inModel: model.
+	target := self operationWithId: 'getMovieById' inModel: model.
+
+	self assert: ((graph at: source) includes: target)
+]
+
+{ #category : 'tests' }
+FamixOpenApiOperationDependencyGraphBuilderTest >> testBuildGraphWithoutDeepNestedTraversalDoesNotFindDependencyInNestedSchemas [
+	| builder graph model source target |
+	model := FamixOpenApiImporter new modelFromJsonString: self nestedSchemaDependencyFixtureJson.
+	builder := FamixOpenApiOperationDependencyGraphBuilder new.
+	graph := builder buildFromModel: model.
+	source := self operationWithId: 'searchMovies' inModel: model.
+	target := self operationWithId: 'getMovieById' inModel: model.
 
 	self deny: ((graph at: source) includes: target)
 ]

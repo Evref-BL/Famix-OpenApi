@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'graph',
 		'model',
-		'nameNormalizer'
+		'nameNormalizer',
+		'nestedPropertyTraversalStrategy'
 	],
 	#category : 'Famix-OpenApi-Analysis',
 	#package : 'Famix-OpenApi-Analysis'
@@ -59,12 +60,18 @@ FamixOpenApiOperationDependencyGraphBuilder >> graph [
 { #category : 'accessing' }
 FamixOpenApiOperationDependencyGraphBuilder >> initialize [
 	super initialize.
-	nameNormalizer := self defaultNameNormalizer
+	nameNormalizer := self defaultNameNormalizer.
+	self useShallowNestedPropertyTraversal
 ]
 
 { #category : 'private - normalization' }
 FamixOpenApiOperationDependencyGraphBuilder >> defaultNameNormalizer [
 	^ [ :rawName | rawName asString asLowercase ]
+]
+
+{ #category : 'private - extraction' }
+FamixOpenApiOperationDependencyGraphBuilder >> defaultNestedPropertyTraversalStrategy [
+	^ [ :propertySchema :requiredOnly :includeProperty | false ]
 ]
 
 { #category : 'private - extraction' }
@@ -107,6 +114,16 @@ FamixOpenApiOperationDependencyGraphBuilder >> nameNormalizer [
 { #category : 'accessing' }
 FamixOpenApiOperationDependencyGraphBuilder >> nameNormalizer: aBlock [
 	nameNormalizer := aBlock ifNil: [ self defaultNameNormalizer ]
+]
+
+{ #category : 'accessing' }
+FamixOpenApiOperationDependencyGraphBuilder >> nestedPropertyTraversalStrategy [
+	^ nestedPropertyTraversalStrategy ifNil: [ self defaultNestedPropertyTraversalStrategy ]
+]
+
+{ #category : 'accessing' }
+FamixOpenApiOperationDependencyGraphBuilder >> nestedPropertyTraversalStrategy: aBlock [
+	nestedPropertyTraversalStrategy := aBlock ifNil: [ self defaultNestedPropertyTraversalStrategy ]
 ]
 
 { #category : 'private - normalization' }
@@ -295,7 +312,14 @@ FamixOpenApiOperationDependencyGraphBuilder >> collectPropertyNamesFromSchema: a
 					normalizedNameFrom: ((property respondsTo: #name)
 						ifTrue: [ property name ]
 						ifFalse: [ nil ]).
-				normalizedName ifNotNil: [ aSet add: normalizedName ] ] ] ].
+				normalizedName ifNotNil: [ aSet add: normalizedName ] ].
+			(self shouldTraverseNestedProperty: property requiredOnly: requiredOnly includeProperty: includeProperty)
+				ifTrue: [
+					self
+						collectPropertyNamesFromSchema: property
+						into: aSet
+						requiredOnly: requiredOnly
+						visited: visitedSchemas ] ] ].
 
 	(aSchema respondsTo: #items) ifTrue: [
 		aSchema items ifNotNil: [ :itemsSchema |
@@ -313,4 +337,26 @@ FamixOpenApiOperationDependencyGraphBuilder >> collectPropertyNamesFromSchema: a
 					into: aSet
 					requiredOnly: requiredOnly
 					visited: visitedSchemas ] ] ]
+]
+
+{ #category : 'private - extraction' }
+FamixOpenApiOperationDependencyGraphBuilder >> shouldTraverseNestedProperty: aPropertySchema requiredOnly: requiredOnly includeProperty: includeProperty [
+	^ self nestedPropertyTraversalStrategy
+		value: aPropertySchema
+		value: requiredOnly
+		value: includeProperty
+]
+
+{ #category : 'accessing' }
+FamixOpenApiOperationDependencyGraphBuilder >> useDeepNestedPropertyTraversal [
+	self
+		nestedPropertyTraversalStrategy: [ :propertySchema :requiredOnly :includeProperty |
+			includeProperty ]
+]
+
+{ #category : 'accessing' }
+FamixOpenApiOperationDependencyGraphBuilder >> useShallowNestedPropertyTraversal [
+	self
+		nestedPropertyTraversalStrategy: [ :propertySchema :requiredOnly :includeProperty |
+			false ]
 ]
