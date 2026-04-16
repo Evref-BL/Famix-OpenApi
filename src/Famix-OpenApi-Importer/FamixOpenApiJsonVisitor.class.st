@@ -970,6 +970,7 @@ FamixOpenApiJsonVisitor >> visitPropertiesNode: aPropertiesNode requiredNames: r
 
 	aPropertiesNode keysAndValuesDo: [ :propertyName :propertyNode |
 		| property |
+		"self haltIf:[ propertyName = 'results' ]."
 		property := self
 			visitPropertyNode: propertyNode
 			named: propertyName asString
@@ -984,7 +985,10 @@ FamixOpenApiJsonVisitor >> visitPropertyNode: aPropertyNode named: aPropertyName
 	| property |
 	(self isDictionaryLike: aPropertyNode) ifFalse: [ ^ nil ].
 
-	property := self newEntityNamed: #Property fromJsonNode: aPropertyNode.
+	"property := self newEntityNamed: #Property fromJsonNode: aPropertyNode."
+	"self haltIf:[ aPropertyName = 'results'. ]."
+	property :=self visitSchemaNode: aPropertyNode named: aPropertyName.
+	
 	self setProperty: #required on: property to: aBoolean.
 	self
 		valueAt: 'enum'
@@ -993,6 +997,8 @@ FamixOpenApiJsonVisitor >> visitPropertyNode: aPropertyNode named: aPropertyName
 			| enumValues |
 			enumValues := self stringArrayFromJsonNode: enumNode.
 			enumValues ifNotNil: [ self setProperty: #enum on: property to: enumValues ] ].
+	
+	
 	self
 		setNameOn: property
 		fromCandidates: {
