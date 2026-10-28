@@ -1,3 +1,6 @@
+"
+I build a directed graph between the operations (OPOperation) of an OpenAPI model. An edge A -> B means that every required input of B (required parameters, and required properties of a required request body) is found among the outputs of A (property names of the schemas of the media types of the successful, 2xx, responses of A). Names are compared after normalisation: lowercased by default, customisable with #nameNormalizer:. The graph is a Dictionary mapping each operation to the Set of the operations that can follow it. B with no required input has no incoming edge.
+"
 Class {
 	#name : 'FamixOpenApiOperationDependencyGraphBuilder',
 	#superclass : 'Object',
@@ -9,6 +12,19 @@ Class {
 	#category : 'Famix-OpenApi-Analysis',
 	#package : 'Famix-OpenApi-Analysis'
 }
+
+{ #category : 'outputs' }
+FamixOpenApiOperationDependencyGraphBuilder >> addName: aRawName into: aSet [
+
+	(self normalizedNameFrom: aRawName) ifNotNil: [ :name |
+		aSet add: name ]
+]
+
+{ #category : 'outputs' }
+FamixOpenApiOperationDependencyGraphBuilder >> addNamesOfProperties: properties into: aSet [
+
+	properties do: [ :each | self addName: each name into: aSet ]
+]
 
 { #category : 'building' }
 FamixOpenApiOperationDependencyGraphBuilder >> buildFromModel: aModel [
@@ -42,13 +58,58 @@ FamixOpenApiOperationDependencyGraphBuilder >> buildFromModel: aModel [
 	^ graph
 ]
 
-{ #category : 'private - model' }
-FamixOpenApiOperationDependencyGraphBuilder >> entityClassNamed: anEntityName [
-	| generatedClassName |
-	generatedClassName := (FamixOpenApiGenerator prefix asString , anEntityName asString) asSymbol.
-	^ Smalltalk globals
-		at: generatedClassName
-		ifAbsent: [ self error: 'Missing generated class: ', generatedClassName asString ]
+{ #category : 'outputs' }
+FamixOpenApiOperationDependencyGraphBuilder >> collectOutputNamesOf: aSchema into: aSet visited: visitedSchemas [
+	"Collect the names of the properties of aSchema, inherited ones included (allOf), then those of its array items and of the union of its oneOf and anyOf members."
+
+	(visitedSchemas includes: aSchema) ifTrue: [ ^ self ].
+	visitedSchemas add: aSchema.
+	self addNamesOfProperties: aSchema allProperties into: aSet.
+	(self outputRelatedSchemasOf: aSchema) do: [ :each |
+		self collectOutputNamesOf: each into: aSet visited: visitedSchemas ]
+]
+
+{ #category : 'inputs' }
+FamixOpenApiOperationDependencyGraphBuilder >> collectRequiredBodyPropertiesOf: anOperation into: aSet [
+
+	| requestBody |
+	requestBody := anOperation requestBody.
+	(requestBody isNotNil and: [ requestBody required = true ]) ifFalse: [
+		^ self ].
+	(self schemasOfContent: requestBody content) do: [ :schema |
+			self
+				collectRequiredNamesOf: schema
+				into: aSet
+				visited: IdentitySet new ]
+]
+
+{ #category : 'inputs' }
+FamixOpenApiOperationDependencyGraphBuilder >> collectRequiredNamesOf: aSchema into: aSet visited: visitedSchemas [
+	"Collect the names of the required properties of aSchema, inherited ones included (allOf), and those of its array items. oneOf and anyOf members are alternatives: they are not followed."
+
+	(visitedSchemas includes: aSchema) ifTrue: [ ^ self ].
+	visitedSchemas add: aSchema.
+	aSchema requiredProperties do: [ :each |
+		self addName: each into: aSet ].
+	self
+		addNamesOfProperties:
+		(aSchema allProperties select: [ :each | each isRequired = true ])
+		into: aSet.
+	(self itemsOf: aSchema) , aSchema allOf do: [ :each |
+		self collectRequiredNamesOf: each into: aSet visited: visitedSchemas ]
+]
+
+{ #category : 'inputs' }
+FamixOpenApiOperationDependencyGraphBuilder >> collectRequiredParametersOf: anOperation into: aSet [
+
+	(anOperation effectiveParameters select: [ :each |
+		 self isRequiredParameter: each ]) do: [ :each |
+		self addName: each name into: aSet ]
+]
+
+{ #category : 'private - normalization' }
+FamixOpenApiOperationDependencyGraphBuilder >> defaultNameNormalizer [
+	^ [ :rawName | rawName asString asLowercase ]
 ]
 
 { #category : 'accessing' }
@@ -62,31 +123,25 @@ FamixOpenApiOperationDependencyGraphBuilder >> initialize [
 	nameNormalizer := self defaultNameNormalizer
 ]
 
-{ #category : 'private - normalization' }
-FamixOpenApiOperationDependencyGraphBuilder >> defaultNameNormalizer [
-	^ [ :rawName | rawName asString asLowercase ]
-]
-
-{ #category : 'private - extraction' }
+{ #category : 'inputs' }
 FamixOpenApiOperationDependencyGraphBuilder >> isRequiredParameter: aParameter [
-	| isMarkedAsRequired location |
-	isMarkedAsRequired := (aParameter respondsTo: #required)
-		and: [ aParameter required = true ].
-	location := (aParameter respondsTo: #location)
-		ifTrue: [ aParameter location ]
-		ifFalse: [ nil ].
-	location := location ifNil: [ '' ] ifNotNil: [ location asString asLowercase ].
-	^ isMarkedAsRequired or: [ location = 'path' ]
+	"Path parameters are always required."
+
+	^ aParameter required = true or: [ aParameter location = 'path' ]
 ]
 
-{ #category : 'private - extraction' }
-FamixOpenApiOperationDependencyGraphBuilder >> isSuccessfulResponseEntry: aResponseEntry [
-	| key |
-	key := (aResponseEntry respondsTo: #key)
-		ifTrue: [ aResponseEntry key ]
-		ifFalse: [ nil ].
-	key := key ifNil: [ '' ] ifNotNil: [ key asString ].
-	^ key isEmpty not and: [ key first = $2 ]
+{ #category : 'building' }
+FamixOpenApiOperationDependencyGraphBuilder >> isSuccessfulResponse: aResponse [
+	"A response is successful when its status code starts with 2 (200, 201, 2XX). default is not."
+
+	^ aResponse statusCode asString beginsWith: '2'
+]
+
+{ #category : 'outputs' }
+FamixOpenApiOperationDependencyGraphBuilder >> itemsOf: aSchema [
+	"Answer the array items schema of aSchema as a collection, empty when there is none."
+
+	^ aSchema items ifNil: [ #(  ) ] ifNotNil: [ :items | { items } ]
 ]
 
 { #category : 'accessing' }
@@ -123,160 +178,60 @@ FamixOpenApiOperationDependencyGraphBuilder >> normalizedNameFrom: aRawName [
 		ifFalse: [ normalized ]
 ]
 
-{ #category : 'private - extraction' }
-FamixOpenApiOperationDependencyGraphBuilder >> operationResponses: anOperation [
-	| responses |
-	(anOperation respondsTo: #responses) ifFalse: [ ^ #() ].
-	responses := anOperation responses.
-	responses ifNil: [ ^ #() ].
-	^ responses select: [ :each | self isSuccessfulResponseEntry: each ]
-]
-
-{ #category : 'private - model' }
+{ #category : 'building' }
 FamixOpenApiOperationDependencyGraphBuilder >> operationsInModel: aModel [
-	| operationClass |
-	operationClass := self entityClassNamed: #Operation.
-	^ (aModel allWithType: operationClass) asOrderedCollection
+	"Answer the operations of aModel."
+
+	^ (aModel allWithType: OPOperation) asOrderedCollection
 ]
 
-{ #category : 'private - extraction' }
+{ #category : 'outputs' }
+FamixOpenApiOperationDependencyGraphBuilder >> outputRelatedSchemasOf: aSchema [
+	"Schemas whose properties are also outputs of aSchema."
+
+	^ (self itemsOf: aSchema) , aSchema allOf , aSchema oneOf
+	  , aSchema anyOf
+]
+
+{ #category : 'outputs' }
 FamixOpenApiOperationDependencyGraphBuilder >> producedOutputsForOperation: anOperation [
+	"Answer the normalized property names found in the schemas of the successful responses of anOperation."
+
 	| outputs |
 	outputs := Set new.
-	(self operationResponses: anOperation) do: [ :responseEntry |
-		| response |
-		response := (responseEntry respondsTo: #value)
-			ifTrue: [ responseEntry value ]
-			ifFalse: [ nil ].
-		response ifNotNil: [
-			(self responseSchemasFor: response) do: [ :schema |
-				self
-					collectPropertyNamesFromSchema: schema
-					into: outputs
-					requiredOnly: false
-					visited: IdentitySet new ] ] ].
+	(self successfulResponsesOf: anOperation) do: [ :response |
+			(self schemasOfContent: response content) do: [ :schema |
+					self
+						collectOutputNamesOf: schema
+						into: outputs
+						visited: IdentitySet new ] ].
 	^ outputs
 ]
 
-{ #category : 'private - extraction' }
+{ #category : 'inputs' }
 FamixOpenApiOperationDependencyGraphBuilder >> requiredInputsForOperation: anOperation [
+	"Answer the normalized names of the required parameters of anOperation and of the required properties of its required request body."
+
 	| requiredInputs |
 	requiredInputs := Set new.
-
-	(anOperation respondsTo: #parameters) ifTrue: [
-		| parameters |
-		parameters := anOperation parameters.
-		parameters ifNotNil: [
-			parameters do: [ :parameter |
-				(self isRequiredParameter: parameter) ifTrue: [
-					| normalizedName |
-					normalizedName := self
-						normalizedNameFrom: ((parameter respondsTo: #name)
-							ifTrue: [ parameter name ]
-							ifFalse: [ nil ]).
-					normalizedName ifNotNil: [ requiredInputs add: normalizedName ] ] ] ] ].
-
-	(self requiredRequestBody: anOperation) ifNotNil: [ :requestBody |
-		(self requestBodySchemasFor: requestBody) do: [ :schema |
-			self
-				collectPropertyNamesFromSchema: schema
-				into: requiredInputs
-				requiredOnly: true
-				visited: IdentitySet new ] ].
-
+	self collectRequiredParametersOf: anOperation into: requiredInputs.
+	self
+		collectRequiredBodyPropertiesOf: anOperation
+		into: requiredInputs.
 	^ requiredInputs
 ]
 
-{ #category : 'private - extraction' }
-FamixOpenApiOperationDependencyGraphBuilder >> requiredRequestBody: anOperation [
-	| requestBody |
-	(anOperation respondsTo: #requestBody) ifFalse: [ ^ nil ].
-	requestBody := anOperation requestBody.
-	requestBody ifNil: [ ^ nil ].
-	(requestBody respondsTo: #required) ifFalse: [ ^ nil ].
-	^ requestBody required = true
-		ifTrue: [ requestBody ]
-		ifFalse: [ nil ]
+{ #category : 'building' }
+FamixOpenApiOperationDependencyGraphBuilder >> schemasOfContent: aMediaTypeCollection [
+
+	^ aMediaTypeCollection
+		  select: [ :each | each schema notNil ]
+		  thenCollect: [ :each | each schema ]
 ]
 
-{ #category : 'private - extraction' }
-FamixOpenApiOperationDependencyGraphBuilder >> requestBodySchemasFor: aRequestBody [
-	| schemas |
-	schemas := OrderedCollection new.
-	(aRequestBody respondsTo: #content) ifFalse: [ ^ schemas ].
-	aRequestBody content ifNil: [ ^ schemas ].
+{ #category : 'building' }
+FamixOpenApiOperationDependencyGraphBuilder >> successfulResponsesOf: anOperation [
 
-	aRequestBody content do: [ :contentEntry |
-		| mediaType schema |
-		mediaType := (contentEntry respondsTo: #value)
-			ifTrue: [ contentEntry value ]
-			ifFalse: [ nil ].
-		schema := (mediaType notNil and: [ mediaType respondsTo: #schema ])
-			ifTrue: [ mediaType schema ]
-			ifFalse: [ nil ].
-		schema ifNotNil: [ schemas add: schema ] ].
-	^ schemas
-]
-
-{ #category : 'private - extraction' }
-FamixOpenApiOperationDependencyGraphBuilder >> responseSchemasFor: aResponse [
-	| schemas |
-	schemas := OrderedCollection new.
-
-	(aResponse respondsTo: #schema) ifTrue: [
-		aResponse schema ifNotNil: [ :schema | schemas add: schema ] ].
-
-	(aResponse respondsTo: #content) ifTrue: [
-		aResponse content ifNotNil: [
-			aResponse content do: [ :contentEntry |
-				| mediaType schema |
-				mediaType := (contentEntry respondsTo: #value)
-					ifTrue: [ contentEntry value ]
-					ifFalse: [ nil ].
-				schema := (mediaType notNil and: [ mediaType respondsTo: #schema ])
-					ifTrue: [ mediaType schema ]
-					ifFalse: [ nil ].
-				schema ifNotNil: [ schemas add: schema ] ] ] ].
-
-	^ schemas
-]
-
-{ #category : 'private - extraction' }
-FamixOpenApiOperationDependencyGraphBuilder >> collectPropertyNamesFromSchema: aSchema into: aSet requiredOnly: requiredOnly visited: visitedSchemas [
-	| properties |
-	aSchema ifNil: [ ^ self ].
-	(visitedSchemas includes: aSchema) ifTrue: [ ^ self ].
-	visitedSchemas add: aSchema.
-
-	properties := (aSchema respondsTo: #properties)
-		ifTrue: [ aSchema properties ]
-		ifFalse: [ nil ].
-	properties ifNotNil: [
-		properties do: [ :property |
-			| includeProperty normalizedName |
-			includeProperty := requiredOnly not
-				or: [ (property respondsTo: #required) and: [ property required = true ] ].
-			includeProperty ifTrue: [
-				normalizedName := self
-					normalizedNameFrom: ((property respondsTo: #name)
-						ifTrue: [ property name ]
-						ifFalse: [ nil ]).
-				normalizedName ifNotNil: [ aSet add: normalizedName ] ] ] ].
-
-	(aSchema respondsTo: #items) ifTrue: [
-		aSchema items ifNotNil: [ :itemsSchema |
-			self
-				collectPropertyNamesFromSchema: itemsSchema
-				into: aSet
-				requiredOnly: requiredOnly
-				visited: visitedSchemas ] ].
-
-	(aSchema respondsTo: #allOf) ifTrue: [
-		aSchema allOf ifNotNil: [
-			aSchema allOf do: [ :subSchema |
-				self
-					collectPropertyNamesFromSchema: subSchema
-					into: aSet
-					requiredOnly: requiredOnly
-					visited: visitedSchemas ] ] ]
+	^ anOperation responses select: [ :each |
+		  self isSuccessfulResponse: each ]
 ]
