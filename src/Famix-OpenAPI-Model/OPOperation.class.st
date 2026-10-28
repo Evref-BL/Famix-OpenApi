@@ -12,7 +12,6 @@ An HTTP operation of a path item (OpenAPI Operation Object): one verb on one pat
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `callbacks` | `OPOperation` | `operation` | `OPCallback` | Callbacks the operation may trigger.|
 | `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocumentation` | External documentation of the entity.|
 | `responses` | `OPOperation` | `operation` | `OPResponse` | Responses of the operation, one per status code.|
 | `securityRequirements` | `OPOperation` | `operation` | `OPSecurityRequirement` | Security requirements of the operation, as alternatives; they replace the ones of the document. See #effectiveSecurity.|
@@ -21,6 +20,7 @@ An HTTP operation of a path item (OpenAPI Operation Object): one verb on one pat
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `callbacks` | `OPOperation` | `usedByOperations` | `OPCallback` | Callbacks the operation may trigger. A callback may be shared by several operations.|
 | `parameters` | `OPOperation` | `usedByOperations` | `OPParameter` | Parameters of the operation. A parameter may be shared by several operations.|
 | `requestBody` | `OPOperation` | `usedByOperations` | `OPRequestBody` | Request body accepted by the operation. A request body may be shared by several operations.|
 | `usedByLinks` | `OPOperation` | `operation` | `OPLink` | Links targeting this operation.|
@@ -50,7 +50,7 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPExternalDocsContainer + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPExternalDocsContainer classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#callbacks => FMMany type: #OPCallback opposite: #operation',
+		'#callbacks => FMMany type: #OPCallback opposite: #usedByOperations',
 		'#deprecated => FMProperty',
 		'#description => FMProperty',
 		'#httpMethod => FMProperty',
@@ -130,11 +130,11 @@ OPOperation >> addUsedByLink: anObject [
 
 { #category : 'accessing' }
 OPOperation >> callbacks [
-	"Relation named: #callbacks type: #OPCallback opposite: #operation"
+	"Relation named: #callbacks type: #OPCallback opposite: #usedByOperations"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Callbacks the operation may trigger.'>
+	<FMComment: 'Callbacks the operation may trigger. A callback may be shared by several operations.'>
 	^ callbacks
 ]
 

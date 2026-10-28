@@ -1,5 +1,5 @@
 "
-A header of a response or of an encoding (OpenAPI Header Object).
+A header of a response or of an encoding (OpenAPI Header Object). A reusable header may be shared by several responses and encodings.
 
 ## Relations
 ======================
@@ -8,13 +8,13 @@ A header of a response or of an encoding (OpenAPI Header Object).
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `components` | `OPHeader` | `headers` | `OPComponents` | The components owning the object, when it is a reusable one.|
-| `encoding` | `OPHeader` | `headers` | `OPEncoding` | The encoding declaring the header.|
-| `response` | `OPHeader` | `headers` | `OPResponse` | The response declaring the header.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `schema` | `OPHeader` | `usedByHeaders` | `OPSchema` | Schema of the header value.|
+| `usedByEncodings` | `OPHeader` | `headers` | `OPEncoding` | Encodings using this header.|
+| `usedByResponses` | `OPHeader` | `headers` | `OPResponse` | Responses using this header.|
 
 
 ## Properties
@@ -43,12 +43,12 @@ Class {
 		'#components => FMOne type: #OPComponents opposite: #headers',
 		'#deprecated => FMProperty',
 		'#description => FMProperty',
-		'#encoding => FMOne type: #OPEncoding opposite: #headers',
 		'#explode => FMProperty',
 		'#required => FMProperty',
-		'#response => FMOne type: #OPResponse opposite: #headers',
 		'#schema => FMOne type: #OPSchema opposite: #usedByHeaders',
-		'#style => FMProperty'
+		'#style => FMProperty',
+		'#usedByEncodings => FMMany type: #OPEncoding opposite: #headers',
+		'#usedByResponses => FMMany type: #OPResponse opposite: #headers'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -62,6 +62,22 @@ OPHeader class >> annotation [
 	<FMClass: #Header super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
+]
+
+{ #category : 'adding' }
+OPHeader >> addUsedByEncoding: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByEncodings add: anObject
+]
+
+{ #category : 'adding' }
+OPHeader >> addUsedByResponse: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByResponses add: anObject
 ]
 
 { #category : 'accessing' }
@@ -118,25 +134,6 @@ OPHeader >> description: anObject [
 ]
 
 { #category : 'accessing' }
-OPHeader >> encoding [
-	"Relation named: #encoding type: #OPEncoding opposite: #headers"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'The encoding declaring the header.'>
-	<container>
-	^ encoding
-]
-
-{ #category : 'accessing' }
-OPHeader >> encoding: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	encoding := anObject
-]
-
-{ #category : 'accessing' }
 OPHeader >> explode [
 
 	<FMProperty: #explode type: #Boolean>
@@ -168,25 +165,6 @@ OPHeader >> required: anObject [
 	<ignoreForCoverage>
 	<generated>
 	required := anObject
-]
-
-{ #category : 'accessing' }
-OPHeader >> response [
-	"Relation named: #response type: #OPResponse opposite: #headers"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'The response declaring the header.'>
-	<container>
-	^ response
-]
-
-{ #category : 'accessing' }
-OPHeader >> response: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	response := anObject
 ]
 
 { #category : 'accessing' }
@@ -222,4 +200,40 @@ OPHeader >> style: anObject [
 	<ignoreForCoverage>
 	<generated>
 	style := anObject
+]
+
+{ #category : 'accessing' }
+OPHeader >> usedByEncodings [
+	"Relation named: #usedByEncodings type: #OPEncoding opposite: #headers"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Encodings using this header.'>
+	^ usedByEncodings
+]
+
+{ #category : 'accessing' }
+OPHeader >> usedByEncodings: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByEncodings value: anObject
+]
+
+{ #category : 'accessing' }
+OPHeader >> usedByResponses [
+	"Relation named: #usedByResponses type: #OPResponse opposite: #headers"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Responses using this header.'>
+	^ usedByResponses
+]
+
+{ #category : 'accessing' }
+OPHeader >> usedByResponses: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByResponses value: anObject
 ]

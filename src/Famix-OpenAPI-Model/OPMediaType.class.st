@@ -13,11 +13,11 @@ The description of a payload for one media type, such as application/json (OpenA
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `encodings` | `OPMediaType` | `mediaType` | `OPEncoding` | Serialization rules of the schema properties.|
-| `examples` | `OPMediaType` | `mediaType` | `OPExample` | Examples of the media type.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `examples` | `OPMediaType` | `usedByMediaTypes` | `OPExample` | Examples of the media type. An example may be shared by several media types.|
 | `schema` | `OPMediaType` | `usedByMediaTypes` | `OPSchema` | Schema of the payload.|
 
 
@@ -41,7 +41,7 @@ Class {
 	#instVars : [
 		'#contentOwner => FMOne type: #OPContentContainer opposite: #content',
 		'#encodings => FMMany type: #OPEncoding opposite: #mediaType',
-		'#examples => FMMany type: #OPExample opposite: #mediaType',
+		'#examples => FMMany type: #OPExample opposite: #usedByMediaTypes',
 		'#mediaType => FMProperty',
 		'#schema => FMOne type: #OPSchema opposite: #usedByMediaTypes'
 	],
@@ -114,11 +114,11 @@ OPMediaType >> encodings: anObject [
 
 { #category : 'accessing' }
 OPMediaType >> examples [
-	"Relation named: #examples type: #OPExample opposite: #mediaType"
+	"Relation named: #examples type: #OPExample opposite: #usedByMediaTypes"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Examples of the media type.'>
+	<FMComment: 'Examples of the media type. An example may be shared by several media types.'>
 	^ examples
 ]
 

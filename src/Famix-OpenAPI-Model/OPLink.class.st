@@ -1,5 +1,5 @@
 "
-A link from a response to an operation that can be followed with values of the response (OpenAPI Link Object).
+A link from a response to an operation that can be followed with values of the response (OpenAPI Link Object). A reusable link may be shared by several responses.
 
 ## Relations
 ======================
@@ -8,7 +8,6 @@ A link from a response to an operation that can be followed with values of the r
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `components` | `OPLink` | `links` | `OPComponents` | The components owning the object, when it is a reusable one.|
-| `response` | `OPLink` | `links` | `OPResponse` | The response declaring the link.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
@@ -19,6 +18,7 @@ A link from a response to an operation that can be followed with values of the r
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `operation` | `OPLink` | `usedByLinks` | `OPOperation` | The linked operation (operationId or operationRef resolved).|
+| `usedByResponses` | `OPLink` | `links` | `OPResponse` | Responses using this link.|
 
 
 ## Properties
@@ -49,8 +49,8 @@ Class {
 		'#operationId => FMProperty',
 		'#operationRef => FMProperty',
 		'#requestBody => FMProperty',
-		'#response => FMOne type: #OPResponse opposite: #links',
-		'#server => FMOne type: #OPServer opposite: #link'
+		'#server => FMOne type: #OPServer opposite: #link',
+		'#usedByResponses => FMMany type: #OPResponse opposite: #links'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -64,6 +64,14 @@ OPLink class >> annotation [
 	<FMClass: #Link super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
+]
+
+{ #category : 'adding' }
+OPLink >> addUsedByResponse: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByResponses add: anObject
 ]
 
 { #category : 'accessing' }
@@ -172,25 +180,6 @@ OPLink >> requestBody: anObject [
 ]
 
 { #category : 'accessing' }
-OPLink >> response [
-	"Relation named: #response type: #OPResponse opposite: #links"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'The response declaring the link.'>
-	<container>
-	^ response
-]
-
-{ #category : 'accessing' }
-OPLink >> response: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	response := anObject
-]
-
-{ #category : 'accessing' }
 OPLink >> server [
 	"Relation named: #server type: #OPServer opposite: #link"
 
@@ -206,4 +195,22 @@ OPLink >> server: anObject [
 	<ignoreForCoverage>
 	<generated>
 	server := anObject
+]
+
+{ #category : 'accessing' }
+OPLink >> usedByResponses [
+	"Relation named: #usedByResponses type: #OPResponse opposite: #links"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Responses using this link.'>
+	^ usedByResponses
+]
+
+{ #category : 'accessing' }
+OPLink >> usedByResponses: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByResponses value: anObject
 ]

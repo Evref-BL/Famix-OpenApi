@@ -27,6 +27,7 @@ A JSON Schema (OpenAPI Schema Object) describing a value: its types, constraints
 | `not` | `OPSchema` | `usedAsNotBy` | `OPSchema` | Schema that must not match.|
 | `oneOf` | `OPSchema` | `usedAsOneOfBy` | `OPSchema` | Alternatives of which exactly one must match.|
 | `prefixItems` | `OPSchema` | `usedAsPrefixItemsBy` | `OPSchema` | Schemas of the first items of an array, in order (tuple validation).|
+| `subSchemas` | `OPSchema` | `subSchemaOf` | `OPSubSchema` | SubSchemas created by the importer as strict subsets of this schema.|
 | `usedAsAdditionalPropertiesBy` | `OPSchema` | `additionalProperties` | `OPSchema` | Schemas having this schema as their additionalProperties.|
 | `usedAsAllOfBy` | `OPSchema` | `allOf` | `OPSchema` | Schemas having this schema in their allOf.|
 | `usedAsAnyOfBy` | `OPSchema` | `anyOf` | `OPSchema` | Schemas having this schema in their anyOf.|
@@ -63,6 +64,7 @@ A JSON Schema (OpenAPI Schema Object) describing a value: its types, constraints
 | `maxLength` | `Number` | nil | Maximum length of a string.|
 | `maxProperties` | `Number` | nil | Maximum number of properties of an object.|
 | `maximum` | `Number` | nil | Inclusive upper bound of a number.|
+| `mergedPointers` | `String` | #() | canonicalPointers of identical inline schemas that the importer merged into this entity; the entity's own canonicalPointer is the first occurrence.|
 | `minItems` | `Number` | nil | Minimum number of items of an array.|
 | `minLength` | `Number` | nil | Minimum length of a string.|
 | `minProperties` | `Number` | nil | Minimum number of properties of an object.|
@@ -107,6 +109,7 @@ Class {
 		'#maxLength => FMProperty',
 		'#maxProperties => FMProperty',
 		'#maximum => FMProperty',
+		'#mergedPointers => FMProperty defaultValue: #()',
 		'#minItems => FMProperty',
 		'#minLength => FMProperty',
 		'#minProperties => FMProperty',
@@ -119,6 +122,7 @@ Class {
 		'#properties => FMMany type: #OPProperty opposite: #schema',
 		'#readOnly => FMProperty',
 		'#requiredProperties => FMProperty defaultValue: #()',
+		'#subSchemas => FMMany type: #OPSubSchema opposite: #subSchemaOf',
 		'#title => FMProperty',
 		'#types => FMProperty defaultValue: #()',
 		'#uniqueItems => FMProperty',
@@ -189,6 +193,14 @@ OPSchema >> addProperty: anObject [
 	<ignoreForCoverage>
 	<generated>
 	^ self properties add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addSubSchema: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self subSchemas add: anObject
 ]
 
 { #category : 'adding' }
@@ -652,6 +664,24 @@ OPSchema >> maximum: anObject [
 ]
 
 { #category : 'accessing' }
+OPSchema >> mergedPointers [
+
+	<FMProperty: #mergedPointers type: #String defaultValue: #()>
+	<ignoreForCoverage>
+	<generated>
+	<multivalued>
+	<FMComment: 'canonicalPointers of identical inline schemas that the importer merged into this entity; the entity''s own canonicalPointer is the first occurrence.'>
+	^ mergedPointers ifNil: [ mergedPointers := #() ]
+]
+
+{ #category : 'accessing' }
+OPSchema >> mergedPointers: anObject [
+	<ignoreForCoverage>
+	<generated>
+	mergedPointers := anObject
+]
+
+{ #category : 'accessing' }
 OPSchema >> minItems [
 
 	<FMProperty: #minItems type: #Number>
@@ -858,6 +888,24 @@ OPSchema >> requiredProperties: anObject [
 	<ignoreForCoverage>
 	<generated>
 	requiredProperties := anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> subSchemas [
+	"Relation named: #subSchemas type: #OPSubSchema opposite: #subSchemaOf"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'SubSchemas created by the importer as strict subsets of this schema.'>
+	^ subSchemas
+]
+
+{ #category : 'accessing' }
+OPSchema >> subSchemas: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	subSchemas value: anObject
 ]
 
 { #category : 'accessing' }

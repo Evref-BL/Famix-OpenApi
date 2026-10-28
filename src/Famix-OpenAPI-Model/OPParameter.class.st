@@ -13,11 +13,11 @@ A parameter of an operation or of a path item (OpenAPI Parameter Object), locate
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `content` | `OPContentContainer` | `contentOwner` | `OPMediaType` | Payload descriptions of the entity, one per media type.|
-| `examples` | `OPParameter` | `parameter` | `OPExample` | Examples of the parameter value.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `examples` | `OPParameter` | `usedByParameters` | `OPExample` | Examples of the parameter value. An example may be shared by several parameters.|
 | `schema` | `OPParameter` | `usedByParameters` | `OPSchema` | Schema of the parameter value.|
 | `usedByOperations` | `OPParameter` | `parameters` | `OPOperation` | Operations using this parameter.|
 | `usedByPaths` | `OPParameter` | `parameters` | `OPPath` | Path items using this parameter.|
@@ -54,7 +54,7 @@ Class {
 		'#components => FMOne type: #OPComponents opposite: #parameters',
 		'#deprecated => FMProperty',
 		'#description => FMProperty',
-		'#examples => FMMany type: #OPExample opposite: #parameter',
+		'#examples => FMMany type: #OPExample opposite: #usedByParameters',
 		'#explode => FMProperty',
 		'#location => FMProperty',
 		'#required => FMProperty',
@@ -190,11 +190,11 @@ OPParameter >> description: anObject [
 
 { #category : 'accessing' }
 OPParameter >> examples [
-	"Relation named: #examples type: #OPExample opposite: #parameter"
+	"Relation named: #examples type: #OPExample opposite: #usedByParameters"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Examples of the parameter value.'>
+	<FMComment: 'Examples of the parameter value. An example may be shared by several parameters.'>
 	^ examples
 ]
 

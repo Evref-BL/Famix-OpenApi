@@ -1,5 +1,5 @@
 "
-A path item (OpenAPI Path Item Object): the operations available on one relative path, declared in the paths, in the webhooks, in a callback or among the reusable path items.
+A path item (OpenAPI Path Item Object): the operations available on one relative path, declared in the paths, in the webhooks, in a callback or among the reusable path items. A path item may be shared by several callbacks.
 
 ## Relations
 ======================
@@ -7,7 +7,6 @@ A path item (OpenAPI Path Item Object): the operations available on one relative
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `callback` | `OPPath` | `pathItems` | `OPCallback` | The callback declaring the path item.|
 | `components` | `OPPath` | `pathItems` | `OPComponents` | The components owning the object, when it is a reusable one.|
 | `openApi` | `OPPath` | `paths` | `OPOpenApi` | The document declaring the path item in its paths.|
 | `webhookOf` | `OPPath` | `webhooks` | `OPOpenApi` | The document declaring the path item in its webhooks.|
@@ -22,6 +21,7 @@ A path item (OpenAPI Path Item Object): the operations available on one relative
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `parameters` | `OPPath` | `usedByPaths` | `OPParameter` | Parameters shared by all the operations of the path item. A parameter may be shared by several paths.|
+| `usedByCallbacks` | `OPPath` | `pathItems` | `OPCallback` | Callbacks using this path item.|
 
 
 ## Properties
@@ -45,7 +45,6 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#callback => FMOne type: #OPCallback opposite: #pathItems',
 		'#components => FMOne type: #OPComponents opposite: #pathItems',
 		'#description => FMProperty',
 		'#openApi => FMOne type: #OPOpenApi opposite: #paths',
@@ -54,6 +53,7 @@ Class {
 		'#relativePath => FMProperty',
 		'#servers => FMMany type: #OPServer opposite: #path',
 		'#summary => FMProperty',
+		'#usedByCallbacks => FMMany type: #OPCallback opposite: #pathItems',
 		'#webhookOf => FMOne type: #OPOpenApi opposite: #webhooks'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
@@ -94,23 +94,12 @@ OPPath >> addServer: anObject [
 	^ self servers add: anObject
 ]
 
-{ #category : 'accessing' }
-OPPath >> callback [
-	"Relation named: #callback type: #OPCallback opposite: #pathItems"
+{ #category : 'adding' }
+OPPath >> addUsedByCallback: anObject [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'The callback declaring the path item.'>
-	<container>
-	^ callback
-]
-
-{ #category : 'accessing' }
-OPPath >> callback: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	callback := anObject
+	^ self usedByCallbacks add: anObject
 ]
 
 { #category : 'accessing' }
@@ -254,6 +243,24 @@ OPPath >> summary: anObject [
 	<ignoreForCoverage>
 	<generated>
 	summary := anObject
+]
+
+{ #category : 'accessing' }
+OPPath >> usedByCallbacks [
+	"Relation named: #usedByCallbacks type: #OPCallback opposite: #pathItems"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Callbacks using this path item.'>
+	^ usedByCallbacks
+]
+
+{ #category : 'accessing' }
+OPPath >> usedByCallbacks: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByCallbacks value: anObject
 ]
 
 { #category : 'accessing' }

@@ -1,5 +1,5 @@
 "
-Requests an operation may send to a URL given at runtime (OpenAPI Callback Object), described by path items.
+Requests an operation may send to a URL given at runtime (OpenAPI Callback Object), described by path items. A reusable callback may be shared by several operations.
 
 ## Relations
 ======================
@@ -8,12 +8,12 @@ Requests an operation may send to a URL given at runtime (OpenAPI Callback Objec
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `components` | `OPCallback` | `callbacks` | `OPComponents` | The components owning the object, when it is a reusable one.|
-| `operation` | `OPCallback` | `callbacks` | `OPOperation` | The operation owning the callback, when it is declared inline.|
 
-### Children
+### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `pathItems` | `OPCallback` | `callback` | `OPPath` | Path items describing the requests sent to the callback URL expressions.|
+| `pathItems` | `OPCallback` | `usedByCallbacks` | `OPPath` | Path items describing the requests sent to the callback URL expressions. A path item may be shared by several callbacks.|
+| `usedByOperations` | `OPCallback` | `callbacks` | `OPOperation` | Operations using this callback.|
 
 
 ## Properties
@@ -35,8 +35,8 @@ Class {
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#components => FMOne type: #OPComponents opposite: #callbacks',
-		'#operation => FMOne type: #OPOperation opposite: #callbacks',
-		'#pathItems => FMMany type: #OPPath opposite: #callback'
+		'#pathItems => FMMany type: #OPPath opposite: #usedByCallbacks',
+		'#usedByOperations => FMMany type: #OPOperation opposite: #callbacks'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -60,6 +60,14 @@ OPCallback >> addPathItem: anObject [
 	^ self pathItems add: anObject
 ]
 
+{ #category : 'adding' }
+OPCallback >> addUsedByOperation: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByOperations add: anObject
+]
+
 { #category : 'accessing' }
 OPCallback >> components [
 	"Relation named: #components type: #OPComponents opposite: #callbacks"
@@ -80,31 +88,12 @@ OPCallback >> components: anObject [
 ]
 
 { #category : 'accessing' }
-OPCallback >> operation [
-	"Relation named: #operation type: #OPOperation opposite: #callbacks"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'The operation owning the callback, when it is declared inline.'>
-	<container>
-	^ operation
-]
-
-{ #category : 'accessing' }
-OPCallback >> operation: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	operation := anObject
-]
-
-{ #category : 'accessing' }
 OPCallback >> pathItems [
-	"Relation named: #pathItems type: #OPPath opposite: #callback"
+	"Relation named: #pathItems type: #OPPath opposite: #usedByCallbacks"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Path items describing the requests sent to the callback URL expressions.'>
+	<FMComment: 'Path items describing the requests sent to the callback URL expressions. A path item may be shared by several callbacks.'>
 	^ pathItems
 ]
 
@@ -114,4 +103,22 @@ OPCallback >> pathItems: anObject [
 	<ignoreForCoverage>
 	<generated>
 	pathItems value: anObject
+]
+
+{ #category : 'accessing' }
+OPCallback >> usedByOperations [
+	"Relation named: #usedByOperations type: #OPOperation opposite: #callbacks"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Operations using this callback.'>
+	^ usedByOperations
+]
+
+{ #category : 'accessing' }
+OPCallback >> usedByOperations: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByOperations value: anObject
 ]

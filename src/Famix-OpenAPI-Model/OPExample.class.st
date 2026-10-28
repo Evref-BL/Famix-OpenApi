@@ -1,5 +1,5 @@
 "
-An example value (OpenAPI Example Object), inline or reusable.
+An example value (OpenAPI Example Object), inline or reusable. A reusable example may be shared by several parameters and media types.
 
 ## Relations
 ======================
@@ -8,8 +8,12 @@ An example value (OpenAPI Example Object), inline or reusable.
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `components` | `OPExample` | `examples` | `OPComponents` | The components owning the object, when it is a reusable one.|
-| `mediaType` | `OPExample` | `examples` | `OPMediaType` | The media type declaring the example.|
-| `parameter` | `OPExample` | `examples` | `OPParameter` | The parameter declaring the example.|
+
+### Other
+| Relation | Origin | Opposite | Type | Comment |
+|---|
+| `usedByMediaTypes` | `OPExample` | `examples` | `OPMediaType` | Media types using this example.|
+| `usedByParameters` | `OPExample` | `examples` | `OPParameter` | Parameters using this example.|
 
 
 ## Properties
@@ -35,9 +39,9 @@ Class {
 	#instVars : [
 		'#components => FMOne type: #OPComponents opposite: #examples',
 		'#externalValue => FMProperty',
-		'#mediaType => FMOne type: #OPMediaType opposite: #examples',
-		'#parameter => FMOne type: #OPParameter opposite: #examples',
 		'#summary => FMProperty',
+		'#usedByMediaTypes => FMMany type: #OPMediaType opposite: #examples',
+		'#usedByParameters => FMMany type: #OPParameter opposite: #examples',
 		'#value => FMProperty'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
@@ -52,6 +56,22 @@ OPExample class >> annotation [
 	<FMClass: #Example super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
+]
+
+{ #category : 'adding' }
+OPExample >> addUsedByMediaType: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByMediaTypes add: anObject
+]
+
+{ #category : 'adding' }
+OPExample >> addUsedByParameter: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByParameters add: anObject
 ]
 
 { #category : 'accessing' }
@@ -91,44 +111,6 @@ OPExample >> externalValue: anObject [
 ]
 
 { #category : 'accessing' }
-OPExample >> mediaType [
-	"Relation named: #mediaType type: #OPMediaType opposite: #examples"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'The media type declaring the example.'>
-	<container>
-	^ mediaType
-]
-
-{ #category : 'accessing' }
-OPExample >> mediaType: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	mediaType := anObject
-]
-
-{ #category : 'accessing' }
-OPExample >> parameter [
-	"Relation named: #parameter type: #OPParameter opposite: #examples"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'The parameter declaring the example.'>
-	<container>
-	^ parameter
-]
-
-{ #category : 'accessing' }
-OPExample >> parameter: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	parameter := anObject
-]
-
-{ #category : 'accessing' }
 OPExample >> summary [
 
 	<FMProperty: #summary type: #String>
@@ -143,6 +125,42 @@ OPExample >> summary: anObject [
 	<ignoreForCoverage>
 	<generated>
 	summary := anObject
+]
+
+{ #category : 'accessing' }
+OPExample >> usedByMediaTypes [
+	"Relation named: #usedByMediaTypes type: #OPMediaType opposite: #examples"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Media types using this example.'>
+	^ usedByMediaTypes
+]
+
+{ #category : 'accessing' }
+OPExample >> usedByMediaTypes: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByMediaTypes value: anObject
+]
+
+{ #category : 'accessing' }
+OPExample >> usedByParameters [
+	"Relation named: #usedByParameters type: #OPParameter opposite: #examples"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Parameters using this example.'>
+	^ usedByParameters
+]
+
+{ #category : 'accessing' }
+OPExample >> usedByParameters: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByParameters value: anObject
 ]
 
 { #category : 'accessing' }

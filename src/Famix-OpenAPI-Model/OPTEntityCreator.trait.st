@@ -485,6 +485,22 @@ OPTEntityCreator >> newServerVariableNamed: aName [
 ]
 
 { #category : 'entity creation' }
+OPTEntityCreator >> newSubSchema [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPSubSchema new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newSubSchemaNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPSubSchema named: aName)
+]
+
+{ #category : 'entity creation' }
 OPTEntityCreator >> newTag [
 
 	<ignoreForCoverage>

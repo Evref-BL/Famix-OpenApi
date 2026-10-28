@@ -14,8 +14,12 @@ A response of an operation for one status code (OpenAPI Response Object). A reus
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `content` | `OPContentContainer` | `contentOwner` | `OPMediaType` | Payload descriptions of the entity, one per media type.|
-| `headers` | `OPResponse` | `response` | `OPHeader` | Headers of the response.|
-| `links` | `OPResponse` | `response` | `OPLink` | Operations that can be followed from the response.|
+
+### Other
+| Relation | Origin | Opposite | Type | Comment |
+|---|
+| `headers` | `OPResponse` | `usedByResponses` | `OPHeader` | Headers of the response. A header may be shared by several responses.|
+| `links` | `OPResponse` | `usedByResponses` | `OPLink` | Links of the response, toward operations that can be followed from it. A link may be shared by several responses.|
 
 
 ## Properties
@@ -40,8 +44,8 @@ Class {
 	#instVars : [
 		'#components => FMOne type: #OPComponents opposite: #responses',
 		'#description => FMProperty',
-		'#headers => FMMany type: #OPHeader opposite: #response',
-		'#links => FMMany type: #OPLink opposite: #response',
+		'#headers => FMMany type: #OPHeader opposite: #usedByResponses',
+		'#links => FMMany type: #OPLink opposite: #usedByResponses',
 		'#operation => FMOne type: #OPOperation opposite: #responses',
 		'#statusCode => FMProperty'
 	],
@@ -113,11 +117,11 @@ OPResponse >> description: anObject [
 
 { #category : 'accessing' }
 OPResponse >> headers [
-	"Relation named: #headers type: #OPHeader opposite: #response"
+	"Relation named: #headers type: #OPHeader opposite: #usedByResponses"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Headers of the response.'>
+	<FMComment: 'Headers of the response. A header may be shared by several responses.'>
 	^ headers
 ]
 
@@ -131,11 +135,11 @@ OPResponse >> headers: anObject [
 
 { #category : 'accessing' }
 OPResponse >> links [
-	"Relation named: #links type: #OPLink opposite: #response"
+	"Relation named: #links type: #OPLink opposite: #usedByResponses"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Operations that can be followed from the response.'>
+	<FMComment: 'Links of the response, toward operations that can be followed from it. A link may be shared by several responses.'>
 	^ links
 ]
 

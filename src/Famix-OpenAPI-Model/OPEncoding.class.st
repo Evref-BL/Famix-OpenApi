@@ -9,10 +9,10 @@ Serialization rules applied to one property of a media type schema (OpenAPI Enco
 |---|
 | `mediaType` | `OPEncoding` | `encodings` | `OPMediaType` | The media type declaring the encoding.|
 
-### Children
+### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `headers` | `OPEncoding` | `encoding` | `OPHeader` | Headers sent with the encoded part.|
+| `headers` | `OPEncoding` | `usedByEncodings` | `OPHeader` | Headers sent with the encoded part. A header may be shared by several encodings.|
 
 
 ## Properties
@@ -40,7 +40,7 @@ Class {
 		'#allowReserved => FMProperty',
 		'#contentType => FMProperty',
 		'#explode => FMProperty',
-		'#headers => FMMany type: #OPHeader opposite: #encoding',
+		'#headers => FMMany type: #OPHeader opposite: #usedByEncodings',
 		'#mediaType => FMOne type: #OPMediaType opposite: #encodings',
 		'#propertyName => FMProperty',
 		'#style => FMProperty'
@@ -120,11 +120,11 @@ OPEncoding >> explode: anObject [
 
 { #category : 'accessing' }
 OPEncoding >> headers [
-	"Relation named: #headers type: #OPHeader opposite: #encoding"
+	"Relation named: #headers type: #OPHeader opposite: #usedByEncodings"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Headers sent with the encoded part.'>
+	<FMComment: 'Headers sent with the encoded part. A header may be shared by several encodings.'>
 	^ headers
 ]
 
