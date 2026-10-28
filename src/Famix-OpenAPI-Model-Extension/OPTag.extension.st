@@ -2,14 +2,14 @@ Extension { #name : 'OPTag' }
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
 OPTag >> anApi [
-	"Deprecated alias of #api (old opposite name), kept for one cycle."
+	"Deprecated alias of #openApi (former name of the opposite of OpenApi>>tags), kept for one cycle."
 
-	^ self api
+	^ self openApi
 ]
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
-OPTag >> anApi: anApi [
-	"Deprecated alias of #api: (old opposite name), kept for one cycle."
+OPTag >> anApi: anOpenApi [
+	"Deprecated alias of #openApi: (former name of the opposite of OpenApi>>tags), kept for one cycle."
 
-	self api: anApi
+	self openApi: anOpenApi
 ]

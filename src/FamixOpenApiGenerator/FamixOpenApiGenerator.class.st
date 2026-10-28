@@ -1,3 +1,11 @@
+"
+Generates the Famix-OpenAPI-Model package (prefix OP): the entities of an OpenAPI 3.1 document. Swagger 2.0 and OpenAPI 3.0.x documents are normalised to this shape by the importer.
+
+The entities are listed once in #entityDefinitions and the traits in #traitDefinitions. Attributes are declared by the #definePropertiesOf* methods and relations by the #defineRelationsOf* methods, as rows interpreted by #defineAttributesIn:rows: and #defineRelationsIn:.
+
+Regenerate with FamixOpenApiGenerator new generate (not generateWithCleaning, which removes the whole package, including the extension methods that the Famix-OpenAPI-Model-Extension package adds to the generated classes). Classes of removed entities must then be removed by hand.
+Never edit the generated classes: change this generator.
+"
 Class {
 	#name : 'FamixOpenApiGenerator',
 	#superclass : 'FamixMetamodelGenerator',
@@ -34,684 +42,42 @@ FamixOpenApiGenerator >> attribute: aName in: aBehavior type: aTypeName comment:
 	^ property
 ]
 
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> canonicalEntityNames [
-	"Names of the entities added for the canonical OpenAPI 3.1 shape."
+{ #category : 'private' }
+FamixOpenApiGenerator >> behaviorNamed: aSymbol [
+	"Answer the entity or the trait named aSymbol."
 
-	^ #( OpenApi Server ServerVariable Encoding Discriminator
-	     DiscriminatorMapping OAuthFlow Reference ExternalDocumentation
-	      )
+	^ entities at: aSymbol ifAbsent: [ traits at: aSymbol ]
 ]
 
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> canonicalNodeEntityNames [
-	"Names of the original entities that also use the CanonicalNode trait. The entities that disappear in the next regeneration (Api, ExternalDocs, XMLElement, ItemsDefinition, ContainedCollections and the Entry wrappers) are left out."
+{ #category : 'definition-helpers' }
+FamixOpenApiGenerator >> defineAttributesIn: aBehaviorName rows: aCollection [
+	"Define attributes on the entity or trait named aBehaviorName. Each row is { attribute name. type name (#String, #Number, #Boolean or #Strings for a collection of Strings). comment }."
 
-	^ #( Components Info Contact License Path Operation Parameter
-	     Schema Response Header Tag SecurityScheme Example RequestBody
-	     MediaType Link Callback SecurityScope SecurityRequirement
-	     Property RequiredSecurityScheme )
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalClasses [
-	"Entities of the canonical OpenAPI 3.1 shape, added next to the original entities (the original ones are removed in a later regeneration)."
-
-	self
-		defineEntityNamed: #OpenApi
-		comment:
-		'An OpenAPI description document (OpenAPI Object), root of the canonical 3.1 shape. Swagger 2.0 and OpenAPI 3.0.x documents are normalised to this shape by the importer.'.
-	self
-		defineEntityNamed: #Server
-		comment:
-		'A server hosting the API (OpenAPI Server Object), declared at document, path item or operation level.'.
-	self
-		defineEntityNamed: #ServerVariable
-		comment:
-		'A variable substituted in the URL template of a Server (OpenAPI Server Variable Object). Its name is the variable name.'.
-	self
-		defineEntityNamed: #Encoding
-		comment:
-		'Serialization rules applied to one property of a media type schema (OpenAPI Encoding Object).'.
-	self
-		defineEntityNamed: #Discriminator
-		comment:
-		'Hint used to select, among oneOf/anyOf/allOf alternatives, the schema matching a payload (OpenAPI Discriminator Object).'.
-	self
-		defineEntityNamed: #DiscriminatorMapping
-		comment:
-		'One entry of the mapping of a Discriminator: a discriminating value (its name) bound to the schema it selects.'.
-	self
-		defineEntityNamed: #OAuthFlow
-		comment:
-		'One OAuth2 flow of a security scheme (OpenAPI OAuth Flow Object): implicit, password, clientCredentials or authorizationCode.'.
-	self
-		defineEntityNamed: #Reference
-		comment:
-		'Placeholder for a $ref that cannot be resolved to an entity of the model, for instance a reference to an external document (OpenAPI Reference Object).'.
-	self
-		defineEntityNamed: #ExternalDocumentation
-		comment:
-		'A reference to external documentation (OpenAPI External Documentation Object).'
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalComponentsRelations [
-	"Reusable objects: each one is owned by the components and shared by reference. Each row is: provisional relation name, target entity, final relation name, description."
-
-	| components |
-	components := self entityNamed: #Components.
-	#( #( #directSchemas #Schema 'schemas' 'reusable schemas' )
-	   #( #directResponses #Response 'responses' 'reusable responses' )
-	   #( #directParameters #Parameter 'parameters' 'reusable parameters' )
-	   #( #directRequestBodies #RequestBody 'requestBodies'
-	      'reusable request bodies' )
-	   #( #directHeaders #Header 'headers' 'reusable headers' )
-	   #( #directExamples #Example 'examples' 'reusable examples' )
-	   #( #directLinks #Link 'links' 'reusable links' )
-	   #( #directCallbacks #Callback 'callbacks' 'reusable callbacks' )
-	   #( #directSecuritySchemes #SecurityScheme 'securitySchemes'
-	      'reusable security schemes' ) ) do: [ :row |
-		| target |
-		target := self entityNamed: (row at: 2).
-		((components property: (row at: 1)) comment:
-			 ('Reference {1} from Components to {2} [0..*]: {4} (provisional name of {3}).'
-				  format: {
-						  (row at: 1).
-						  (row at: 2).
-						  (row at: 3).
-						  (row at: 4) })) <>-* ((target property: #components) comment:
-			 ('Opposite reference components from {1} to Components [0..1], when the object is a reusable one.'
-				  format: { (row at: 2) })) ].
-	((components property: #pathItems) comment:
-		 'Reference pathItems from Components to Path [0..*]: reusable path items.')
-	<>-* (((self entityNamed: #Path) property: #components) comment:
-			 'Opposite reference components from Path to Components [0..1], when the path item is a reusable one.')
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalDocumentProperties [
-
-	| openApi server variable encoding |
-	openApi := self entityNamed: #OpenApi.
-	self
-		attribute: #sourceVersion
-		in: openApi
-		type: #String
-		comment:
-		'Version of the specification as read from the source document: 2.0, 3.0.x or 3.1.x [1].'.
-	self
-		attribute: #openapiVersion
-		in: openApi
-		type: #String
-		comment: 'Value of the openapi field of the canonical document [1].'.
-	self
-		attribute: #jsonSchemaDialect
-		in: openApi
-		type: #String
-		comment:
-		'URI of the JSON Schema dialect used by the schemas of the document (jsonSchemaDialect field) [1].'.
-	self
-		attribute: #selfUrl
-		in: openApi
-		type: #String
-		comment:
-		'URI under which the document is available ($self field) [1].'.
-	server := self entityNamed: #Server.
-	self
-		attribute: #url
-		in: server
-		type: #String
-		comment: 'URL template of the server [1].'.
-	self
-		attribute: #description
-		in: server
-		type: #String
-		comment: 'Description of the server [1].'.
-	variable := self entityNamed: #ServerVariable.
-	self
-		attribute: #defaultValue
-		in: variable
-		type: #String
-		comment: 'Value used when the variable is not provided [1].'.
-	self
-		attribute: #description
-		in: variable
-		type: #String
-		comment: 'Description of the server variable [1].'.
-	self
-		stringCollection: #enumValues
-		in: variable
-		comment: 'Allowed values of the server variable [*] (strings).'.
-	encoding := self entityNamed: #Encoding.
-	self
-		attribute: #propertyName
-		in: encoding
-		type: #String
-		comment:
-		'Name of the media type schema property this encoding applies to [1].'.
-	self
-		attribute: #contentType
-		in: encoding
-		type: #String
-		comment: 'Content type(s) accepted for the property [1].'.
-	self
-		attribute: #style
-		in: encoding
-		type: #String
-		comment: 'Serialization style of the property [1].'.
-	self
-		attribute: #explode
-		in: encoding
-		type: #Boolean
-		comment:
-		'Whether array and object values generate separate parameters [1].'.
-	self
-		attribute: #allowReserved
-		in: encoding
-		type: #Boolean
-		comment: 'Whether reserved characters are left unescaped [1].'.
-	self
-		attribute: #description
-		in: (self entityNamed: #ExternalDocumentation)
-		type: #String
-		comment: 'Description of the external documentation [1].'.
-	self
-		attribute: #url
-		in: (self entityNamed: #ExternalDocumentation)
-		type: #String
-		comment: 'URL of the external documentation [1].'.
-	self
-		attribute: #target
-		in: (self entityNamed: #Reference)
-		type: #String
-		comment: 'The $ref URI that could not be resolved [1].'.
-	self
-		attribute: #summary
-		in: (self entityNamed: #Reference)
-		type: #String
-		comment: 'Summary overriding the one of the referenced object [1].'.
-	self
-		attribute: #description
-		in: (self entityNamed: #Reference)
-		type: #String
-		comment:
-		'Description overriding the one of the referenced object [1].'.
-	self
-		attribute: #summary
-		in: (self entityNamed: #Example)
-		type: #String
-		comment: 'Short description of the example [1].'.
-	self
-		attribute: #externalValue
-		in: (self entityNamed: #Example)
-		type: #String
-		comment: 'URL of a document holding the example value [1].'
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalDocumentRelations [
-
-	| openApi |
-	openApi := self entityNamed: #OpenApi.
-	((openApi property: #info) comment:
-		 'Reference info from OpenApi to Info [0..1]: metadata of the API.')
-	<>- (((self entityNamed: #Info) property: #openApi) comment: 'Opposite reference openApi from Info to OpenApi [0..1].').
-	((openApi property: #servers) comment:
-		 'Reference servers from OpenApi to Server [0..*]: servers hosting the API.')
-	<>-* (((self entityNamed: #Server) property: #openApi) comment:
-			 'Opposite reference openApi from Server to OpenApi [0..1], when the server is declared at document level.').
-	((openApi property: #paths) comment:
-		 'Reference paths from OpenApi to Path [0..*]: the path items of the API.')
-	<>-* (((self entityNamed: #Path) property: #openApi) comment:
-			 'Opposite reference openApi from Path to OpenApi [0..1], when the path item is declared in paths.').
-	((openApi property: #webhooks) comment:
-		 'Reference webhooks from OpenApi to Path [0..*]: path items describing the requests the API may send (OpenAPI 3.1 webhooks).')
-	<>-* (((self entityNamed: #Path) property: #webhookOf) comment:
-			 'Opposite reference webhookOf from Path to OpenApi [0..1], when the path item is declared in webhooks.').
-	((openApi property: #components) comment:
-		 'Reference components from OpenApi to Components [0..1]: reusable objects of the API.')
-	<>- (((self entityNamed: #Components) property: #openApi) comment:
-			 'Opposite reference openApi from Components to OpenApi [0..1].').
-	((openApi property: #tags) comment:
-		 'Reference tags from OpenApi to Tag [0..*]: tags declared by the document.')
-	<>-* (((self entityNamed: #Tag) property: #openApi) comment:
-			 'Opposite reference openApi from Tag to OpenApi [0..1].').
-	((openApi property: #securityRequirements) comment:
-		 'Reference securityRequirements from OpenApi to SecurityRequirement [0..*]: security applied to every operation by default.')
-	<>-* (((self entityNamed: #SecurityRequirement) property: #openApi)
-			 comment:
-			 'Opposite reference openApi from SecurityRequirement to OpenApi [0..1].').
-	((openApi property: #externalDocs) comment:
-		 'Reference externalDocs from OpenApi to ExternalDocumentation [0..1].')
-	<>- (((self entityNamed: #ExternalDocumentation) property: #openApi) comment: 'Opposite reference openApi from ExternalDocumentation to OpenApi [0..1].').
-	(((self entityNamed: #Server) property: #variables) comment:
-		 'Reference variables from Server to ServerVariable [0..*]: substitutions of the URL template.')
-	<>-*
-		(((self entityNamed: #ServerVariable) property: #server) comment:
-			 'Opposite reference server from ServerVariable to Server [0..1].').
-	(((self entityNamed: #Path) property: #servers) comment:
-		 'Reference servers from Path to Server [0..*]: servers overriding the document ones for this path item.')
-	<>-* (((self entityNamed: #Server) property: #path) comment:
-			 'Opposite reference path from Server to Path [0..1], when the server is declared by a path item.').
-	(((self entityNamed: #Operation) property: #servers) comment:
-		 'Reference servers from Operation to Server [0..*]: servers overriding the ones of the path item for this operation.')
-	<>-* (((self entityNamed: #Server) property: #operation) comment:
-			 'Opposite reference operation from Server to Operation [0..1], when the server is declared by an operation.').
-	(((self entityNamed: #Link) property: #server) comment:
-		 'Reference server from Link to Server [0..1]: server used by the linked operation.')
-	<>- (((self entityNamed: #Server) property: #link) comment:
-			 'Opposite reference link from Server to Link [0..1], when the server is declared by a link.').
-	(((self traitNamed: #ExternalDocsContainer) property:
-		  #externalDocumentation) comment:
-		 'Reference externalDocumentation from ExternalDocsContainer to ExternalDocumentation [0..1]: provisional name of externalDocs.')
-	<>- (((self entityNamed: #ExternalDocumentation) property: #externalDocsContainer) comment: 'Opposite reference externalDocsContainer from ExternalDocumentation to ExternalDocsContainer [0..1]: the operation, schema or tag that declares the documentation.')
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalHierarchy [
-
-	self canonicalEntityNames , self canonicalNodeEntityNames do: [
-		:entityName |
-		(self entityNamed: entityName)
-		--|> (self traitNamed: #CanonicalNode) ].
-	self canonicalEntityNames do: [ :entityName |
-		(self entityNamed: entityName) --|> #TNamedEntity.
-		(self entityNamed: entityName) --|> (self traitNamed: #SourceText) ].
-	"Parameters may carry their payload description in a content map, like request bodies and responses."
-	(self entityNamed: #Parameter)
-	--|> (self traitNamed: #ContentContainer)
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalNodeProperties [
-
-	self
-		attribute: #canonicalPointer
-		in: (self traitNamed: #CanonicalNode)
-		type: #String
-		comment:
-		'JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].'.
-	self
-		attribute: #extensions
-		in: (self traitNamed: #CanonicalNode)
-		type: #String
-		comment:
-		'Specification extensions (x-* keys) of the source node, as a JSON object text [1].'
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalOperationProperties [
-
-	| parameter header |
-	self
-		attribute: #statusCode
-		in: (self entityNamed: #Response)
-		type: #String
-		comment:
-		'HTTP status code of the response, a range or default: 200, 2XX or default [1].'.
-	self
-		attribute: #mediaType
-		in: (self entityNamed: #MediaType)
-		type: #String
-		comment:
-		'Media type (MIME type) described, for example application/json [1].'.
-	self
-		stringCollection: #tagNames
-		in: (self entityNamed: #Operation)
-		comment:
-		'Names of the tags of the operation as written in the source [*] (strings). Use #tags to get the Tag entities.'.
-	parameter := self entityNamed: #Parameter.
-	self
-		attribute: #style
-		in: parameter
-		type: #String
-		comment: 'Serialization style of the parameter value [1].'.
-	self
-		attribute: #explode
-		in: parameter
-		type: #Boolean
-		comment:
-		'Whether array and object values generate separate parameters [1].'.
-	self
-		attribute: #allowReserved
-		in: parameter
-		type: #Boolean
-		comment:
-		'Whether reserved characters are left unescaped in the value [1].'.
-	self
-		attribute: #deprecated
-		in: parameter
-		type: #Boolean
-		comment: 'Whether the parameter is deprecated [1].'.
-	header := self entityNamed: #Header.
-	self
-		attribute: #required
-		in: header
-		type: #Boolean
-		comment: 'Whether the header is mandatory [1].'.
-	self
-		attribute: #deprecated
-		in: header
-		type: #Boolean
-		comment: 'Whether the header is deprecated [1].'.
-	self
-		attribute: #style
-		in: header
-		type: #String
-		comment: 'Serialization style of the header value [1].'.
-	self
-		attribute: #explode
-		in: header
-		type: #Boolean
-		comment: 'Whether array and object values are exploded [1].'
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalOperationRelations [
-
-	| operation response mediaType callback |
-	operation := self entityNamed: #Operation.
-	response := self entityNamed: #Response.
-	mediaType := self entityNamed: #MediaType.
-	callback := self entityNamed: #Callback.
-	((operation property: #directResponses) comment:
-		 'Reference directResponses from Operation to Response [0..*]: responses by status code (provisional name of responses).')
-	<>-* ((response property: #operation) comment:
-			 'Opposite reference operation from Response to Operation [0..1], when the response is declared inline by an operation.').
-	((operation property: #directCallbacks) comment:
-		 'Reference directCallbacks from Operation to Callback [0..*]: callbacks the operation may trigger (provisional name of callbacks).')
-	<>-* ((callback property: #operation) comment:
-			 'Opposite reference operation from Callback to Operation [0..1], when the callback is declared inline by an operation.').
-	((operation property: #securityRequirements) comment:
-		 'Reference securityRequirements from Operation to SecurityRequirement [0..*]: security of the operation, overriding the document one.')
-	<>-*
-		(((self entityNamed: #SecurityRequirement) property: #operation)
-			 comment:
-			 'Opposite reference operation from SecurityRequirement to Operation [0..1].').
-	(((self traitNamed: #ContentContainer) property: #directContent)
-		 comment:
-		 'Reference directContent from ContentContainer to MediaType [0..*]: payload descriptions by media type (provisional name of content).')
-	<>-* ((mediaType property: #contentOwner) comment:
-			 'Opposite reference contentOwner from MediaType to ContentContainer [0..1]: the response, request body or parameter that declares the media type.').
-	((mediaType property: #encodings) comment:
-		 'Reference encodings from MediaType to Encoding [0..*]: serialization rules of the schema properties.')
-	<>-* (((self entityNamed: #Encoding) property: #mediaType) comment:
-			 'Opposite reference mediaType from Encoding to MediaType [0..1].').
-	((mediaType property: #directExamples) comment:
-		 'Reference directExamples from MediaType to Example [0..*]: examples of the media type (provisional name of examples).')
-	<>-* (((self entityNamed: #Example) property: #mediaType) comment:
-			 'Opposite reference mediaType from Example to MediaType [0..1].').
-	(((self entityNamed: #Parameter) property: #examples) comment:
-		 'Reference examples from Parameter to Example [0..*].')
-	<>-* (((self entityNamed: #Example) property: #parameter) comment:
-			 'Opposite reference parameter from Example to Parameter [0..1].').
-	(((self entityNamed: #Encoding) property: #headers) comment:
-		 'Reference headers from Encoding to Header [0..*]: headers sent with the encoded part.')
-	<>-* (((self entityNamed: #Header) property: #encoding) comment:
-			 'Opposite reference encoding from Header to Encoding [0..1].').
-	((response property: #links) comment:
-		 'Reference links from Response to Link [0..*]: operations that can be followed from the response.')
-	<>-* (((self entityNamed: #Link) property: #response) comment:
-			 'Opposite reference response from Link to Response [0..1].').
-	(((self entityNamed: #Link) property: #operation) comment:
-		 'Reference operation from Link to Operation [0..1]: the linked operation (operationId or operationRef resolved).')
-	*- (((self entityNamed: #Operation) property: #usedByLinks) comment:
-			 'Links targeting this Operation [0..*].').
-	(((callback property: #pathItems) comment: 'Reference pathItems from Callback to Path [0..*]: path items describing the requests sent to the callback URL expressions.') <>-* (((self entityNamed: #Path) property: #callback) comment: 'Opposite reference callback from Path to Callback [0..1], when the path item is declared by a callback.'))
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalProperties [
-	"Attributes of the canonical OpenAPI 3.1 shape: on the new entities and on the original entities that are kept."
-
-	self defineCanonicalNodeProperties.
-	self defineCanonicalDocumentProperties.
-	self defineCanonicalOperationProperties.
-	self defineCanonicalSchemaProperties.
-	self defineCanonicalSecurityProperties
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalRelations [
-	"Relations of the canonical OpenAPI 3.1 shape. Containment relations (<>-, <>-*) have a single owner, either the components or the inline declaration; references shared by several owners are many-to-one (*-) or many-to-many (*-*). A relation whose final name is already used by an original relation toward an Entry wrapper has a provisional name prefixed with direct (or the one given in #provisionalRelationNames); the next regeneration deletes the original relation and renames the new one."
-
-	self defineCanonicalDocumentRelations.
-	self defineCanonicalComponentsRelations.
-	self defineCanonicalOperationRelations.
-	self defineCanonicalSchemaRelations.
-	self defineCanonicalSecurityRelations
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalSchemaProperties [
-
-	| schema |
-	schema := self entityNamed: #Schema.
-	self
-		stringCollection: #types
-		in: schema
-		comment:
-		'JSON Schema types of the schema [*] (strings such as string, integer, null); several values for a 3.1 type array.'.
-	self
-		attribute: #isNullable
-		in: schema
-		type: #Boolean
-		comment:
-		'Whether null is an accepted value (nullable in 3.0, null among the types in 3.1) [1].'.
-	self
-		attribute: #enumValues
-		in: schema
-		type: #String
-		comment: 'Allowed values of the schema, as a JSON array text [1].'.
-	self
-		attribute: #constValue
-		in: schema
-		type: #String
-		comment:
-		'The only allowed value of the schema (const), as JSON text [1].'.
-	self
-		attribute: #defaultValue
-		in: schema
-		type: #String
-		comment: 'Default value of the schema, as JSON text [1].'.
-	self
-		attribute: #exampleValue
-		in: schema
-		type: #String
-		comment: 'Example value of the schema, as JSON text [1].'.
-	self
-		attribute: #deprecated
-		in: schema
-		type: #Boolean
-		comment: 'Whether the schema is deprecated [1].'.
-	self
-		attribute: #writeOnly
-		in: schema
-		type: #Boolean
-		comment:
-		'Whether the value is only sent to the server, never returned [1].'.
-	self
-		stringCollection: #requiredProperties
-		in: schema
-		comment:
-		'Names of the properties that are mandatory in an instance of the schema [*] (strings).'.
-	self
-		attribute: #value
-		in: (self entityNamed: #DiscriminatorMapping)
-		type: #String
-		comment:
-		'Name or reference of the schema selected by the discriminating value, as written in the source [1].'.
-	self
-		attribute: #propertyName
-		in: (self entityNamed: #Discriminator)
-		type: #String
-		comment:
-		'Name of the property whose value discriminates the schemas [1].'.
-	self
-		attribute: #isRequired
-		in: (self entityNamed: #Property)
-		type: #Boolean
-		comment:
-		'Whether the property is listed as required by its declaring schema [1].'
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalSchemaRelations [
-
-	| schema |
-	schema := self entityNamed: #Schema.
-	((schema property: #oneOf) comment:
-		 'Reference oneOf from Schema to Schema [0..*]: alternatives of which exactly one must match.')
-	*-* ((schema property: #usedAsOneOfBy) comment:
-			 'Schemas having this Schema in their oneOf [0..*].').
-	((schema property: #anyOf) comment:
-		 'Reference anyOf from Schema to Schema [0..*]: alternatives of which at least one must match.')
-	*-* ((schema property: #usedAsAnyOfBy) comment:
-			 'Schemas having this Schema in their anyOf [0..*].').
-	((schema property: #not) comment:
-		 'Reference not from Schema to Schema [0..1]: schema that must not match.')
-	*- ((schema property: #usedAsNotBy) comment:
-			 'Schemas having this Schema as their not [0..*].').
-	((schema property: #prefixItems) comment:
-		 'Reference prefixItems from Schema to Schema [0..*]: schemas of the first array items, in order.')
-	*-* ((schema property: #usedAsPrefixItemsBy) comment:
-			 'Schemas having this Schema in their prefixItems [0..*].').
-	((schema property: #discriminatorEntity) comment:
-		 'Reference discriminatorEntity from Schema to Discriminator [0..1].')
-	<>- (((self entityNamed: #Discriminator) property: #schema) comment:
-			 'Opposite reference schema from Discriminator to Schema [0..1].').
-	(((self entityNamed: #Discriminator) property: #mapping) comment:
-		 'Reference mapping from Discriminator to DiscriminatorMapping [0..*].')
-	<>-*
-		(((self entityNamed: #DiscriminatorMapping) property: #discriminator)
-			 comment:
-			 'Opposite reference discriminator from DiscriminatorMapping to Discriminator [0..1].').
-	(((self entityNamed: #DiscriminatorMapping) property: #schema)
-		 comment:
-		 'Reference schema from DiscriminatorMapping to Schema [0..1]: the selected schema.')
-	*- ((schema property: #usedByDiscriminatorMappings) comment:
-			 'Discriminator mappings selecting this Schema [0..*].').
-	(((self entityNamed: #Property) property: #valueSchema) comment:
-		 'Reference valueSchema from Property to Schema [0..1]: schema of the property value.')
-	*- ((schema property: #usedAsPropertyValueBy) comment:
-			 'Properties whose value schema is this Schema [0..*].')
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalSecurityProperties [
-
-	| flow scheme |
-	flow := self entityNamed: #OAuthFlow.
-	self
-		attribute: #flowType
-		in: flow
-		type: #String
-		comment:
-		'Kind of flow: implicit, password, clientCredentials or authorizationCode [1].'.
-	self
-		attribute: #authorizationUrl
-		in: flow
-		type: #String
-		comment: 'Authorization URL of the flow [1].'.
-	self
-		attribute: #tokenUrl
-		in: flow
-		type: #String
-		comment: 'Token URL of the flow [1].'.
-	self
-		attribute: #refreshUrl
-		in: flow
-		type: #String
-		comment: 'URL used to obtain refresh tokens [1].'.
-	scheme := self entityNamed: #SecurityScheme.
-	self
-		attribute: #inLocation
-		in: scheme
-		type: #String
-		comment:
-		'Location of an apiKey credential: query, header or cookie (the in field) [1].'.
-	self
-		attribute: #parameterName
-		in: scheme
-		type: #String
-		comment:
-		'Name of the header, query or cookie parameter carrying an apiKey credential (the name field) [1].'
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalSecurityRelations [
-
-	(((self entityNamed: #SecurityScheme) property: #flows) comment:
-		 'Reference flows from SecurityScheme to OAuthFlow [0..*]: OAuth2 flows supported by the scheme.')
-	<>-*
-		(((self entityNamed: #OAuthFlow) property: #securityScheme)
-			 comment:
-			 'Opposite reference securityScheme from OAuthFlow to SecurityScheme [0..1].').
-	(((self entityNamed: #OAuthFlow) property: #scopes) comment:
-		 'Reference scopes from OAuthFlow to SecurityScope [0..*]: scopes of the flow with their description.')
-	<>-*
-		(((self entityNamed: #SecurityScope) property: #oauthFlow) comment:
-			 'Opposite reference oauthFlow from SecurityScope to OAuthFlow [0..1].')
-]
-
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> defineCanonicalTraits [
-	"Trait of the canonical OpenAPI 3.1 shape."
-
-	self
-		defineTraitNamed: #CanonicalNode
-		comment:
-		'Common part of the entities of the canonical OpenAPI 3.1 shape: the JSON pointer of the entity in the canonical document and its specification extensions (x-* keys).'
+	| behavior |
+	behavior := self behaviorNamed: aBehaviorName.
+	aCollection do: [ :row |
+		row second = #Strings
+			ifTrue: [
+			self stringCollection: row first in: behavior comment: row third ]
+			ifFalse: [
+				self
+					attribute: row first
+					in: behavior
+					type: row second
+					comment: row third ] ]
 ]
 
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineClasses [
-    super defineClasses.
-    entities := Dictionary new.
-    self defineEntityNamed: #ContainedCollections.
-    self defineEntityNamed: #Api.
-    self defineEntityNamed: #Components.
-    self defineEntityNamed: #Info.
-    self defineEntityNamed: #Contact.
-    self defineEntityNamed: #License.
-    self defineEntityNamed: #Path.
-    self defineEntityNamed: #Operation.
-    self defineEntityNamed: #ExternalDocs.
-    self defineEntityNamed: #Parameter.
-    self defineEntityNamed: #ItemsDefinition.
-    self defineEntityNamed: #Schema.
-    self defineEntityNamed: #Response.
-    self defineEntityNamed: #Header.
-    self defineEntityNamed: #Tag.
-    self defineEntityNamed: #SecurityScheme.
-    self defineEntityNamed: #Example.
-    self defineEntityNamed: #RequestBody.
-    self defineEntityNamed: #MediaType.
-    self defineEntityNamed: #Link.
-    self defineEntityNamed: #Callback.
-    self defineEntityNamed: #XMLElement.
-    self defineEntityNamed: #SecurityScope.
-    self defineEntityNamed: #SecurityRequirement.
-    self defineEntityNamed: #Property.
-    self defineEntityNamed: #ResponseEntry.
-    self defineEntityNamed: #SchemaEntry.
-    self defineEntityNamed: #ResponseDefinitionEntry.
-    self defineEntityNamed: #ParameterEntry.
-    self defineEntityNamed: #SecuritySchemeEntry.
-    self defineEntityNamed: #MediaTypeEntry.
-    self defineEntityNamed: #RequestBodyEntry.
-    self defineEntityNamed: #HeaderEntry.
-    self defineEntityNamed: #ExampleEntry.
-    self defineEntityNamed: #LinkEntry.
-    self defineEntityNamed: #CallbackEntry.
-    self defineEntityNamed: #RequiredSecurityScheme.
-	self defineCanonicalClasses
-]
 
-{ #category : 'private' }
-FamixOpenApiGenerator >> defineEntityNamed: aSymbol [
-    entities at: aSymbol put: (builder newClassNamed: aSymbol comment: 'Generated from openapi2.ecore')
+	super defineClasses.
+	entities := Dictionary new.
+	self entityDefinitions do: [ :each |
+		self defineEntityNamed: each key comment: each value ].
+	(builder ensureAbstractClassNamed: #Entity) comment:
+		'Common superclass of the entities of the OpenAPI metamodel.'.
+	builder model comment:
+		'Moose model holding the entities of one or several OpenAPI documents (an OpenApi entity is the root of each document).'
 ]
 
 { #category : 'definition-helpers' }
@@ -724,237 +90,430 @@ FamixOpenApiGenerator >> defineEntityNamed: aSymbol comment: aString [
 
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineHierarchy [
-    super defineHierarchy.
-    #(
-        ContainedCollections Api Components Info Contact License Path Operation
-        ExternalDocs Parameter ItemsDefinition Schema Response Header Tag
-        SecurityScheme Example RequestBody MediaType Link Callback XMLElement
-        SecurityScope SecurityRequirement Property ResponseEntry SchemaEntry
-        ResponseDefinitionEntry ParameterEntry SecuritySchemeEntry MediaTypeEntry
-        RequestBodyEntry HeaderEntry ExampleEntry LinkEntry CallbackEntry
-        RequiredSecurityScheme)
-        do: [ :entityName | (self entityNamed: entityName) --|> #TNamedEntity ].
-    #(
-        ContainedCollections Api Components Info Contact License Path Operation
-        ExternalDocs Parameter ItemsDefinition Schema Response Header Tag
-        SecurityScheme Example RequestBody MediaType Link Callback XMLElement
-        SecurityScope SecurityRequirement Property ResponseEntry SchemaEntry
-        ResponseDefinitionEntry ParameterEntry SecuritySchemeEntry MediaTypeEntry
-        RequestBodyEntry HeaderEntry ExampleEntry LinkEntry CallbackEntry
-        RequiredSecurityScheme)
-        do: [ :entityName | (self entityNamed: entityName) --|> (self traitNamed: #SourceText) ].
-    (self entityNamed: #Api) --|> (self traitNamed: #ExternalDocsContainer).
-    (self entityNamed: #Api) --|> (self traitNamed: #SecurityContainer).
-    (self entityNamed: #Path) --|> (self traitNamed: #ParameterContainer).
-    (self entityNamed: #Path) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #Operation) --|> (self traitNamed: #ParameterContainer).
-    (self entityNamed: #Operation) --|> (self traitNamed: #ExternalDocsContainer).
-    (self entityNamed: #Operation) --|> (self traitNamed: #SecurityContainer).
-    (self entityNamed: #Operation) --|> (self traitNamed: #ResponseContainer).
-    (self entityNamed: #RequestBody) --|> (self traitNamed: #ContentContainer).
-    (self entityNamed: #RequestBody) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #Parameter) --|> (self traitNamed: #SchemaContainer).
-    (self entityNamed: #Parameter) --|> (self traitNamed: #JSONSchemaSubset).
-    (self entityNamed: #Parameter) --|> (self traitNamed: #ArrayContainer).
-    (self entityNamed: #Parameter) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #ItemsDefinition) --|> (self traitNamed: #JSONSchemaSubset).
-    (self entityNamed: #ItemsDefinition) --|> (self traitNamed: #ArrayContainer).
-    (self entityNamed: #Schema) --|> (self traitNamed: #JSONSchemaSubset).
-    (self entityNamed: #Schema) --|> (self traitNamed: #SchemaContainer).
-    (self entityNamed: #Schema) --|> (self traitNamed: #ExternalDocsContainer).
-    (self entityNamed: #Schema) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #Response) --|> (self traitNamed: #SchemaContainer).
-    (self entityNamed: #Response) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #Response) --|> (self traitNamed: #ContentContainer).
-    (self entityNamed: #Header) --|> (self traitNamed: #JSONSchemaSubset).
-    (self entityNamed: #Header) --|> (self traitNamed: #ArrayContainer).
-    (self entityNamed: #Header) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #Tag) --|> (self traitNamed: #ExternalDocsContainer).
-    (self entityNamed: #Example) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #Link) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #Callback) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #SecurityScheme) --|> (self traitNamed: #Referenceable).
-    (self entityNamed: #Property) --|> (self traitNamed: #SchemaContainer).
-    (self entityNamed: #SchemaEntry) --|> (self traitNamed: #SchemaContainer).
-    (self entityNamed: #ResponseDefinitionEntry) --|> (self traitNamed: #ResponseContainer).
-    (self entityNamed: #ParameterEntry) --|> (self traitNamed: #ParameterContainer).
-	self defineCanonicalHierarchy
+
+	super defineHierarchy.
+	entities valuesDo: [ :entity |
+		entity --|> #TNamedEntity.
+		entity --|> (self traitNamed: #SourceText).
+		entity --|> (self traitNamed: #CanonicalNode) ].
+	#( Path Parameter Schema Response Header Example SecurityScheme
+	   RequestBody Link Callback ) do: [ :entityName |
+		(self entityNamed: entityName)
+		--|> (self traitNamed: #Referenceable) ].
+	#( RequestBody Parameter Response ) do: [ :entityName |
+		(self entityNamed: entityName)
+		--|> (self traitNamed: #ContentContainer) ].
+	#( Operation Schema Tag ) do: [ :entityName |
+		(self entityNamed: entityName)
+		--|> (self traitNamed: #ExternalDocsContainer) ]
 ]
 
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineProperties [
-    super defineProperties.
-    (((self traitNamed: #JSONSchemaSubset) property: #type type: #String) comment: 'Attribute type from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #format type: #String) comment: 'Attribute format from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #description type: #String) comment: 'Attribute description from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #maximum type: #Number) comment: 'Attribute maximum from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #exclusiveMaximum type: #Boolean) comment: 'Attribute exclusiveMaximum from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #minimum type: #Number) comment: 'Attribute minimum from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #exclusiveMinimum type: #Boolean) comment: 'Attribute exclusiveMinimum from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #maxLength type: #Number) comment: 'Attribute maxLength from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #minLength type: #Number) comment: 'Attribute minLength from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #pattern type: #String) comment: 'Attribute pattern from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #maxItems type: #Number) comment: 'Attribute maxItems from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #minItems type: #Number) comment: 'Attribute minItems from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #uniqueItems type: #Boolean) comment: 'Attribute uniqueItems from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #enum type: #Object) comment: 'Attribute enum from JSONSchemaSubset [*]').
-    (((self traitNamed: #JSONSchemaSubset) property: #default type: #String) comment: 'Attribute default from JSONSchemaSubset [1]').
-    (((self traitNamed: #JSONSchemaSubset) property: #multipleOf type: #Number) comment: 'Attribute multipleOf from JSONSchemaSubset [1]').
-    (((self entityNamed: #Api) property: #openapi type: #String) comment: 'Attribute openapi from API [1]').
-    (((self entityNamed: #Api) property: #host type: #String) comment: 'Attribute host from API [1]').
-    (((self entityNamed: #Api) property: #basePath type: #String) comment: 'Attribute basePath from API [1]').
-    (((self entityNamed: #Api) property: #schemes type: #Object) comment: 'Attribute schemes from API [*]').
-    (((self entityNamed: #Api) property: #consumes type: #Object) comment: 'Attribute consumes from API [*]').
-    (((self entityNamed: #Api) property: #produces type: #Object) comment: 'Attribute produces from API [*]').
-    (((self entityNamed: #Info) property: #title type: #String) comment: 'Attribute title from Info [1]').
-    (((self entityNamed: #Info) property: #description type: #String) comment: 'Attribute description from Info [1]').
-    (((self entityNamed: #Info) property: #termsOfService type: #String) comment: 'Attribute termsOfService from Info [1]').
-    (((self entityNamed: #Info) property: #version type: #String) comment: 'Attribute version from Info [1]').
-    (((self entityNamed: #Contact) property: #url type: #String) comment: 'Attribute url from Contact [1]').
-    (((self entityNamed: #Contact) property: #email type: #String) comment: 'Attribute email from Contact [1]').
-    (((self entityNamed: #License) property: #url type: #String) comment: 'Attribute url from License [1]').
-    (((self entityNamed: #Path) property: #relativePath type: #String) comment: 'Attribute relativePath from Path [1]').
-    (((self entityNamed: #Path) property: #summary type: #String) comment: 'Attribute summary from Path [1]').
-    (((self entityNamed: #Path) property: #description type: #String) comment: 'Attribute description from Path [1]').
-    (((self entityNamed: #Operation) property: #tagReferences type: #Object) comment: 'Attribute tagReferences from Operation [*]').
-    (((self entityNamed: #Operation) property: #summary type: #String) comment: 'Attribute summary from Operation [1]').
-    (((self entityNamed: #Operation) property: #description type: #String) comment: 'Attribute description from Operation [1]').
-    (((self entityNamed: #Operation) property: #httpMethod type: #String) comment: 'Attribute httpMethod from Operation [1]: lowercase HTTP verb (get, put, post, delete, options, head, patch, trace).').
-    (((self entityNamed: #Operation) property: #operationId type: #String) comment: 'Attribute operationId from Operation [1]').
-    (((self entityNamed: #Operation) property: #consumes type: #Object) comment: 'Attribute consumes from Operation [*]').
-    (((self entityNamed: #Operation) property: #produces type: #Object) comment: 'Attribute produces from Operation [*]').
-    (((self entityNamed: #Operation) property: #schemes type: #Object) comment: 'Attribute schemes from Operation [*]').
-    (((self entityNamed: #Operation) property: #deprecated type: #Boolean) comment: 'Attribute deprecated from Operation [1]').
-    (((self entityNamed: #ExternalDocs) property: #description type: #String) comment: 'Attribute description from ExternalDocs [1]').
-    (((self entityNamed: #ExternalDocs) property: #url type: #String) comment: 'Attribute url from ExternalDocs [1]').
-    (((self entityNamed: #Parameter) property: #location type: #String) comment: 'Attribute location from Parameter [1]').
-    (((self entityNamed: #Parameter) property: #required type: #Boolean) comment: 'Attribute required from Parameter [1]').
-    (((self entityNamed: #Parameter) property: #allowEmptyValue type: #Boolean) comment: 'Attribute allowEmptyValue from Parameter [1]').
-    (((self entityNamed: #Parameter) property: #example type: #String) comment: 'Attribute example from Parameter [1]').
-    (((self entityNamed: #Schema) property: #title type: #String) comment: 'Attribute title from Schema [1]').
-    (((self entityNamed: #Schema) property: #maxProperties type: #Number) comment: 'Attribute maxProperties from Schema [1]').
-    (((self entityNamed: #Schema) property: #minProperties type: #Number) comment: 'Attribute minProperties from Schema [1]').
-    (((self entityNamed: #Schema) property: #example type: #String) comment: 'Attribute example from Schema [1]').
-    (((self entityNamed: #Schema) property: #discriminator type: #String) comment: 'Attribute discriminator from Schema [1]').
-    (((self entityNamed: #Schema) property: #readOnly type: #Boolean) comment: 'Attribute readOnly from Schema [1]').
-    (((self entityNamed: #Schema) property: #additionalPropertiesAllowed type: #Boolean) comment: 'Attribute additionalPropertiesAllowed from Schema [1]').
-    (((self entityNamed: #Response) property: #description type: #String) comment: 'Attribute description from Response [1]').
-    (((self entityNamed: #Tag) property: #description type: #String) comment: 'Attribute description from Tag [1]').
-    (((self entityNamed: #SecurityScheme) property: #type type: #String) comment: 'Attribute type from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #description type: #String) comment: 'Attribute description from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #location type: #String) comment: 'Attribute location from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #scheme type: #String) comment: 'Attribute scheme from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #bearerFormat type: #String) comment: 'Attribute bearerFormat from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #openIdConnectUrl type: #String) comment: 'Attribute openIdConnectUrl from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #flow type: #String) comment: 'Attribute flow from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #authorizationUrl type: #String) comment: 'Attribute authorizationUrl from SecurityScheme [1]').
-    (((self entityNamed: #SecurityScheme) property: #tokenUrl type: #String) comment: 'Attribute tokenUrl from SecurityScheme [1]').
-    (((self entityNamed: #Example) property: #mimeType type: #String) comment: 'Attribute mimeType from Example [1]').
-    (((self entityNamed: #Example) property: #value type: #String) comment: 'Attribute value from Example [1]').
-    (((self entityNamed: #RequestBody) property: #description type: #String) comment: 'Attribute description from RequestBody [1]').
-    (((self entityNamed: #RequestBody) property: #required type: #Boolean) comment: 'Attribute required from RequestBody [1]').
-    (((self entityNamed: #MediaType) property: #example type: #Object) comment: 'Attribute example from MediaType [1]').
-    (((self entityNamed: #Link) property: #operationRef type: #String) comment: 'Attribute operationRef from Link [1]').
-    (((self entityNamed: #Link) property: #operationId type: #String) comment: 'Attribute operationId from Link [1]').
-    (((self entityNamed: #Link) property: #requestBody type: #String) comment: 'Attribute requestBody from Link [1]').
-    (((self entityNamed: #Link) property: #description type: #String) comment: 'Attribute description from Link [1]').
-    (((self entityNamed: #XMLElement) property: #namespace type: #String) comment: 'Attribute namespace from XMLElement [1]').
-    (((self entityNamed: #XMLElement) property: #prefix type: #String) comment: 'Attribute prefix from XMLElement [1]').
-    (((self entityNamed: #XMLElement) property: #attribute type: #Boolean) comment: 'Attribute attribute from XMLElement [1]').
-    (((self entityNamed: #XMLElement) property: #wrapped type: #Boolean) comment: 'Attribute wrapped from XMLElement [1]').
-    (((self entityNamed: #SecurityScope) property: #description type: #String) comment: 'Attribute description from SecurityScope [1]').
-    (((self traitNamed: #ArrayContainer) property: #collectionFormat type: #String) comment: 'Attribute collectionFormat from ArrayContainer [1]').
-    (((self traitNamed: #Referenceable) property: #ref type: #String) comment: 'Attribute ref from Reference Object [1]').
-    (((self traitNamed: #SourceText) property: #sourceText type: #String) comment: 'Attribute sourceText from original JSON node [1]').
-    (((self entityNamed: #Property) property: #enum type: #Object) comment: 'Attribute enum from Property [*] (array of strings)').
-    (((self entityNamed: #Property) property: #required type: #Boolean) comment: 'Attribute required from Property [1]').
-    (((self entityNamed: #ResponseEntry) property: #key type: #String) comment: 'Attribute key from ResponseEntry [1]').
-    (((self entityNamed: #SchemaEntry) property: #key type: #String) comment: 'Attribute key from SchemaEntry [1]').
-    (((self entityNamed: #ResponseDefinitionEntry) property: #key type: #String) comment: 'Attribute key from ResponseDefinitionEntry [1]').
-    (((self entityNamed: #ParameterEntry) property: #key type: #String) comment: 'Attribute key from ParameterEntry [1]').
-    (((self entityNamed: #SecuritySchemeEntry) property: #key type: #String) comment: 'Attribute key from SecuritySchemeEntry [1]').
-    (((self entityNamed: #MediaTypeEntry) property: #key type: #String) comment: 'Attribute key from MediaTypeEntry [1]').
-    (((self entityNamed: #RequestBodyEntry) property: #key type: #String) comment: 'Attribute key from RequestBodyEntry [1]').
-    (((self entityNamed: #HeaderEntry) property: #key type: #String) comment: 'Attribute key from HeaderEntry [1]').
-    (((self entityNamed: #ExampleEntry) property: #key type: #String) comment: 'Attribute key from ExampleEntry [1]').
-    (((self entityNamed: #LinkEntry) property: #key type: #String) comment: 'Attribute key from LinkEntry [1]').
-    (((self entityNamed: #CallbackEntry) property: #key type: #String) comment: 'Attribute key from CallbackEntry [1]').
-	self defineCanonicalProperties
+
+	super defineProperties.
+	self definePropertiesOfTraits.
+	self definePropertiesOfDocument.
+	self definePropertiesOfOperations.
+	self definePropertiesOfSchemas.
+	self definePropertiesOfSecurity
+]
+
+{ #category : 'definition-properties' }
+FamixOpenApiGenerator >> definePropertiesOfDocument [
+
+	self defineAttributesIn: #OpenApi rows: {
+			{ #sourceVersion. #String. 'Version of the specification of the source document: 2.0, 3.0.x or 3.1.x.' }.
+			{ #openapiVersion. #String. 'Value of the openapi field of the canonical document.' }.
+			{ #jsonSchemaDialect. #String. 'URI of the JSON Schema dialect used by the schemas of the document (jsonSchemaDialect field).' }.
+			{ #selfUrl. #String. 'URI under which the document is available ($self field).' } }.
+	self defineAttributesIn: #Info rows: {
+			{ #title. #String. 'Title of the API.' }.
+			{ #description. #String. 'Description of the API.' }.
+			{ #termsOfService. #String. 'URL of the terms of service of the API.' }.
+			{ #version. #String. 'Version of the API (not the one of the specification).' } }.
+	self defineAttributesIn: #Contact rows: {
+			{ #url. #String. 'URL of the contact page.' }.
+			{ #email. #String. 'Email address of the contact.' } }.
+	self
+		defineAttributesIn: #License
+		rows: { { #url. #String. 'URL of the license text.' } }.
+	self defineAttributesIn: #Server rows: {
+			{ #url. #String. 'URL template of the server.' }.
+			{ #description. #String. 'Description of the server.' } }.
+	self defineAttributesIn: #ServerVariable rows: {
+			{ #defaultValue. #String. 'Value used when the variable is not provided.' }.
+			{ #description. #String. 'Description of the server variable.' }.
+			{ #enumValues. #Strings. 'Allowed values of the server variable.' } }.
+	self
+		defineAttributesIn: #Tag
+		rows: { { #description. #String. 'Description of the tag.' } }.
+	self defineAttributesIn: #ExternalDocumentation rows: {
+			{ #description. #String. 'Description of the external documentation.' }.
+			{ #url. #String. 'URL of the external documentation.' } }.
+	self defineAttributesIn: #Reference rows: {
+			{ #target. #String. 'The $ref URI that could not be resolved.' }.
+			{ #summary. #String. 'Summary overriding the one of the referenced object.' }.
+			{ #description. #String. 'Description overriding the one of the referenced object.' } }
+]
+
+{ #category : 'definition-properties' }
+FamixOpenApiGenerator >> definePropertiesOfOperations [
+
+	self defineAttributesIn: #Path rows: {
+			{ #relativePath. #String. 'Relative path of the path item, for example /pets/{petId}.' }.
+			{ #summary. #String. 'Short summary of the path item.' }.
+			{ #description. #String. 'Description of the path item.' } }.
+	self defineAttributesIn: #Operation rows: {
+			{ #summary. #String. 'Short summary of the operation.' }.
+			{ #description. #String. 'Description of the operation.' }.
+			{ #httpMethod. #String. 'Lowercase HTTP verb of the operation: get, put, post, delete, options, head, patch or trace.' }.
+			{ #operationId. #String. 'Unique identifier of the operation in the document.' }.
+			{ #deprecated. #Boolean. 'Whether the operation is deprecated.' }.
+			{ #tagNames. #Strings. 'Names of the tags of the operation as written in the source. Use #tags to get the Tag entities.' } }.
+	((self entityNamed: #Operation)
+		 property: #securityDisabled
+		 type: #Boolean
+		 defaultValue: false) comment:
+		'True when the operation explicitly disables the security of the document (security: [] in the source); false otherwise. See #effectiveSecurity.'.
+	self defineAttributesIn: #Parameter rows: {
+			{ #location. #String. 'Where the parameter is located: path, query, header or cookie (the in field).' }.
+			{ #required. #Boolean. 'Whether the parameter is mandatory.' }.
+			{ #allowEmptyValue. #Boolean. 'Whether a query parameter may be sent with an empty value.' }.
+			{ #description. #String. 'Description of the parameter.' }.
+			{ #style. #String. 'Serialization style of the parameter value.' }.
+			{ #explode. #Boolean. 'Whether array and object values generate separate parameters.' }.
+			{ #allowReserved. #Boolean. 'Whether reserved characters are left unescaped in the value.' }.
+			{ #deprecated. #Boolean. 'Whether the parameter is deprecated.' } }.
+	self defineAttributesIn: #RequestBody rows: {
+			{ #description. #String. 'Description of the request body.' }.
+			{ #required. #Boolean. 'Whether the request body is mandatory.' } }.
+	self defineAttributesIn: #Response rows: {
+			{ #statusCode. #String. 'HTTP status code of the response, a range or default: 200, 2XX or default.' }.
+			{ #description. #String. 'Description of the response.' } }.
+	self defineAttributesIn: #Header rows: {
+			{ #description. #String. 'Description of the header.' }.
+			{ #required. #Boolean. 'Whether the header is mandatory.' }.
+			{ #deprecated. #Boolean. 'Whether the header is deprecated.' }.
+			{ #style. #String. 'Serialization style of the header value.' }.
+			{ #explode. #Boolean. 'Whether array and object values are exploded.' } }.
+	self
+		defineAttributesIn: #MediaType
+		rows:
+		{ { #mediaType. #String. 'Media type (MIME type) described, for example application/json.' } }.
+	self defineAttributesIn: #Encoding rows: {
+			{ #propertyName. #String. 'Name of the media type schema property this encoding applies to.' }.
+			{ #contentType. #String. 'Content type or types accepted for the property.' }.
+			{ #style. #String. 'Serialization style of the property.' }.
+			{ #explode. #Boolean. 'Whether array and object values generate separate parameters.' }.
+			{ #allowReserved. #Boolean. 'Whether reserved characters are left unescaped.' } }.
+	self defineAttributesIn: #Example rows: {
+			{ #summary. #String. 'Short description of the example.' }.
+			{ #value. #String. 'Value of the example, as JSON text.' }.
+			{ #externalValue. #String. 'URL of a document holding the example value.' } }.
+	self defineAttributesIn: #Link rows: {
+			{ #operationRef. #String. 'URI reference of the linked operation (operationRef field).' }.
+			{ #operationId. #String. 'operationId of the linked operation.' }.
+			{ #requestBody. #String. 'Expression or literal used as request body of the linked operation.' }.
+			{ #description. #String. 'Description of the link.' } }
+]
+
+{ #category : 'definition-properties' }
+FamixOpenApiGenerator >> definePropertiesOfSchemas [
+
+	self defineAttributesIn: #Schema rows: {
+			{ #title. #String. 'Title of the schema.' }.
+			{ #description. #String. 'Description of the schema.' }.
+			{ #types. #Strings. 'JSON Schema types of the schema, such as string, integer or null; several values for a 3.1 type array.' }.
+			{ #format. #String. 'Format of the values, such as int32, int64 or date-time.' }.
+			{ #isNullable. #Boolean. 'Whether null is an accepted value (nullable in 3.0, null among the types in 3.1).' }.
+			{ #enumValues. #String. 'Allowed values of the schema, as a JSON array text.' }.
+			{ #constValue. #String. 'The only allowed value of the schema (const), as JSON text.' }.
+			{ #defaultValue. #String. 'Default value of the schema, as JSON text.' }.
+			{ #exampleValue. #String. 'Example value of the schema, as JSON text.' }.
+			{ #deprecated. #Boolean. 'Whether the schema is deprecated.' }.
+			{ #readOnly. #Boolean. 'Whether the value is only returned by the server, never sent to it.' }.
+			{ #writeOnly. #Boolean. 'Whether the value is only sent to the server, never returned.' }.
+			{ #requiredProperties. #Strings. 'Names of the properties that are mandatory in an instance of the schema.' }.
+			{ #additionalPropertiesAllowed. #Boolean. 'Whether additional properties are allowed when additionalProperties is a boolean in the source.' }.
+			{ #maximum. #Number. 'Inclusive upper bound of a number.' }.
+			{ #minimum. #Number. 'Inclusive lower bound of a number.' }.
+			{ #exclusiveMaximum. #Number. 'Exclusive upper bound of a number (OpenAPI 3.1 form).' }.
+			{ #exclusiveMinimum. #Number. 'Exclusive lower bound of a number (OpenAPI 3.1 form).' }.
+			{ #multipleOf. #Number. 'A number is valid when it is a multiple of this value.' }.
+			{ #maxLength. #Number. 'Maximum length of a string.' }.
+			{ #minLength. #Number. 'Minimum length of a string.' }.
+			{ #pattern. #String. 'Regular expression a string must match.' }.
+			{ #maxItems. #Number. 'Maximum number of items of an array.' }.
+			{ #minItems. #Number. 'Minimum number of items of an array.' }.
+			{ #uniqueItems. #Boolean. 'Whether the items of an array must be distinct.' }.
+			{ #maxProperties. #Number. 'Maximum number of properties of an object.' }.
+			{ #minProperties. #Number. 'Minimum number of properties of an object.' } }.
+	self
+		defineAttributesIn: #Property
+		rows:
+		{ { #isRequired. #Boolean. 'Whether the property is listed as required by its declaring schema.' } }.
+	self
+		defineAttributesIn: #Discriminator
+		rows:
+		{ { #propertyName. #String. 'Name of the property whose value discriminates the schemas.' } }.
+	self
+		defineAttributesIn: #DiscriminatorMapping
+		rows:
+		{ { #value. #String. 'Name or reference of the schema selected by the discriminating value, as written in the source.' } }.
+	self defineAttributesIn: #XmlElement rows: {
+			{ #namespace. #String. 'URI of the XML namespace.' }.
+			{ #prefix. #String. 'Prefix of the XML namespace.' }.
+			{ #attribute. #Boolean. 'Whether the property is an XML attribute rather than an element.' }.
+			{ #wrapped. #Boolean. 'Whether the items of an array are wrapped in an enclosing element.' } }
+]
+
+{ #category : 'definition-properties' }
+FamixOpenApiGenerator >> definePropertiesOfSecurity [
+
+	self defineAttributesIn: #SecurityScheme rows: {
+			{ #type. #String. 'Type of the scheme: apiKey, http, oauth2, openIdConnect or mutualTLS.' }.
+			{ #description. #String. 'Description of the security scheme.' }.
+			{ #scheme. #String. 'Name of the HTTP authorization scheme, such as basic or bearer.' }.
+			{ #bearerFormat. #String. 'Hint on the format of the bearer token.' }.
+			{ #openIdConnectUrl. #String. 'URL of the OpenID Connect discovery document.' }.
+			{ #inLocation. #String. 'Location of an apiKey credential: query, header or cookie (the in field).' }.
+			{ #parameterName. #String. 'Name of the header, query or cookie parameter carrying an apiKey credential (the name field).' } }.
+	self defineAttributesIn: #OAuthFlow rows: {
+			{ #flowType. #String. 'Kind of flow: implicit, password, clientCredentials or authorizationCode.' }.
+			{ #authorizationUrl. #String. 'Authorization URL of the flow.' }.
+			{ #tokenUrl. #String. 'Token URL of the flow.' }.
+			{ #refreshUrl. #String. 'URL used to obtain refresh tokens.' } }.
+	self
+		defineAttributesIn: #SecurityScope
+		rows:
+		{ { #description. #String. 'Description of what the scope grants.' } }.
+	self
+		defineAttributesIn: #SecurityRequirementItem
+		rows:
+		{ { #scopeNames. #Strings. 'Names of the scopes required from the security scheme (empty when the scheme has no scopes).' } }
+]
+
+{ #category : 'definition-properties' }
+FamixOpenApiGenerator >> definePropertiesOfTraits [
+
+	self defineAttributesIn: #CanonicalNode rows: {
+			{ #canonicalPointer. #String. 'JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.' }.
+			{ #extensions. #String. 'Specification extensions (x-* keys) of the source node, as a JSON object text.' } }.
+	self
+		defineAttributesIn: #SourceText
+		rows:
+		{ { #sourceText. #String. 'Text of the JSON node the entity was built from.' } }.
+	self
+		defineAttributesIn: #Referenceable
+		rows:
+		{ { #ref. #String. 'The $ref, as written in the source, that designates the reusable object this entity is or was copied from (for example #/components/schemas/Pet). Empty when the entity is not the result of a reference.' } }
 ]
 
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineRelations [
-    super defineRelations.
-    (((self entityNamed: #ContainedCollections) property: #parameters) comment: 'Reference parameters from ContainedCollections to Parameter [0..*].') <>-* (self entityNamed: #Parameter).
-    (((self entityNamed: #ContainedCollections) property: #schemas) comment: 'Reference schemas from ContainedCollections to Schema [0..*].') <>-* (self entityNamed: #Schema).
-    (((self entityNamed: #ContainedCollections) property: #responses) comment: 'Reference responses from ContainedCollections to Response [0..*].') <>-* (self entityNamed: #Response).
-    (((self entityNamed: #Api) property: #info) comment: 'Reference info from API to Info [0..1].') <>- (self entityNamed: #Info).
-    (((self entityNamed: #Api) property: #paths) comment: 'Reference paths from API to Path [0..*].') <>-* (((self entityNamed: #Path) property: #api) comment: 'Opposite reference api from Path to API [0..1].').
-    (((self entityNamed: #Api) property: #components) comment: 'Reference components from API to Components [0..1].') <>- (((self entityNamed: #Components) property: #api) comment: 'Opposite reference api from Components to API [0..1].').
-    (((self entityNamed: #Api) property: #definitions) comment: 'Reference definitions from API to SchemaEntry [0..*].') <>-* (self entityNamed: #SchemaEntry).
-    (((self entityNamed: #Api) property: #responses) comment: 'Reference responses from API to ResponseDefinitionEntry [0..*].') <>-* (self entityNamed: #ResponseDefinitionEntry).
-    (((self entityNamed: #Api) property: #securityDefinitions) comment: 'Reference securityDefinitions from API to SecuritySchemeEntry [0..*].') <>-* (self entityNamed: #SecuritySchemeEntry).
-    (((self entityNamed: #Api) property: #tags) comment: 'Reference tags from API to Tag [0..*].') <>-* (((self entityNamed: #Tag) property: #api) comment: 'Opposite reference api from Tag to API [0..1].').
-    (((self entityNamed: #Api) property: #parameters) comment: 'Reference parameters from API to ParameterEntry [0..*].') <>-* (self entityNamed: #ParameterEntry).
-    (((self entityNamed: #Api) property: #containedCollections) comment: 'Reference containedCollections from API to ContainedCollections [0..1].') <>- (self entityNamed: #ContainedCollections).
-    (((self entityNamed: #Components) property: #schemas) comment: 'Reference schemas from Components to SchemaEntry [0..*].') <>-* (self entityNamed: #SchemaEntry).
-    (((self entityNamed: #Components) property: #responses) comment: 'Reference responses from Components to ResponseDefinitionEntry [0..*].') <>-* (self entityNamed: #ResponseDefinitionEntry).
-    (((self entityNamed: #Components) property: #parameters) comment: 'Reference parameters from Components to ParameterEntry [0..*].') <>-* (self entityNamed: #ParameterEntry).
-    (((self entityNamed: #Components) property: #securitySchemes) comment: 'Reference securitySchemes from Components to SecuritySchemeEntry [0..*].') <>-* (self entityNamed: #SecuritySchemeEntry).
-    (((self entityNamed: #Components) property: #requestBodies) comment: 'Reference requestBodies from Components to RequestBodyEntry [0..*].') <>-* (self entityNamed: #RequestBodyEntry).
-    (((self entityNamed: #Components) property: #headers) comment: 'Reference headers from Components to HeaderEntry [0..*].') <>-* (self entityNamed: #HeaderEntry).
-    (((self entityNamed: #Components) property: #examples) comment: 'Reference examples from Components to ExampleEntry [0..*].') <>-* (self entityNamed: #ExampleEntry).
-    (((self entityNamed: #Components) property: #links) comment: 'Reference links from Components to LinkEntry [0..*].') <>-* (self entityNamed: #LinkEntry).
-    (((self entityNamed: #Components) property: #callbacks) comment: 'Reference callbacks from Components to CallbackEntry [0..*].') <>-* (self entityNamed: #CallbackEntry).
-    (((self entityNamed: #Info) property: #contact) comment: 'Reference contact from Info to Contact [0..1].') <>- (self entityNamed: #Contact).
-    (((self entityNamed: #Info) property: #license) comment: 'Reference license from Info to License [0..1].') <>- (self entityNamed: #License).
-    (((self entityNamed: #Path) property: #operations) comment: 'Reference operations from Path to Operation [0..*]: one operation per HTTP method.') <>-* (((self entityNamed: #Operation) property: #path) comment: 'Opposite reference path from Operation to Path [0..1].').
-    (((self entityNamed: #Path) property: #parameters) comment: 'Reference parameters from Path to Parameter [0..*]. A parameter may be shared by several paths.') *-* (((self entityNamed: #Parameter) property: #usedByPaths) comment: 'Paths using this Parameter [0..*].').
-    (((self entityNamed: #Operation) property: #responses) comment: 'Reference responses from Operation to ResponseEntry [1..*].') <>-* (self entityNamed: #ResponseEntry).
-    (((self entityNamed: #Operation) property: #parameters) comment: 'Reference parameters from Operation to Parameter [0..*]. A parameter may be shared by several operations.') *-* (((self entityNamed: #Parameter) property: #usedByOperations) comment: 'Operations using this Parameter [0..*].').
-    (((self entityNamed: #Operation) property: #requestBody) comment: 'Reference requestBody from Operation to RequestBody [0..1]. A request body may be shared by several operations.') *- (((self entityNamed: #RequestBody) property: #usedByOperations) comment: 'Operations using this RequestBody [0..*].').
-    (((self entityNamed: #Operation) property: #callbacks) comment: 'Reference callbacks from Operation to CallbackEntry [0..*].') <>-* (self entityNamed: #CallbackEntry).
-    (((self entityNamed: #Parameter) property: #declaringContext) comment: 'Reference declaringContext from Parameter to ParameterContainer [0..1].') - (self traitNamed: #ParameterContainer).
-    (((self entityNamed: #Parameter) property: #schema) comment: 'Reference schema from Parameter to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedByParameters) comment: 'Parameters whose schema is this Schema [0..*].').
-    (((self entityNamed: #Schema) property: #properties) comment: 'Reference properties from Schema to Property [0..*].') <>-* (((self entityNamed: #Property) property: #schema) comment: 'Opposite reference schema from Property to Schema [0..1].').
-    (((self entityNamed: #Schema) property: #allOf) comment: 'Reference allOf from Schema to Schema [0..*].') *-* (((self entityNamed: #Schema) property: #usedAsAllOfBy) comment: 'Schemas having this Schema in their allOf [0..*].').
-    (((self entityNamed: #Schema) property: #items) comment: 'Reference items from Schema to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedAsItemsBy) comment: 'Schemas having this Schema as their items [0..*].').
-    (((self entityNamed: #Schema) property: #xml) comment: 'Reference xml from Schema to XMLElement [0..1].') <>- (self entityNamed: #XMLElement).
-    (((self entityNamed: #Schema) property: #additionalProperties) comment: 'Reference additionalProperties from Schema to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedAsAdditionalPropertiesBy) comment: 'Schemas having this Schema as their additionalProperties [0..*].').
-    (((self entityNamed: #Schema) property: #declaringContext) comment: 'Reference declaringContext from Schema to SchemaContainer [0..1].') - (self traitNamed: #SchemaContainer).
-    (((self entityNamed: #Schema) property: #tupleItems) comment: 'Reference tupleItems from Schema to Schema [0..*].') *-* (((self entityNamed: #Schema) property: #usedAsTupleItemsBy) comment: 'Schemas having this Schema in their tupleItems [0..*].').
-    (((self entityNamed: #Response) property: #headers) comment: 'Reference headers from Response to Header [0..*].') <>-* (self entityNamed: #Header).
-    (((self entityNamed: #Response) property: #examples) comment: 'Reference examples from Response to Example [0..*].') <>-* (self entityNamed: #Example).
-    (((self entityNamed: #Response) property: #declaringContext) comment: 'Reference declaringContext from Response to ResponseContainer [0..1].') - (self traitNamed: #ResponseContainer).
-    (((self entityNamed: #Response) property: #schema) comment: 'Reference schema from Response to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedByResponses) comment: 'Responses whose schema is this Schema [0..*].').
-    (((self entityNamed: #Header) property: #schema) comment: 'Reference schema from Header to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedByHeaders) comment: 'Headers whose schema is this Schema [0..*].').
-    (((self traitNamed: #ContentContainer) property: #content) comment: 'Reference content from ContentContainer to MediaTypeEntry [0..*].') <>-* (self entityNamed: #MediaTypeEntry).
-    (((self entityNamed: #MediaType) property: #schema) comment: 'Reference schema from MediaType to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedByMediaTypes) comment: 'Media types whose schema is this Schema [0..*].').
-    (((self entityNamed: #MediaType) property: #examples) comment: 'Reference examples from MediaType to ExampleEntry [0..*].') <>-* (self entityNamed: #ExampleEntry).
-    (((self entityNamed: #SecurityScheme) property: #scopes) comment: 'Reference scopes from SecurityScheme to SecurityScope [0..*].') <>-* (self entityNamed: #SecurityScope).
-    (((self traitNamed: #ExternalDocsContainer) property: #externalDocs) comment: 'Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].') <>- (self entityNamed: #ExternalDocs).
-    (((self traitNamed: #ArrayContainer) property: #items) comment: 'Reference items from ArrayContainer to ItemsDefinition [0..1].') <>- (self entityNamed: #ItemsDefinition).
-    (((self entityNamed: #SecurityRequirement) property: #securitySchemes) comment: 'Reference securitySchemes from SecurityRequirement to RequiredSecurityScheme [0..*].') <>-* (self entityNamed: #RequiredSecurityScheme).
-    (((self entityNamed: #ResponseEntry) property: #value) comment: 'Reference value from ResponseEntry to Response [0..1].') *- (((self entityNamed: #Response) property: #usedByResponseEntries) comment: 'ResponseEntry entries whose value is this Response [0..*].').
-    (((self entityNamed: #SchemaEntry) property: #value) comment: 'Reference value from SchemaEntry to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedBySchemaEntries) comment: 'SchemaEntry entries whose value is this Schema [0..*].').
-    (((self entityNamed: #ResponseDefinitionEntry) property: #value) comment: 'Reference value from ResponseDefinitionEntry to Response [0..1].') *- (((self entityNamed: #Response) property: #usedByResponseDefinitionEntries) comment: 'ResponseDefinitionEntry entries whose value is this Response [0..*].').
-    (((self entityNamed: #ParameterEntry) property: #value) comment: 'Reference value from ParameterEntry to Parameter [0..1].') *- (((self entityNamed: #Parameter) property: #usedByParameterEntries) comment: 'ParameterEntry entries whose value is this Parameter [0..*].').
-    (((self entityNamed: #MediaTypeEntry) property: #value) comment: 'Reference value from MediaTypeEntry to MediaType [0..1].') *- (((self entityNamed: #MediaType) property: #usedByMediaTypeEntries) comment: 'MediaTypeEntry entries whose value is this MediaType [0..*].').
-    (((self entityNamed: #RequestBodyEntry) property: #value) comment: 'Reference value from RequestBodyEntry to RequestBody [0..1].') *- (((self entityNamed: #RequestBody) property: #usedByRequestBodyEntries) comment: 'RequestBodyEntry entries whose value is this RequestBody [0..*].').
-    (((self entityNamed: #HeaderEntry) property: #value) comment: 'Reference value from HeaderEntry to Header [0..1].') *- (((self entityNamed: #Header) property: #usedByHeaderEntries) comment: 'HeaderEntry entries whose value is this Header [0..*].').
-    (((self entityNamed: #ExampleEntry) property: #value) comment: 'Reference value from ExampleEntry to Example [0..1].') *- (((self entityNamed: #Example) property: #usedByExampleEntries) comment: 'ExampleEntry entries whose value is this Example [0..*].').
-    (((self entityNamed: #LinkEntry) property: #value) comment: 'Reference value from LinkEntry to Link [0..1].') *- (((self entityNamed: #Link) property: #usedByLinkEntries) comment: 'LinkEntry entries whose value is this Link [0..*].').
-    (((self entityNamed: #CallbackEntry) property: #value) comment: 'Reference value from CallbackEntry to Callback [0..1].') *- (((self entityNamed: #Callback) property: #usedByCallbackEntries) comment: 'CallbackEntry entries whose value is this Callback [0..*].').
-    (((self traitNamed: #SecurityContainer) property: #security) comment: 'Reference security from SecurityContainer to SecurityRequirement [0..*].') <>-* (self entityNamed: #SecurityRequirement).
-    (((self entityNamed: #SecuritySchemeEntry) property: #value) comment: 'Reference value from SecuritySchemeEntry to SecurityScheme [0..1].') *- (((self entityNamed: #SecurityScheme) property: #usedBySecuritySchemeEntries) comment: 'SecuritySchemeEntry entries whose value is this SecurityScheme [0..*].').
-    (((self entityNamed: #RequiredSecurityScheme) property: #securityScopes) comment: 'Reference securityScopes from RequiredSecurityScheme to SecurityScope [0..*].') *-* (((self entityNamed: #SecurityScope) property: #usedByRequiredSecuritySchemes) comment: 'Required security schemes using this SecurityScope [0..*].').
-    (((self entityNamed: #RequiredSecurityScheme) property: #securityScheme) comment: 'Reference securityScheme from RequiredSecurityScheme to SecurityScheme [0..1].') *- (((self entityNamed: #SecurityScheme) property: #usedByRequiredSecuritySchemes) comment: 'Required security schemes using this SecurityScheme [0..*].').
-	self defineCanonicalRelations
+
+	super defineRelations.
+	self defineRelationsOfDocument.
+	self defineRelationsOfComponents.
+	self defineRelationsOfOperations.
+	self defineRelationsOfSchemas.
+	self defineRelationsOfSecurity
 ]
 
-{ #category : 'definition' }
-FamixOpenApiGenerator >> defineTraitNamed: aSymbol [
-    traits at: aSymbol put: (builder newTraitNamed: aSymbol comment: 'Generated from openapi2.ecore')
+{ #category : 'definition-helpers' }
+FamixOpenApiGenerator >> defineRelationsIn: aCollection [
+	"Define bidirectional relations. Each row is { kind. owner name. relation name. target name. opposite name. relation comment. opposite comment }. The kind is #containsOne (owner contains one target), #containsMany (owner contains several targets), #manyToOne (the owner refers to one target, a target is referred to by several owners) or #manyToMany. Owner and target are entity or trait names."
+
+	aCollection do: [ :row |
+		| origin opposite |
+		origin := ((self behaviorNamed: (row at: 2)) property: (row at: 3))
+			          comment: (row at: 6);
+			          yourself.
+		opposite := ((self behaviorNamed: (row at: 4)) property: (row at: 5))
+			            comment: (row at: 7);
+			            yourself.
+		self relate: origin with: opposite kind: row first ]
+]
+
+{ #category : 'definition-relations' }
+FamixOpenApiGenerator >> defineRelationsOfComponents [
+
+	#( #( schemas Schema 'reusable schemas' )
+	   #( responses Response 'reusable responses' )
+	   #( parameters Parameter 'reusable parameters' )
+	   #( requestBodies RequestBody 'reusable request bodies' )
+	   #( headers Header 'reusable headers' )
+	   #( examples Example 'reusable examples' )
+	   #( links Link 'reusable links' ) #( callbacks Callback 'reusable callbacks' )
+	   #( securitySchemes SecurityScheme 'reusable security schemes' )
+	   #( pathItems Path 'reusable path items' ) ) do: [ :row |
+		self defineRelationsIn: { {
+				#containsMany.
+				#Components.
+				row first.
+				row second.
+				#components.
+				('The ' , row third
+				 ,
+				 ' of the document, owned by the components and shared by reference.').
+				'The components owning the object, when it is a reusable one.' } } ]
+]
+
+{ #category : 'definition-relations' }
+FamixOpenApiGenerator >> defineRelationsOfDocument [
+
+	self defineRelationsIn: {
+			{ #containsOne. #OpenApi. #info. #Info. #openApi. 'Metadata of the API.'.
+			'The document the Info describes.' }.
+			{ #containsMany. #OpenApi. #servers. #Server. #openApi. 'Servers hosting the API.'.
+			'The document declaring the server, when it is declared at document level.' }.
+			{ #containsMany. #OpenApi. #paths. #Path. #openApi. 'Path items of the API.'.
+			'The document declaring the path item in its paths.' }.
+			{ #containsMany. #OpenApi. #webhooks. #Path. #webhookOf. 'Path items describing the requests the API may send (OpenAPI 3.1 webhooks).'.
+			'The document declaring the path item in its webhooks.' }.
+			{ #containsOne. #OpenApi. #components. #Components. #openApi.
+			'Reusable objects of the API.'. 'The document the components belong to.' }.
+			{ #containsMany. #OpenApi. #tags. #Tag. #openApi. 'Tags declared by the document.'.
+			'The document declaring the tag.' }.
+			{ #containsMany. #OpenApi. #securityRequirements.
+			#SecurityRequirement. #openApi. 'Security requirements applied to every operation by default, as alternatives.'.
+			'The document declaring the requirement as its default security.' }.
+			{ #containsOne. #OpenApi. #externalDocs. #ExternalDocumentation.
+			#openApi. 'External documentation of the API as a whole.'.
+			'The document the external documentation belongs to.' }.
+			{ #containsMany. #OpenApi. #unresolvedReferences.
+			#Reference. #openApi. 'References that could not be resolved to an entity of the model, for example references to external documents.'.
+			'The document in which the unresolved reference appears.' }.
+			{ #containsOne. #Info. #contact. #Contact. #info. 'Contact of the API.'.
+			'The Info declaring the contact.' }.
+			{ #containsOne. #Info. #license. #License. #info. 'License of the API.'.
+			'The Info declaring the license.' }.
+			{ #containsMany. #Server. #variables. #ServerVariable.
+			#server. 'Variables substituted in the URL template of the server.'.
+			'The server declaring the variable.' }.
+			{ #containsMany. #Path. #servers. #Server. #path. 'Servers overriding the ones of the document for this path item.'.
+			'The path item declaring the server.' }.
+			{ #containsMany. #Operation. #servers. #Server. #operation.
+			'Servers overriding the ones of the path item for this operation.'.
+			'The operation declaring the server.' }.
+			{ #containsOne. #Link. #server. #Server. #link. 'Server used by the linked operation.'.
+			'The link declaring the server.' }.
+			{ #containsOne. #ExternalDocsContainer. #externalDocs. #ExternalDocumentation.
+			#externalDocsContainer. 'External documentation of the entity.'.
+			'The operation, schema or tag the external documentation belongs to.' } }
+]
+
+{ #category : 'definition-relations' }
+FamixOpenApiGenerator >> defineRelationsOfOperations [
+
+	self defineRelationsIn: {
+			{ #containsMany. #Path. #operations. #Operation. #path. 'Operations of the path item, one per HTTP method.'.
+			'The path item declaring the operation.' }.
+			{ #manyToMany. #Path. #parameters. #Parameter. #usedByPaths.
+			'Parameters shared by all the operations of the path item. A parameter may be shared by several paths.'.
+			'Path items using this parameter.' }.
+			{ #manyToMany. #Operation. #parameters. #Parameter. #usedByOperations.
+			'Parameters of the operation. A parameter may be shared by several operations.'.
+			'Operations using this parameter.' }.
+			{ #manyToOne. #Operation. #requestBody. #RequestBody. #usedByOperations.
+			'Request body accepted by the operation. A request body may be shared by several operations.'.
+			'Operations using this request body.' }.
+			{ #containsMany. #Operation. #responses. #Response. #operation.
+			'Responses of the operation, one per status code.'.
+			'The operation owning the response.' }.
+			{ #containsMany. #Operation. #callbacks. #Callback. #operation.
+			'Callbacks the operation may trigger.'.
+			'The operation owning the callback, when it is declared inline.' }.
+			{ #containsMany. #Operation. #securityRequirements.
+			#SecurityRequirement. #operation. 'Security requirements of the operation, as alternatives; they replace the ones of the document. See #effectiveSecurity.'.
+			'The operation declaring the requirement.' }.
+			{ #manyToOne. #Link. #operation. #Operation. #usedByLinks.
+			'The linked operation (operationId or operationRef resolved).'.
+			'Links targeting this operation.' }.
+			{ #containsMany. #Callback. #pathItems. #Path. #callback. 'Path items describing the requests sent to the callback URL expressions.'.
+			'The callback declaring the path item.' }.
+			{ #containsMany. #ContentContainer. #content. #MediaType. #contentOwner.
+			'Payload descriptions of the entity, one per media type.'.
+			'The response, request body or parameter declaring the media type.' }.
+			{ #containsMany. #MediaType. #encodings. #Encoding. #mediaType.
+			'Serialization rules of the schema properties.'.
+			'The media type declaring the encoding.' }.
+			{ #containsMany. #MediaType. #examples. #Example. #mediaType.
+			'Examples of the media type.'. 'The media type declaring the example.' }.
+			{ #containsMany. #Parameter. #examples. #Example. #parameter.
+			'Examples of the parameter value.'.
+			'The parameter declaring the example.' }.
+			{ #containsMany. #Encoding. #headers. #Header. #encoding. 'Headers sent with the encoded part.'.
+			'The encoding declaring the header.' }.
+			{ #containsMany. #Response. #headers. #Header. #response. 'Headers of the response.'.
+			'The response declaring the header.' }.
+			{ #containsMany. #Response. #links. #Link. #response. 'Operations that can be followed from the response.'.
+			'The response declaring the link.' }.
+			{ #manyToOne. #Parameter. #schema. #Schema. #usedByParameters.
+			'Schema of the parameter value.'. 'Parameters whose schema is this schema.' }.
+			{ #manyToOne. #Header. #schema. #Schema. #usedByHeaders.
+			'Schema of the header value.'. 'Headers whose schema is this schema.' }.
+			{ #manyToOne. #MediaType. #schema. #Schema. #usedByMediaTypes.
+			'Schema of the payload.'. 'Media types whose schema is this schema.' } }
+]
+
+{ #category : 'definition-relations' }
+FamixOpenApiGenerator >> defineRelationsOfSchemas [
+
+	self defineRelationsIn: {
+			{ #containsMany. #Schema. #properties. #Property. #schema. 'Named properties of an object schema.'.
+			'The schema declaring the property.' }.
+			{ #manyToMany. #Schema. #allOf. #Schema. #usedAsAllOfBy.
+			'Schemas that must all match.'. 'Schemas having this schema in their allOf.' }.
+			{ #manyToMany. #Schema. #oneOf. #Schema. #usedAsOneOfBy.
+			'Alternatives of which exactly one must match.'.
+			'Schemas having this schema in their oneOf.' }.
+			{ #manyToMany. #Schema. #anyOf. #Schema. #usedAsAnyOfBy.
+			'Alternatives of which at least one must match.'.
+			'Schemas having this schema in their anyOf.' }.
+			{ #manyToMany. #Schema. #prefixItems. #Schema. #usedAsPrefixItemsBy.
+			'Schemas of the first items of an array, in order (tuple validation).'.
+			'Schemas having this schema in their prefixItems.' }.
+			{ #manyToOne. #Schema. #not. #Schema. #usedAsNotBy. 'Schema that must not match.'.
+			'Schemas having this schema as their not.' }.
+			{ #manyToOne. #Schema. #items. #Schema. #usedAsItemsBy.
+			'Schema of the items of an array.'.
+			'Schemas having this schema as their items.' }.
+			{ #manyToOne. #Schema. #additionalProperties. #Schema. #usedAsAdditionalPropertiesBy.
+			'Schema of the additional properties of an object.'.
+			'Schemas having this schema as their additionalProperties.' }.
+			{ #containsOne. #Schema. #discriminator. #Discriminator.
+			#schema. 'Discriminator selecting the matching alternative of the schema.'.
+			'The schema declaring the discriminator.' }.
+			{ #containsOne. #Schema. #xml. #XmlElement. #schema. 'XML representation of the schema.'.
+			'The schema declaring the XML element.' }.
+			{ #containsMany. #Discriminator. #mapping. #DiscriminatorMapping.
+			#discriminator. 'Explicit bindings of discriminating values to schemas.'.
+			'The discriminator declaring the mapping.' }.
+			{ #manyToOne. #DiscriminatorMapping. #schema. #Schema. #usedByDiscriminatorMappings.
+			'The schema selected by the discriminating value.'.
+			'Discriminator mappings selecting this schema.' }.
+			{ #manyToOne. #Property. #valueSchema. #Schema. #usedAsPropertyValueBy.
+			'Schema of the property value.'. 'Properties whose value schema is this schema.' } }
+]
+
+{ #category : 'definition-relations' }
+FamixOpenApiGenerator >> defineRelationsOfSecurity [
+
+	self defineRelationsIn: {
+			{ #containsMany. #SecurityScheme. #flows. #OAuthFlow. #securityScheme.
+			'OAuth2 flows supported by the scheme.'.
+			'The security scheme declaring the flow.' }.
+			{ #containsMany. #OAuthFlow. #scopes. #SecurityScope. #oauthFlow.
+			'Scopes offered by the flow, with their description.'.
+			'The flow offering the scope.' }.
+			{ #containsMany. #SecurityRequirement. #items. #SecurityRequirementItem.
+			#requirement. 'Schemes that must all be satisfied together (logical AND).'.
+			'The requirement the item belongs to.' }.
+			{ #manyToOne. #SecurityRequirementItem. #scheme. #SecurityScheme.
+			#usedBySecurityRequirementItems. 'The security scheme required by the item.'.
+			'Requirement items that require this security scheme.' } }
 ]
 
 { #category : 'definition-helpers' }
@@ -967,19 +526,108 @@ FamixOpenApiGenerator >> defineTraitNamed: aSymbol comment: aString [
 
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineTraits [
-    super defineTraits.
-    traits := Dictionary new.
-    self defineTraitNamed: #JSONSchemaSubset.
-    self defineTraitNamed: #ParameterContainer.
-    self defineTraitNamed: #SchemaContainer.
-    self defineTraitNamed: #ResponseContainer.
-    self defineTraitNamed: #ExternalDocsContainer.
-    self defineTraitNamed: #ArrayContainer.
-    self defineTraitNamed: #SecurityContainer.
-    self defineTraitNamed: #ContentContainer.
-    self defineTraitNamed: #Referenceable.
-    self defineTraitNamed: #SourceText.
-	self defineCanonicalTraits
+
+	super defineTraits.
+	traits := Dictionary new.
+	self traitDefinitions do: [ :each |
+		self defineTraitNamed: each key comment: each value ]
+]
+
+{ #category : 'definition-entities' }
+FamixOpenApiGenerator >> entityDefinitions [
+	"Answer the entities of the metamodel: each association binds the name of an entity to the text of its class comment. This is the only place where the entities are listed."
+
+	^ {
+		  (#OpenApi
+		   ->
+		   'An OpenAPI description document (OpenAPI Object), root of the model. Swagger 2.0 and OpenAPI 3.0.x documents are normalised by the importer to the OpenAPI 3.1 shape described by this model.').
+		  (#Info
+		   ->
+		   'Metadata of the API: title, version, description, terms of service, contact and license (OpenAPI Info Object).').
+		  (#Contact
+		   -> 'Contact information of the API (OpenAPI Contact Object).').
+		  (#License -> 'License of the API (OpenAPI License Object).').
+		  (#Server
+		   ->
+		   'A server hosting the API (OpenAPI Server Object), declared at document, path item, operation or link level.').
+		  (#ServerVariable
+		   ->
+		   'A variable substituted in the URL template of a Server (OpenAPI Server Variable Object). Its name is the variable name.').
+		  (#Tag
+		   ->
+		   'A tag declared by the document to group operations (OpenAPI Tag Object).').
+		  (#ExternalDocumentation
+		   ->
+		   'A reference to external documentation (OpenAPI External Documentation Object).').
+		  (#Path
+		   ->
+		   'A path item (OpenAPI Path Item Object): the operations available on one relative path, declared in the paths, in the webhooks, in a callback or among the reusable path items.').
+		  (#Operation
+		   ->
+		   'An HTTP operation of a path item (OpenAPI Operation Object): one verb on one path, with its parameters, request body, responses, callbacks and security.').
+		  (#Parameter
+		   ->
+		   'A parameter of an operation or of a path item (OpenAPI Parameter Object), located in the path, the query, a header or a cookie. It may be shared by several operations.').
+		  (#RequestBody
+		   ->
+		   'The payload an operation accepts (OpenAPI Request Body Object), described by media types. It may be shared by several operations.').
+		  (#Response
+		   ->
+		   'A response of an operation for one status code (OpenAPI Response Object). A reusable response referenced by several operations is copied for each of them: each copy owns its status code and operation and keeps the reference to the original.').
+		  (#Header
+		   ->
+		   'A header of a response or of an encoding (OpenAPI Header Object).').
+		  (#MediaType
+		   ->
+		   'The description of a payload for one media type, such as application/json (OpenAPI Media Type Object).').
+		  (#Encoding
+		   ->
+		   'Serialization rules applied to one property of a media type schema (OpenAPI Encoding Object).').
+		  (#Example
+		   ->
+		   'An example value (OpenAPI Example Object), inline or reusable.').
+		  (#Link
+		   ->
+		   'A link from a response to an operation that can be followed with values of the response (OpenAPI Link Object).').
+		  (#Callback
+		   ->
+		   'Requests an operation may send to a URL given at runtime (OpenAPI Callback Object), described by path items.').
+		  (#Components
+		   ->
+		   'The reusable objects of the document (OpenAPI Components Object): schemas, responses, parameters, request bodies, headers, examples, links, callbacks, security schemes and path items. Each reusable object is owned by the components and shared by reference.').
+		  (#Schema
+		   ->
+		   'A JSON Schema (OpenAPI Schema Object) describing a value: its types, constraints, properties and composition (allOf, oneOf, anyOf, not).').
+		  (#Property
+		   ->
+		   'A named property of an object Schema. It binds a name to the Schema of the value and tells whether the property is required.').
+		  (#Discriminator
+		   ->
+		   'Hint used to select, among oneOf/anyOf/allOf alternatives, the schema matching a payload (OpenAPI Discriminator Object).').
+		  (#DiscriminatorMapping
+		   ->
+		   'One entry of the mapping of a Discriminator: a discriminating value (its name) bound to the Schema it selects.').
+		  (#XmlElement
+		   ->
+		   'XML representation of a Schema (OpenAPI XML Object): element name, namespace, prefix, attribute or wrapped array. Its name is the XML element name.').
+		  (#SecurityScheme
+		   ->
+		   'A security scheme usable by the API (OpenAPI Security Scheme Object): apiKey, http, oauth2, openIdConnect or mutualTLS.').
+		  (#OAuthFlow
+		   ->
+		   'One OAuth2 flow of a security scheme (OpenAPI OAuth Flow Object): implicit, password, clientCredentials or authorizationCode.').
+		  (#SecurityScope
+		   ->
+		   'A scope offered by an OAuth2 flow, with its description. Scopes exist only under OAuthFlow.').
+		  (#SecurityRequirement
+		   ->
+		   'An alternative of the security of an API or of an operation (OpenAPI Security Requirement Object). All its items must be satisfied together (logical AND); the requirements of the same list are alternatives (logical OR).').
+		  (#SecurityRequirementItem
+		   ->
+		   'One security scheme required by a SecurityRequirement, with the names of the scopes needed from it.').
+		  (#Reference
+		   ->
+		   'A $ref that cannot be resolved to an entity of the model, for instance a reference to an external document (OpenAPI Reference Object). It is owned by the root OpenApi.') }
 ]
 
 { #category : 'private' }
@@ -987,24 +635,19 @@ FamixOpenApiGenerator >> entityNamed: aSymbol [
     ^ entities at: aSymbol
 ]
 
-{ #category : 'definition-canonical' }
-FamixOpenApiGenerator >> provisionalRelationNames [
-	"Provisional name -> final name of the new relations that cannot yet take their final name because an original relation uses it. Recorded in the commit message and applied by the next regeneration. OPXmlElement (replacing OPXMLElement, with Schema>>xml) is not added yet: its Tonel file name only differs by case from the one of OPXMLElement, which cannot coexist on a case-insensitive file system."
+{ #category : 'definition-helpers' }
+FamixOpenApiGenerator >> relate: anOriginProperty with: anOppositeProperty kind: aKind [
+	"Declare the two properties as opposites of each other, with the multiplicity and the containment given by aKind."
 
-	^ { 'OPComponents>>directSchemas -> schemas'.
-	  'OPComponents>>directResponses -> responses'.
-	  'OPComponents>>directParameters -> parameters'.
-	  'OPComponents>>directRequestBodies -> requestBodies'.
-	  'OPComponents>>directHeaders -> headers'.
-	  'OPComponents>>directExamples -> examples'.
-	  'OPComponents>>directLinks -> links'.
-	  'OPComponents>>directCallbacks -> callbacks'.
-	  'OPComponents>>directSecuritySchemes -> securitySchemes'.
-	  'OPOperation>>directResponses -> responses'.
-	  'OPOperation>>directCallbacks -> callbacks'.
-	  'OPContentContainer>>directContent -> content (trait used by OPResponse, OPRequestBody and OPParameter)'.
-	  'OPMediaType>>directExamples -> examples'.
-	  'OPExternalDocsContainer>>externalDocumentation -> externalDocs (target OPExternalDocumentation)' }
+	aKind = #containsOne ifTrue: [
+		^ anOriginProperty <>- anOppositeProperty ].
+	aKind = #containsMany ifTrue: [
+		^ anOriginProperty <>-* anOppositeProperty ].
+	aKind = #manyToOne ifTrue: [
+		^ anOriginProperty *- anOppositeProperty ].
+	aKind = #manyToMany ifTrue: [
+		^ anOriginProperty *-* anOppositeProperty ].
+	^ self error: 'Unknown kind of relation: ' , aKind printString
 ]
 
 { #category : 'definition-helpers' }
@@ -1019,6 +662,28 @@ FamixOpenApiGenerator >> stringCollection: aName in: aBehavior comment: aString 
 	property multivalued: true.
 	property comment: aString.
 	^ property
+]
+
+{ #category : 'definition' }
+FamixOpenApiGenerator >> traitDefinitions [
+	"Answer the traits of the metamodel: each association binds the name of a trait to the text of its comment. This is the only place where the traits are listed."
+
+	^ {
+		  (#CanonicalNode
+		   ->
+		   'Common part of the entities of the model: the JSON pointer of the entity in the canonical OpenAPI 3.1 document and its specification extensions (x-* keys).').
+		  (#SourceText
+		   ->
+		   'Keeps the text of the JSON node an entity was built from, for traceability.').
+		  (#Referenceable
+		   ->
+		   'Entities that can be designated by a $ref (reusable objects) and keep the reference they come from.').
+		  (#ContentContainer
+		   ->
+		   'Entities that describe a payload through media types: Response, RequestBody and Parameter.').
+		  (#ExternalDocsContainer
+		   ->
+		   'Entities that may point to external documentation: Operation, Schema and Tag.') }
 ]
 
 { #category : 'private' }

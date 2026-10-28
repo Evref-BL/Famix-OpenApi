@@ -1,3 +1,6 @@
+"
+OLD visitor of the importer, intentionally BROKEN since the regeneration of the final Famix-OpenAPI-Model: it builds the removed Entry-based entities (OPApi, OPSchemaEntry, OPResponseEntry...) and uses relations that no longer exist. It is rewritten by the next step (importer rewrite); do not fix it in place.
+"
 Class {
 	#name : 'FamixOpenApiJsonVisitor',
 	#superclass : 'Object',

@@ -188,7 +188,7 @@ FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiOfACallbackOperationIsTh
 		          operationNamed: 'subscribe'
 		          in: (self pathNamed: '/subscriptions' in: openApi).
 	callback := OPCallback new.
-	parent addDirectCallback: callback.
+	parent addCallback: callback.
 	callbackOperation := self operationNamed: 'notify' in: (OPPath new
 			                      callback: callback;
 			                      yourself).
@@ -301,6 +301,31 @@ FamixOpenApiDerivedAccessorsTest >> testEffectiveSecurityIsEmptyWhenNothingIsDec
 	self assert: operation effectiveSecurity isEmpty
 ]
 
+{ #category : 'tests-security' }
+FamixOpenApiDerivedAccessorsTest >> testEffectiveSecurityIsEmptyWhenTheOperationDisablesItsOwnSecurityToo [
+
+	| operation |
+	operation := self operationNamed: 'orphan'.
+	operation addSecurityRequirement:
+		(self securityRequirementNamed: 'local').
+	operation securityDisabled: true.
+	self assert: operation effectiveSecurity isEmpty
+]
+
+{ #category : 'tests-security' }
+FamixOpenApiDerivedAccessorsTest >> testEffectiveSecurityIsEmptyWhenTheOperationDisablesTheSecurityOfTheOpenApi [
+
+	| openApi operation |
+	openApi := OPOpenApi new.
+	openApi addSecurityRequirement:
+		(self securityRequirementNamed: 'global').
+	operation := self
+		             operationNamed: 'listPets'
+		             in: (self pathNamed: '/pets' in: openApi).
+	operation securityDisabled: true.
+	self assert: operation effectiveSecurity isEmpty
+]
+
 { #category : 'tests-effective' }
 FamixOpenApiDerivedAccessorsTest >> testEffectiveSecurityPrefersTheRequirementsOfTheOperation [
 
@@ -314,6 +339,28 @@ FamixOpenApiDerivedAccessorsTest >> testEffectiveSecurityPrefersTheRequirementsO
 	own := self securityRequirementNamed: 'local'.
 	operation addSecurityRequirement: own.
 	self assert: operation effectiveSecurity asArray equals: { own }
+]
+
+{ #category : 'tests-security' }
+FamixOpenApiDerivedAccessorsTest >> testEffectiveSecurityUsesTheDocumentWhenSecurityIsNotDisabled [
+
+	| openApi operation global |
+	openApi := OPOpenApi new.
+	global := self securityRequirementNamed: 'global'.
+	openApi addSecurityRequirement: global.
+	operation := self
+		             operationNamed: 'listPets'
+		             in: (self pathNamed: '/pets' in: openApi).
+	operation securityDisabled: false.
+	self assert: operation effectiveSecurity asArray equals: { global }
+]
+
+{ #category : 'tests-document' }
+FamixOpenApiDerivedAccessorsTest >> testOldAliasesAreGone [
+
+	self deny: (OPParameter includesSelector: #allowEmplyValue).
+	self deny: (OPSchema includesSelector: #additonalProperties).
+	self deny: (OPSchema includesSelector: #additonalPropertiesAllowed)
 ]
 
 { #category : 'tests-operations' }
@@ -405,6 +452,66 @@ FamixOpenApiDerivedAccessorsTest >> testReferrersIncludeTheReceiverWhenItRefersT
 	self assert: schema referrers asArray equals: { schema }
 ]
 
+{ #category : 'tests-security' }
+FamixOpenApiDerivedAccessorsTest >> testSecurityDisabledIsFalseByDefault [
+
+	self deny: (self operationNamed: 'orphan') securityDisabled
+]
+
+{ #category : 'tests-security' }
+FamixOpenApiDerivedAccessorsTest >> testSecurityRequirementItemIsAReferrerOfItsScheme [
+
+	| scheme item requirement |
+	scheme := OPSecurityScheme new.
+	item := OPSecurityRequirementItem new
+		        scheme: scheme;
+		        yourself.
+	requirement := self securityRequirementNamed: 'single'.
+	requirement addItem: item.
+	self assert: scheme referrers asArray equals: { item }.
+	self assert: item requirement equals: requirement
+]
+
+{ #category : 'tests-security' }
+FamixOpenApiDerivedAccessorsTest >> testSecurityRequirementItemsExpressAnAndBetweenSchemes [
+
+	| requirement apiKey oauth2 |
+	requirement := self securityRequirementNamed: 'both'.
+	apiKey := OPSecurityScheme new
+		          name: 'api_key';
+		          yourself.
+	oauth2 := OPSecurityScheme new
+		          name: 'petstore_auth';
+		          yourself.
+	requirement
+		addItem: (OPSecurityRequirementItem new
+				 scheme: apiKey;
+				 yourself);
+		addItem: (OPSecurityRequirementItem new
+				 scheme: oauth2;
+				 scopeNames: #( 'read:pets' );
+				 yourself).
+	self assert: requirement items size equals: 2.
+	self assert: requirement schemes asArray equals: {
+			apiKey.
+			oauth2 }.
+	self
+		assert: requirement items last scopeNames asArray
+		equals: #( 'read:pets' )
+]
+
+{ #category : 'tests-document' }
+FamixOpenApiDerivedAccessorsTest >> testTagDeprecatedAliasesRedirectToOpenApi [
+
+	| tag openApi |
+	tag := self tagNamed: 'pets'.
+	openApi := OPOpenApi new.
+	tag anApi: openApi.
+	self assert: tag openApi equals: openApi.
+	self assert: tag anApi equals: openApi.
+	self assert: openApi tags asArray equals: { tag }
+]
+
 { #category : 'tests-operations' }
 FamixOpenApiDerivedAccessorsTest >> testTagsAreEmptyForADetachedOperation [
 
@@ -456,4 +563,19 @@ FamixOpenApiDerivedAccessorsTest >> testTagsSkipANameNotDeclaredByTheOpenApi [
 		             in: (self pathNamed: '/pets' in: openApi).
 	operation tagNames: #( 'unknown' 'pets' ).
 	self assert: operation tags asArray equals: { pets }
+]
+
+{ #category : 'tests-document' }
+FamixOpenApiDerivedAccessorsTest >> testUnresolvedReferencesAreOwnedByTheOpenApi [
+
+	| openApi reference |
+	openApi := OPOpenApi new.
+	reference := OPReference new
+		             target: 'https://example.com/owner.json#/Owner';
+		             yourself.
+	openApi addUnresolvedReference: reference.
+	self
+		assert: openApi unresolvedReferences asArray
+		equals: { reference }.
+	self assert: reference openApi equals: openApi
 ]

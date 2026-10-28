@@ -5,16 +5,16 @@ Class {
 	#package : 'FamixOpenApiGenerator-Test'
 }
 
-{ #category : 'private' }
+{ #category : 'helpers' }
 FamixOpenApiGeneratorInstantiationTest >> allGeneratedEntityNames [
-	^ #(
-		ContainedCollections Api Components Info Contact License Path Operation
-		ExternalDocs Parameter ItemsDefinition Schema Response Header Tag
-		SecurityScheme Example RequestBody MediaType Link Callback XMLElement
-		SecurityScope SecurityRequirement Property ResponseEntry SchemaEntry
-		ResponseDefinitionEntry ParameterEntry SecuritySchemeEntry MediaTypeEntry
-		RequestBodyEntry HeaderEntry ExampleEntry LinkEntry CallbackEntry
-		RequiredSecurityScheme)
+	"Answer the names of all the entities of the metamodel, listed independently from the generator."
+
+	^ #( OpenApi Info Contact License Server ServerVariable Tag
+	     ExternalDocumentation Path Operation Parameter RequestBody Response
+	     Header MediaType Encoding Example Link Callback Components Schema
+	     Property Discriminator DiscriminatorMapping XmlElement SecurityScheme
+	     OAuthFlow SecurityScope SecurityRequirement SecurityRequirementItem
+	     Reference )
 ]
 
 { #category : 'private' }
@@ -46,12 +46,37 @@ FamixOpenApiGeneratorInstantiationTest >> testAllEntitiesExposeSourceTextAccesso
 { #category : 'tests' }
 FamixOpenApiGeneratorInstantiationTest >> testCanInstantiateGeneratedEntities [
 	| entityNames |
-	entityNames := #(Api Components Path Operation RequestBody MediaType Schema Property Response).
+	entityNames := #(OpenApi Components Path Operation RequestBody MediaType Schema Property Response).
 	entityNames do: [ :entityName |
 		| generatedClass instance |
 		generatedClass := self generatedClassNamed: entityName.
 		instance := generatedClass new.
 		self assert: instance class equals: generatedClass ]
+]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testGeneratorDefinesEveryExpectedEntity [
+	self
+		assert: (FamixOpenApiGenerator new entityDefinitions collect: #key) asSet
+		equals: self allGeneratedEntityNames asSet
+]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testOldEntitiesAreNotGeneratedAnymore [
+	#( Api ExternalDocs XMLElement ItemsDefinition ContainedCollections ResponseEntry SchemaEntry
+	   RequiredSecurityScheme ) do: [ :entityName |
+		self deny: (Smalltalk globals includesKey: (FamixOpenApiGenerator prefix asString , entityName asString) asSymbol) ]
+]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testPropertyEntityExposesIsRequiredAccessor [
+	| generatedClass instance |
+	generatedClass := self generatedClassNamed: #Property.
+	instance := generatedClass new.
+	self assert: (instance respondsTo: #isRequired).
+	self assert: (instance respondsTo: #isRequired:).
+	instance isRequired: true.
+	self assert: instance isRequired
 ]
 
 { #category : 'tests' }
@@ -69,20 +94,9 @@ FamixOpenApiGeneratorInstantiationTest >> testReferenceableEntitiesExposeRefAcce
 ]
 
 { #category : 'tests' }
-FamixOpenApiGeneratorInstantiationTest >> testPropertyEntityExposesEnumAccessor [
-	| generatedClass instance |
-	generatedClass := self generatedClassNamed: #Property.
-	instance := generatedClass new.
-	self assert: (instance respondsTo: #enum).
-	self assert: (instance respondsTo: #enum:).
-	instance enum: #('cat' 'dog').
-	self assert: instance enum asArray equals: #('cat' 'dog')
-]
-
-{ #category : 'tests' }
 FamixOpenApiGeneratorInstantiationTest >> testUsesCurrentPrefixForGeneratedEntities [
-	| generatedApiClassName generatedApiClass |
-	generatedApiClassName := (FamixOpenApiGenerator prefix asString , 'Api') asSymbol.
-	generatedApiClass := self generatedClassNamed: #Api.
-	self assert: generatedApiClass name equals: generatedApiClassName
+	| generatedOpenApiClassName generatedOpenApiClass |
+	generatedOpenApiClassName := (FamixOpenApiGenerator prefix asString , 'OpenApi') asSymbol.
+	generatedOpenApiClass := self generatedClassNamed: #OpenApi.
+	self assert: generatedOpenApiClass name equals: generatedOpenApiClassName
 ]
