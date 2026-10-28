@@ -174,6 +174,15 @@ FamixOpenApiDerivedAccessorsTest >> testAllReferrersTerminateOnACycleAndExcludeT
 ]
 
 { #category : 'tests-operations' }
+FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiIsNilForADetachedCallbackAndADetachedPath [
+
+	self assert: OPCallback new declaringOpenApi isNil.
+	self assert: OPCallback new declaringOpenApis isEmpty.
+	self assert: OPPath new declaringOpenApi isNil.
+	self assert: OPPath new declaringOpenApis isEmpty
+]
+
+{ #category : 'tests-operations' }
 FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiIsNilForADetachedOperation [
 
 	self assert: (self operationNamed: 'orphan') declaringOpenApi isNil
@@ -182,17 +191,69 @@ FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiIsNilForADetachedOperati
 { #category : 'tests-operations' }
 FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiOfACallbackOperationIsTheOpenApiOfTheCallbackOperation [
 
-	| openApi parent callback callbackOperation |
+	| openApi parent callback callbackOperation callbackPath |
 	openApi := OPOpenApi new.
 	parent := self
 		          operationNamed: 'subscribe'
 		          in: (self pathNamed: '/subscriptions' in: openApi).
 	callback := OPCallback new.
 	parent addCallback: callback.
-	callbackOperation := self operationNamed: 'notify' in: (OPPath new
-			                      callback: callback;
-			                      yourself).
+	callbackPath := OPPath new.
+	callback addPathItem: callbackPath.
+	callbackOperation := self operationNamed: 'notify' in: callbackPath.
 	self assert: callbackOperation declaringOpenApi equals: openApi
+]
+
+{ #category : 'tests-operations' }
+FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiOfACallbackSharedByOperationsOfTwoOpenApisAnswersBoth [
+
+	| first second callback |
+	first := OPOpenApi new.
+	second := OPOpenApi new.
+	callback := OPCallback new.
+	(self operationNamed: 'one' in: (self pathNamed: '/one' in: first))
+		addCallback: callback.
+	(self operationNamed: 'two' in: (self pathNamed: '/two' in: second))
+		addCallback: callback.
+	self assert: callback declaringOpenApi equals: first.
+	self assert: callback declaringOpenApis asArray equals: {
+			first.
+			second }
+]
+
+{ #category : 'tests-operations' }
+FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiOfAPathItemSharedByTwoCallbacksFollowsTheCallbacks [
+
+	| openApi pathItem inline reusable operation |
+	openApi := OPOpenApi new
+		           components: OPComponents new;
+		           yourself.
+	pathItem := OPPath new.
+	inline := OPCallback new.
+	reusable := OPCallback new.
+	inline addPathItem: pathItem.
+	reusable addPathItem: pathItem.
+	self assert: pathItem declaringOpenApi isNil.
+	operation := self
+		             operationNamed: 'subscribe'
+		             in: (self pathNamed: '/subscriptions' in: openApi).
+	operation addCallback: inline.
+	self assert: pathItem declaringOpenApi equals: openApi.
+	openApi components addCallback: reusable.
+	self assert: pathItem declaringOpenApis asArray equals: { openApi }
+]
+
+{ #category : 'tests-operations' }
+FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiOfAReusableCallbackIsTheOpenApiOfItsComponents [
+
+	| openApi callback |
+	openApi := OPOpenApi new
+		           components: OPComponents new;
+		           yourself.
+	callback := OPCallback new.
+	openApi components addCallback: callback.
+	self assert: callback declaringOpenApi equals: openApi.
+	self assert: callback declaringOpenApis asArray equals: { openApi }
 ]
 
 { #category : 'tests-operations' }
@@ -215,6 +276,19 @@ FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiOfAnOperationIsTheOpenAp
 		             operationNamed: 'listPets'
 		             in: (self pathNamed: '/pets' in: openApi).
 	self assert: operation declaringOpenApi equals: openApi
+]
+
+{ #category : 'tests-operations' }
+FamixOpenApiDerivedAccessorsTest >> testDeclaringOpenApiTerminatesWhenACallbackPathItemHasAnOperationUsingTheSameCallback [
+
+	| callback callbackPath |
+	callback := OPCallback new.
+	callbackPath := OPPath new.
+	callback addPathItem: callbackPath.
+	(self operationNamed: 'loop' in: callbackPath) addCallback: callback.
+	self assert: callbackPath declaringOpenApi isNil.
+	self assert: callback declaringOpenApi isNil.
+	self assert: callbackPath declaringOpenApis isEmpty
 ]
 
 { #category : 'tests-effective' }
@@ -355,6 +429,16 @@ FamixOpenApiDerivedAccessorsTest >> testEffectiveSecurityUsesTheDocumentWhenSecu
 	self assert: operation effectiveSecurity asArray equals: { global }
 ]
 
+{ #category : 'tests-referrers' }
+FamixOpenApiDerivedAccessorsTest >> testMergedPointersAreEmptyByDefaultAndKeepWhatIsSet [
+
+	| schema |
+	schema := self schemaNamed: 'Merged'.
+	self assert: schema mergedPointers isEmpty.
+	schema mergedPointers: #( '#/a' '#/b' ).
+	self assert: schema mergedPointers asArray equals: #( '#/a' '#/b' )
+]
+
 { #category : 'tests-document' }
 FamixOpenApiDerivedAccessorsTest >> testOldAliasesAreGone [
 
@@ -413,6 +497,43 @@ FamixOpenApiDerivedAccessorsTest >> testReferrersAreEmptyWhenNothingRefersToTheE
 	self assert: (self schemaNamed: 'Pet') referrers isEmpty
 ]
 
+{ #category : 'tests-referrers' }
+FamixOpenApiDerivedAccessorsTest >> testReferrersCollectTheOperationsUsingTheCallbackAndTheCallbacksUsingThePath [
+
+	| callback first second pathItem |
+	callback := OPCallback new.
+	first := OPOperation new
+		         addCallback: callback;
+		         yourself.
+	second := OPOperation new
+		          addCallback: callback;
+		          yourself.
+	pathItem := OPPath new.
+	callback addPathItem: pathItem.
+	self assert: callback referrers asArray equals: {
+			first.
+			second }.
+	self assert: pathItem referrers asArray equals: { callback }
+]
+
+{ #category : 'tests-referrers' }
+FamixOpenApiDerivedAccessorsTest >> testReferrersCollectTheParametersAndMediaTypesUsingTheExample [
+
+	| example parameter mediaType |
+	example := OPExample new.
+	parameter := OPParameter new
+		             addExample: example;
+		             yourself.
+	mediaType := OPMediaType new
+		             addExample: example;
+		             yourself.
+	self assert: example usedByParameters asArray equals: { parameter }.
+	self assert: example usedByMediaTypes asArray equals: { mediaType }.
+	self assert: example referrers asIdentitySet equals: {
+			parameter.
+			mediaType } asIdentitySet
+]
+
 { #category : 'tests-schema and referrers' }
 FamixOpenApiDerivedAccessorsTest >> testReferrersCollectTheParametersUsingTheSchema [
 
@@ -431,6 +552,46 @@ FamixOpenApiDerivedAccessorsTest >> testReferrersCollectThePropertiesUsingTheSch
 	property := self propertyNamed: 'pet'.
 	property valueSchema: schema.
 	self assert: schema referrers asArray equals: { property }
+]
+
+{ #category : 'tests-referrers' }
+FamixOpenApiDerivedAccessorsTest >> testReferrersCollectTheResponsesAndEncodingsUsingTheHeader [
+
+	| header first second encoding |
+	header := OPHeader new.
+	first := OPResponse new
+		         addHeader: header;
+		         yourself.
+	second := OPResponse new
+		          addHeader: header;
+		          yourself.
+	encoding := OPEncoding new
+		            addHeader: header;
+		            yourself.
+	self assert: header usedByResponses size equals: 2.
+	self assert: header usedByEncodings asArray equals: { encoding }.
+	self assert: header referrers size equals: 3.
+	self assert: header referrers asIdentitySet equals: {
+			first.
+			second.
+			encoding } asIdentitySet.
+	self assert: first headers asArray equals: { header }
+]
+
+{ #category : 'tests-referrers' }
+FamixOpenApiDerivedAccessorsTest >> testReferrersCollectTheResponsesUsingTheLink [
+
+	| link first second |
+	link := OPLink new.
+	first := OPResponse new
+		         addLink: link;
+		         yourself.
+	second := OPResponse new
+		          addLink: link;
+		          yourself.
+	self assert: link referrers asArray equals: {
+			first.
+			second }
 ]
 
 { #category : 'tests-schema and referrers' }
@@ -498,6 +659,43 @@ FamixOpenApiDerivedAccessorsTest >> testSecurityRequirementItemsExpressAnAndBetw
 	self
 		assert: requirement items last scopeNames asArray
 		equals: #( 'read:pets' )
+]
+
+{ #category : 'tests-referrers' }
+FamixOpenApiDerivedAccessorsTest >> testSubSchemaIsASchemaLinkedToItsLargerSchemaInBothDirections [
+
+	| larger sub |
+	larger := self schemaNamed: 'Pet'.
+	sub := OPSubSchema new
+		       name: 'PetSummary';
+		       yourself.
+	sub subSchemaOf: larger.
+	self assert: (sub isKindOf: OPSchema).
+	self assert: sub subSchemaOf equals: larger.
+	self assert: larger subSchemas asArray equals: { sub }.
+	sub subSchemaOf: nil.
+	self assert: larger subSchemas isEmpty
+]
+
+{ #category : 'tests-referrers' }
+FamixOpenApiDerivedAccessorsTest >> testSubSchemaKeepsTheDerivedAccessorsOfSchema [
+
+	| larger sub property parameter |
+	larger := self schemaNamed: 'Pet'.
+	sub := OPSubSchema new
+		       name: 'PetSummary';
+		       yourself.
+	sub subSchemaOf: larger.
+	property := OPProperty new
+		            name: 'id';
+		            yourself.
+	sub addProperty: property.
+	parameter := self parameterNamed: 'summary' location: 'query'.
+	parameter schema: sub.
+	self assert: sub allProperties asArray equals: { property }.
+	self assert: sub referrers asArray equals: { parameter }.
+	self assert: sub mergedPointers isEmpty.
+	self assert: sub types isEmpty
 ]
 
 { #category : 'tests-document' }

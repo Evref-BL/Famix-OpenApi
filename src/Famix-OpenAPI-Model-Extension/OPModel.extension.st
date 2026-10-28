@@ -554,6 +554,7 @@ OPModel class >> buildSchemasIn: aModel for: aComponents [
 	"Declare the reusable Schemas of the Petstore."
 
 	self buildPetSchemasIn: aModel for: aComponents.
+	self buildSubSchemasIn: aModel for: aComponents.
 	self buildErrorSchemaIn: aModel for: aComponents.
 	self buildAnimalSchemasIn: aModel for: aComponents
 ]
@@ -677,13 +678,17 @@ OPModel class >> buildSharedExamplesIn: aModel for: aComponents [
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
 OPModel class >> buildSharedHeadersIn: aModel for: aComponents [
-	"Declare the reusable Header X-Rate-Limit."
+	"Declare the reusable Header X-Rate-Limit. Its schema stands for an identical inline schema that the importer merged into it."
 
-	aComponents addHeader: (self
-			 newHeaderIn: aModel
-			 named: 'X-Rate-Limit'
-			 types: #( 'integer' )
-			 pointer: '#/components/headers/X-Rate-Limit')
+	| header |
+	header := self
+		          newHeaderIn: aModel
+		          named: 'X-Rate-Limit'
+		          types: #( 'integer' )
+		          pointer: '#/components/headers/X-Rate-Limit'.
+	header schema mergedPointers:
+		#( '#/paths/~1pets~1search/get/responses/200/headers/X-Rate-Limit/schema' ).
+	aComponents addHeader: header
 ]
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
@@ -712,6 +717,73 @@ OPModel class >> buildSharedResponsesIn: aModel for: aComponents [
 		type: 'application/json'
 		schema: (self entityNamed: 'Error' in: aComponents schemas)
 		in: aModel
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSharedUsagesIn: aModel for: anOpenApi [
+	"Reference the reusable Header, Example, Link, Callback and callback Path item from several places: each of them is then shared by two usages and keeps a single entity. Also add the 206 Response of searchPets, whose schema is the PetSummary SubSchema."
+
+	| components list create get search rateLimit fluffy getPetById petEvent pathItem summaries |
+	components := anOpenApi components.
+	list := self operationNamed: 'listPets' in: anOpenApi.
+	create := self operationNamed: 'createPet' in: anOpenApi.
+	get := self operationNamed: 'getPet' in: anOpenApi.
+	search := self operationNamed: 'searchPets' in: anOpenApi.
+	rateLimit := self entityNamed: 'X-Rate-Limit' in: components headers.
+	(self responseWithStatus: '200' of: list) addHeader: rateLimit.
+	(self responseWithStatus: '200' of: search) addHeader: rateLimit.
+	fluffy := self entityNamed: 'FluffyExample' in: components examples.
+	(self responseWithStatus: '201' of: create) content anyOne
+		addExample: fluffy.
+	(self responseWithStatus: '200' of: get) content anyOne addExample:
+		fluffy.
+	getPetById := self
+		              entityNamed: 'GetPetByIdShared'
+		              in: components links.
+	(self responseWithStatus: '200' of: list) addLink: getPetById.
+	(self responseWithStatus: '201' of: create) addLink: getPetById.
+	petEvent := self entityNamed: 'PetEvent' in: components callbacks.
+	pathItem := create callbacks first pathItems first.
+	create addCallback: petEvent.
+	(self operationNamed: 'deletePet' in: anOpenApi) addCallback:
+		petEvent.
+	petEvent addPathItem: pathItem.
+	summaries := self
+		             addResponseTo: search
+		             status: '206'
+		             description: 'A summary of the matching pets.'
+		             in: aModel.
+	self
+		addMediaTypeTo: summaries
+		type: 'application/json'
+		schema: (self entityNamed: 'PetSummary' in: components schemas)
+		in: aModel
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSubSchemasIn: aModel for: aComponents [
+	"Declare PetSummary, a SubSchema of Pet: its id and name properties are properties of Pet (inherited through NewPet and the identifier schema) with equivalent value schemas."
+
+	| summary |
+	summary := aModel newSubSchema
+		           types: #( 'object' );
+		           name: 'PetSummary';
+		           canonicalPointer: '#/components/schemas/PetSummary';
+		           subSchemaOf:
+			           (self entityNamed: 'Pet' in: aComponents schemas);
+		           yourself.
+	aComponents addSchema: summary.
+	(self
+		 addPropertyNamed: 'id'
+		 types: #( 'integer' )
+		 to: summary
+		 in: aModel) valueSchema format: 'int64'.
+	(self
+		 addPropertyNamed: 'name'
+		 types: #( 'string' )
+		 to: summary
+		 in: aModel) isRequired: true.
+	^ summary
 ]
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
@@ -818,12 +890,13 @@ OPModel class >> exampleMinimalApi [
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
 OPModel class >> exampleSmallPetstore [
-	"Answer a new OPModel that holds a small Petstore-like API in the OpenAPI 3.1 shape and instantiates every main concept of the metamodel: OpenApi, Info (Contact, License), Server (ServerVariable), Tag, ExternalDocumentation, Components, Path (also as a webhook), Operation, Parameter (inline on a path, inline on an operation, reusable and shared by two operations), RequestBody, Response, MediaType, Encoding, Header, Example, Link, Callback, Schema (object, array, allOf, oneOf, anyOf, enumeration, nullable, readOnly, with an XmlElement and exclusive bounds), Property, Discriminator and its mappings, SecurityScheme (apiKey and oauth2 with OAuthFlow and SecurityScope), SecurityRequirement and an unresolved Reference attached to the root.
+	"Answer a new OPModel that holds a small Petstore-like API in the OpenAPI 3.1 shape and instantiates every main concept of the metamodel: OpenApi, Info (Contact, License), Server (ServerVariable), Tag, ExternalDocumentation, Components, Path (also as a webhook), Operation, Parameter (inline on a path, inline on an operation, reusable and shared by two operations), RequestBody, Response, MediaType, Encoding, Header, Example, Link, Callback, Schema and SubSchema (object, array, allOf, oneOf, anyOf, enumeration, nullable, readOnly, with an XmlElement and exclusive bounds), Property, Discriminator and its mappings, SecurityScheme (apiKey and oauth2 with OAuthFlow and SecurityScope), SecurityRequirement and an unresolved Reference attached to the root.
 
 	Security: the document requires the apiKey scheme. createPet requires one SecurityRequirement with two SecurityRequirementItems (the oauth2 scopes AND the apiKey). searchPets is public: its securityDisabled is true.
 
 	Shared responses: the reusable NotFound response is copied for each operation that uses it (the 404 of getPet and of deletePet): each copy owns its status code and its operation and keeps the ref of the original and gets its own canonicalPointer (its position under the operation).
 
+	Shared references: the reusable Header X-Rate-Limit is used by two responses, the Example FluffyExample by two media types, the Link GetPetByIdShared by two responses, the Callback PetEvent by two operations and the Path item of the onPetCreated callback by two callbacks (a single entity each, reachable from every usage through the usedBy* relations). PetSummary is a SubSchema of Pet (subSchemaOf) used by the 206 response of searchPets, and the schema of X-Rate-Limit lists the pointer of an identical inline schema in its mergedPointers.
 	The Pet schema is shared: it is the item of Pets, a member of PetOrError and the schema of three media types. Run it from a Playground, or from the class browser with the play button of this method:
 
 		OPModel exampleSmallPetstore inspect"
@@ -845,6 +918,7 @@ OPModel class >> exampleSmallPetstore [
 	self buildPathsIn: model for: openApi.
 	self buildWebhooksIn: model for: openApi.
 	self buildSharedLinksIn: model for: openApi.
+	self buildSharedUsagesIn: model for: openApi.
 	self buildSecurityIn: model for: openApi.
 	self buildUnresolvedReferenceIn: model for: openApi.
 	^ model
@@ -1026,4 +1100,12 @@ OPModel class >> operationNamed: anOperationId in: anOpenApi [
 
 	^ anOpenApi operations detect: [ :each |
 		  each operationId = anOperationId ]
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> responseWithStatus: aStatusCode of: anOperation [
+	"Answer the Response of anOperation for aStatusCode."
+
+	^ anOperation responses detect: [ :each |
+		  each statusCode = aStatusCode ]
 ]

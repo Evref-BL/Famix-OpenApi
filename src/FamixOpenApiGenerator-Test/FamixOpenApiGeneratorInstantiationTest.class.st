@@ -12,7 +12,7 @@ FamixOpenApiGeneratorInstantiationTest >> allGeneratedEntityNames [
 	^ #( OpenApi Info Contact License Server ServerVariable Tag
 	     ExternalDocumentation Path Operation Parameter RequestBody Response
 	     Header MediaType Encoding Example Link Callback Components Schema
-	     Property Discriminator DiscriminatorMapping XmlElement SecurityScheme
+	     SubSchema Property Discriminator DiscriminatorMapping XmlElement SecurityScheme
 	     OAuthFlow SecurityScope SecurityRequirement SecurityRequirementItem
 	     Reference )
 ]
@@ -46,7 +46,7 @@ FamixOpenApiGeneratorInstantiationTest >> testAllEntitiesExposeSourceTextAccesso
 { #category : 'tests' }
 FamixOpenApiGeneratorInstantiationTest >> testCanInstantiateGeneratedEntities [
 	| entityNames |
-	entityNames := #(OpenApi Components Path Operation RequestBody MediaType Schema Property Response).
+	entityNames := #(OpenApi Components Path Operation RequestBody MediaType Schema SubSchema Property Response).
 	entityNames do: [ :entityName |
 		| generatedClass instance |
 		generatedClass := self generatedClassNamed: entityName.
@@ -91,6 +91,60 @@ FamixOpenApiGeneratorInstantiationTest >> testReferenceableEntitiesExposeRefAcce
 		self assert: (instance respondsTo: #ref:).
 				instance ref: '#/components/schemas/Pet'.
 				self assert: instance ref equals: '#/components/schemas/Pet' ]
+]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testSharedReferencesHaveManyToManyUsageRelationsAndNoSingleOwner [
+
+	#( #( Response headers Header usedByResponses )
+	   #( Encoding headers Header usedByEncodings )
+	   #( Response links Link usedByResponses )
+	   #( Parameter examples Example usedByParameters )
+	   #( MediaType examples Example usedByMediaTypes )
+	   #( Operation callbacks Callback usedByOperations )
+	   #( Callback pathItems Path usedByCallbacks ) ) do: [ :row |
+		| owner target |
+		owner := self generatedClassNamed: row first.
+		target := self generatedClassNamed: row third.
+		self assert: (owner canUnderstand: row second).
+		self assert: (target canUnderstand: row fourth).
+		self assert: (owner new perform: row second) isEmpty.
+		self assert: (target new perform: row fourth) isEmpty ].
+	#( #( Header response ) #( Header encoding ) #( Link response )
+	   #( Example parameter ) #( Example mediaType )
+	   #( Callback operation ) #( Path callback ) ) do: [ :row |
+		self deny:
+			((self generatedClassNamed: row first) includesSelector: row second) ]
+]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testSharedReferencesStayContainedByTheComponents [
+	#( #( Header headers addHeader: ) #( Link links addLink: ) #( Example examples addExample: )
+	   #( Callback callbacks addCallback: ) #( Path pathItems addPathItem: ) ) do: [ :row |
+		| entity components |
+		entity := (self generatedClassNamed: row first) new.
+		components := (self generatedClassNamed: #Components) new.
+		components perform: row third with: entity.
+		self assert: entity components equals: components.
+		self assert: (components perform: row second) asArray equals: { entity } ]
+]
+
+{ #category : 'tests' }
+FamixOpenApiGeneratorInstantiationTest >> testSubSchemaIsASubclassOfSchemaAndKeepsItsSlotsAndTraits [
+
+	| subSchema |
+	subSchema := self generatedClassNamed: #SubSchema.
+	self
+		assert: subSchema superclass
+		equals: (self generatedClassNamed: #Schema).
+	self
+		assert: (subSchema slots collect: #name) asArray
+		equals: #( subSchemaOf ).
+	self assert:
+		(subSchema inheritsFrom: (self generatedClassNamed: #Schema)).
+	self assert: (subSchema canUnderstand: #mergedPointers).
+	self assert: (subSchema canUnderstand: #canonicalPointer).
+	self assert: subSchema comment isNotEmpty
 ]
 
 { #category : 'tests' }

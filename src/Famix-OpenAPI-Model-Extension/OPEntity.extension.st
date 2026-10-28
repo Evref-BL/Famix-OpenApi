@@ -1,6 +1,15 @@
 Extension { #name : 'OPEntity' }
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
+OPEntity >> addDeclaringOpenApi: aDocument to: aCollection [
+	"Add aDocument to aCollection unless it is nil or already there."
+
+	aDocument ifNil: [ ^ self ].
+	(aCollection identityIncludes: aDocument) ifFalse: [
+		aCollection add: aDocument ]
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
 OPEntity >> allReferrers [
 	"Answer the entities that refer to the receiver directly or through a chain of referrers. Cycles are followed only once and the receiver is never part of the answer."
 

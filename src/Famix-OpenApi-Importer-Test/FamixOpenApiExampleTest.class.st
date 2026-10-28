@@ -44,6 +44,7 @@ FamixOpenApiExampleTest >> mainConceptClasses [
 		  OPLink.
 		  OPCallback.
 		  OPSchema.
+		  OPSubSchema.
 		  OPProperty.
 		  OPDiscriminator.
 		  OPDiscriminatorMapping.
@@ -71,8 +72,7 @@ FamixOpenApiExampleTest >> operationNamed: anOperationId [
 
 { #category : 'helpers' }
 FamixOpenApiExampleTest >> schemaNamed: aName [
-
-	^ (model allWithType: OPSchema) detect: [ :each | each name = aName ]
+	^ (model allWithSubTypesOf: OPSchema) detect: [ :each | each name = aName ]
 ]
 
 { #category : 'running' }
@@ -227,6 +227,19 @@ FamixOpenApiExampleTest >> testExportToMSE [
 	self assert: (self exportedWith: #exportToMSEStream:) isNotEmpty
 ]
 
+{ #category : 'tests' }
+FamixOpenApiExampleTest >> testFluffyExampleIsSharedByTwoMediaTypes [
+
+	| example |
+	example := (model allWithType: OPExample) detect: [ :each |
+		           each name = 'FluffyExample' ].
+	self assert: example usedByMediaTypes size equals: 2.
+	self assert: example referrers size equals: 2.
+	self assert: example components equals: self openApi components.
+	self assert: (example usedByMediaTypes allSatisfy: [ :each |
+			 each examples includes: example ])
+]
+
 { #category : 'running' }
 FamixOpenApiExampleTest >> testLimitParameterIsReusableUnderComponents [
 
@@ -329,6 +342,20 @@ FamixOpenApiExampleTest >> testOperationsWithoutSecurityDeclarationInheritTheOne
 ]
 
 { #category : 'tests' }
+FamixOpenApiExampleTest >> testPetEventCallbackIsSharedByTwoOperationsAndItsPathItemByTwoCallbacks [
+	| callback pathItem |
+	callback := (model allWithType: OPCallback) detect: [ :each |
+		            each name = 'PetEvent' ].
+	self assert: callback usedByOperations size equals: 2.
+	pathItem := callback pathItems detect: [ :each |
+		            each usedByCallbacks size = 2 ].
+	self assert: (pathItem usedByCallbacks includes: callback).
+	self assert: pathItem declaringOpenApi equals: self openApi.
+	self assert: callback declaringOpenApi equals: self openApi.
+	self assert: callback declaringOpenApis asArray equals: { self openApi }
+]
+
+{ #category : 'tests' }
 FamixOpenApiExampleTest >> testPetSchemaHasAnXmlElement [
 
 	| xml |
@@ -353,6 +380,53 @@ FamixOpenApiExampleTest >> testPetSchemaIsTheItemOfPets [
 ]
 
 { #category : 'tests' }
+FamixOpenApiExampleTest >> testPetSummaryIsASubSchemaOfPet [
+	| summary pet |
+	summary := self schemaNamed: 'PetSummary'.
+	pet := self schemaNamed: 'Pet'.
+	self assert: summary class equals: OPSubSchema.
+	self assert: (summary isKindOf: OPSchema).
+	self assert: ((model allWithSubTypesOf: OPSchema) includes: summary).
+	self deny: ((model allWithType: OPSchema) includes: summary).
+	self assert: (model allWithType: OPSubSchema) asArray equals: { summary }.
+	self assert: summary subSchemaOf equals: pet.
+	self assert: pet subSchemas asArray equals: { summary }.
+	self
+		assert: (summary allProperties collect: #name) asSet
+		equals: #( 'id' 'name' ) asSet.
+	self
+		assert: ((pet allProperties collect: #name) includesAll: #( 'id' 'name' )).
+	self assert: summary referrers size equals: 1.
+	self assert: summary referrers anyOne class equals: OPMediaType
+]
+
+{ #category : 'tests' }
+FamixOpenApiExampleTest >> testRateLimitHeaderIsSharedByTwoResponses [
+	| header responses |
+	header := (model allWithType: OPHeader) detect: [ :each |
+		          each name = 'X-Rate-Limit' ].
+	responses := header usedByResponses.
+	self assert: responses size equals: 2.
+	self assert: (responses allSatisfy: [ :each | each headers includes: header ]).
+	self assert: header components equals: self openApi components.
+	self assert: header referrers size equals: 2.
+	self assert: header usedByEncodings isEmpty
+]
+
+{ #category : 'tests' }
+FamixOpenApiExampleTest >> testRateLimitSchemaKeepsTheMergedPointers [
+
+	| header |
+	header := (model allWithType: OPHeader) detect: [ :each |
+		          each name = 'X-Rate-Limit' ].
+	self assert: header schema mergedPointers size equals: 1.
+	self deny:
+		(header schema mergedPointers includes:
+			 header schema canonicalPointer).
+	self assert: (self schemaNamed: 'Pet') mergedPointers isEmpty
+]
+
+{ #category : 'tests' }
 FamixOpenApiExampleTest >> testReferenceIsOwnedByTheOpenApiAndHasNoReferrer [
 
 	| reference |
@@ -373,6 +447,20 @@ FamixOpenApiExampleTest >> testSearchPetsDisablesTheSecurityOfTheDocument [
 	self assert: search securityRequirements isEmpty.
 	self assert: search effectiveSecurity isEmpty.
 	self deny: (self operationNamed: 'getPet') securityDisabled
+]
+
+{ #category : 'tests' }
+FamixOpenApiExampleTest >> testSharedLinkIsUsedByTwoResponsesAndInlineLinkByOne [
+
+	| shared inline |
+	shared := (model allWithType: OPLink) detect: [ :each |
+		          each name = 'GetPetByIdShared' ].
+	inline := (model allWithType: OPLink) detect: [ :each |
+		          each name = 'GetPetById' ].
+	self assert: shared usedByResponses size equals: 2.
+	self assert: shared components equals: self openApi components.
+	self assert: inline usedByResponses size equals: 1.
+	self assert: inline components isNil
 ]
 
 { #category : 'running' }

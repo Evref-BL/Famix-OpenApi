@@ -90,12 +90,15 @@ FamixOpenApiGenerator >> defineEntityNamed: aSymbol comment: aString [
 
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineHierarchy [
-
+	| subSchema |
 	super defineHierarchy.
-	entities valuesDo: [ :entity |
+	subSchema := self entityNamed: #SubSchema.
+	"A SubSchema inherits the traits of Schema through its superclass."
+	(entities reject: [ :entity | entity == subSchema ]) valuesDo: [ :entity |
 		entity --|> #TNamedEntity.
 		entity --|> (self traitNamed: #SourceText).
 		entity --|> (self traitNamed: #CanonicalNode) ].
+	subSchema --|> (self entityNamed: #Schema).
 	#( Path Parameter Schema Response Header Example SecurityScheme
 	   RequestBody Link Callback ) do: [ :entityName |
 		(self entityNamed: entityName)
@@ -235,6 +238,7 @@ FamixOpenApiGenerator >> definePropertiesOfSchemas [
 			{ #readOnly. #Boolean. 'Whether the value is only returned by the server, never sent to it.' }.
 			{ #writeOnly. #Boolean. 'Whether the value is only sent to the server, never returned.' }.
 			{ #requiredProperties. #Strings. 'Names of the properties that are mandatory in an instance of the schema.' }.
+			{ #mergedPointers. #Strings. 'canonicalPointers of identical inline schemas that the importer merged into this entity; the entity''s own canonicalPointer is the first occurrence.' }.
 			{ #additionalPropertiesAllowed. #Boolean. 'Whether additional properties are allowed when additionalProperties is a boolean in the source.' }.
 			{ #maximum. #Number. 'Inclusive upper bound of a number.' }.
 			{ #minimum. #Number. 'Inclusive lower bound of a number.' }.
@@ -422,34 +426,34 @@ FamixOpenApiGenerator >> defineRelationsOfOperations [
 			{ #containsMany. #Operation. #responses. #Response. #operation.
 			'Responses of the operation, one per status code.'.
 			'The operation owning the response.' }.
-			{ #containsMany. #Operation. #callbacks. #Callback. #operation.
-			'Callbacks the operation may trigger.'.
-			'The operation owning the callback, when it is declared inline.' }.
+			{ #manyToMany. #Operation. #callbacks. #Callback. #usedByOperations.
+			'Callbacks the operation may trigger. A callback may be shared by several operations.'.
+			'Operations using this callback.' }.
 			{ #containsMany. #Operation. #securityRequirements.
 			#SecurityRequirement. #operation. 'Security requirements of the operation, as alternatives; they replace the ones of the document. See #effectiveSecurity.'.
 			'The operation declaring the requirement.' }.
 			{ #manyToOne. #Link. #operation. #Operation. #usedByLinks.
 			'The linked operation (operationId or operationRef resolved).'.
 			'Links targeting this operation.' }.
-			{ #containsMany. #Callback. #pathItems. #Path. #callback. 'Path items describing the requests sent to the callback URL expressions.'.
-			'The callback declaring the path item.' }.
+			{ #manyToMany. #Callback. #pathItems. #Path. #usedByCallbacks. 'Path items describing the requests sent to the callback URL expressions. A path item may be shared by several callbacks.'.
+			'Callbacks using this path item.' }.
 			{ #containsMany. #ContentContainer. #content. #MediaType. #contentOwner.
 			'Payload descriptions of the entity, one per media type.'.
 			'The response, request body or parameter declaring the media type.' }.
 			{ #containsMany. #MediaType. #encodings. #Encoding. #mediaType.
 			'Serialization rules of the schema properties.'.
 			'The media type declaring the encoding.' }.
-			{ #containsMany. #MediaType. #examples. #Example. #mediaType.
-			'Examples of the media type.'. 'The media type declaring the example.' }.
-			{ #containsMany. #Parameter. #examples. #Example. #parameter.
-			'Examples of the parameter value.'.
-			'The parameter declaring the example.' }.
-			{ #containsMany. #Encoding. #headers. #Header. #encoding. 'Headers sent with the encoded part.'.
-			'The encoding declaring the header.' }.
-			{ #containsMany. #Response. #headers. #Header. #response. 'Headers of the response.'.
-			'The response declaring the header.' }.
-			{ #containsMany. #Response. #links. #Link. #response. 'Operations that can be followed from the response.'.
-			'The response declaring the link.' }.
+			{ #manyToMany. #MediaType. #examples. #Example. #usedByMediaTypes.
+			'Examples of the media type. An example may be shared by several media types.'. 'Media types using this example.' }.
+			{ #manyToMany. #Parameter. #examples. #Example. #usedByParameters.
+			'Examples of the parameter value. An example may be shared by several parameters.'.
+			'Parameters using this example.' }.
+			{ #manyToMany. #Encoding. #headers. #Header. #usedByEncodings. 'Headers sent with the encoded part. A header may be shared by several encodings.'.
+			'Encodings using this header.' }.
+			{ #manyToMany. #Response. #headers. #Header. #usedByResponses. 'Headers of the response. A header may be shared by several responses.'.
+			'Responses using this header.' }.
+			{ #manyToMany. #Response. #links. #Link. #usedByResponses. 'Links of the response, toward operations that can be followed from it. A link may be shared by several responses.'.
+			'Responses using this link.' }.
 			{ #manyToOne. #Parameter. #schema. #Schema. #usedByParameters.
 			'Schema of the parameter value.'. 'Parameters whose schema is this schema.' }.
 			{ #manyToOne. #Header. #schema. #Schema. #usedByHeaders.
@@ -495,7 +499,10 @@ FamixOpenApiGenerator >> defineRelationsOfSchemas [
 			'The schema selected by the discriminating value.'.
 			'Discriminator mappings selecting this schema.' }.
 			{ #manyToOne. #Property. #valueSchema. #Schema. #usedAsPropertyValueBy.
-			'Schema of the property value.'. 'Properties whose value schema is this schema.' } }
+			'Schema of the property value.'. 'Properties whose value schema is this schema.' }.
+			{ #manyToOne. #SubSchema. #subSchemaOf. #Schema. #subSchemas.
+			'The larger Schema of which the receiver is a strict subset (same property names, with equivalent value schemas).'.
+			'SubSchemas created by the importer as strict subsets of this schema.' } }
 ]
 
 { #category : 'definition-relations' }
@@ -561,7 +568,7 @@ FamixOpenApiGenerator >> entityDefinitions [
 		   'A reference to external documentation (OpenAPI External Documentation Object).').
 		  (#Path
 		   ->
-		   'A path item (OpenAPI Path Item Object): the operations available on one relative path, declared in the paths, in the webhooks, in a callback or among the reusable path items.').
+		   'A path item (OpenAPI Path Item Object): the operations available on one relative path, declared in the paths, in the webhooks, in a callback or among the reusable path items. A path item may be shared by several callbacks.').
 		  (#Operation
 		   ->
 		   'An HTTP operation of a path item (OpenAPI Operation Object): one verb on one path, with its parameters, request body, responses, callbacks and security.').
@@ -576,7 +583,7 @@ FamixOpenApiGenerator >> entityDefinitions [
 		   'A response of an operation for one status code (OpenAPI Response Object). A reusable response referenced by several operations is copied for each of them: each copy owns its status code and operation and keeps the reference to the original.').
 		  (#Header
 		   ->
-		   'A header of a response or of an encoding (OpenAPI Header Object).').
+		   'A header of a response or of an encoding (OpenAPI Header Object). A reusable header may be shared by several responses and encodings.').
 		  (#MediaType
 		   ->
 		   'The description of a payload for one media type, such as application/json (OpenAPI Media Type Object).').
@@ -585,19 +592,22 @@ FamixOpenApiGenerator >> entityDefinitions [
 		   'Serialization rules applied to one property of a media type schema (OpenAPI Encoding Object).').
 		  (#Example
 		   ->
-		   'An example value (OpenAPI Example Object), inline or reusable.').
+		   'An example value (OpenAPI Example Object), inline or reusable. A reusable example may be shared by several parameters and media types.').
 		  (#Link
 		   ->
-		   'A link from a response to an operation that can be followed with values of the response (OpenAPI Link Object).').
+		   'A link from a response to an operation that can be followed with values of the response (OpenAPI Link Object). A reusable link may be shared by several responses.').
 		  (#Callback
 		   ->
-		   'Requests an operation may send to a URL given at runtime (OpenAPI Callback Object), described by path items.').
+		   'Requests an operation may send to a URL given at runtime (OpenAPI Callback Object), described by path items. A reusable callback may be shared by several operations.').
 		  (#Components
 		   ->
 		   'The reusable objects of the document (OpenAPI Components Object): schemas, responses, parameters, request bodies, headers, examples, links, callbacks, security schemes and path items. Each reusable object is owned by the components and shared by reference.').
 		  (#Schema
 		   ->
 		   'A JSON Schema (OpenAPI Schema Object) describing a value: its types, constraints, properties and composition (allOf, oneOf, anyOf, not).').
+		  (#SubSchema
+		   ->
+		   'A Schema that is a strict subset of a larger Schema (same property names with equivalent value schemas). Created by the importer, it does not exist as such in the source document; subSchemaOf points to the larger Schema.').
 		  (#Property
 		   ->
 		   'A named property of an object Schema. It binds a name to the Schema of the value and tells whether the property is required.').

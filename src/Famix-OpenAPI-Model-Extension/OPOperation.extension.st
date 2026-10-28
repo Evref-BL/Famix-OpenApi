@@ -13,10 +13,30 @@ OPOperation >> allParameters [
 ]
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
+OPOperation >> collectDeclaringOpenApisInto: aCollection visited: visitedEntities [
+	"Add to aCollection the documents declaring the path item of the receiver."
+
+	self path ifNotNil: [ :aPath |
+		aPath
+			collectDeclaringOpenApisInto: aCollection
+			visited: visitedEntities ]
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
 OPOperation >> declaringOpenApi [
 	"Answer the OpenAPI document declaring the receiver through its path item, or nil when the receiver has no path item."
 
 	^ self path ifNotNil: [ :aPath | aPath declaringOpenApi ]
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPOperation >> declaringOpenApis [
+	"Answer the distinct OpenAPI documents declaring the receiver through its path item. Answer an empty collection when the receiver has no path item. See OPPath>>#declaringOpenApis."
+
+	| documents |
+	documents := OrderedCollection new.
+	self collectDeclaringOpenApisInto: documents visited: IdentitySet new.
+	^ documents
 ]
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
