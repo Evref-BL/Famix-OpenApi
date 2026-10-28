@@ -1,0 +1,1018 @@
+Extension { #name : 'OPModel' }
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addComponentSchemaNamed: aName types: anArray in: aModel to: aComponents [
+	"Add and answer a reusable Schema declared under the components with the key aName."
+
+	| schema |
+	schema := (self
+		           newSchemaIn: aModel
+		           types: anArray
+		           pointer: '#/components/schemas/' , aName)
+		          name: aName;
+		          yourself.
+	aComponents addDirectSchema: schema.
+	^ schema
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addErrorResponsesTo: anOperation in: aModel components: aComponents [
+	"Add the default Error Response of anOperation, an inline Response whose schema is the shared Error schema."
+
+	| response |
+	response := self
+		            addResponseTo: anOperation
+		            status: 'default'
+		            description: 'Unexpected error.'
+		            in: aModel.
+	self
+		addMediaTypeTo: response
+		type: 'application/json'
+		schema: (self entityNamed: 'Error' in: aComponents directSchemas)
+		in: aModel
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addInlineParameterTo: aParameterOwner named: aName location: aLocation types: anArray in: aModel [
+	"Add and answer a Parameter declared inline by aParameterOwner (a path or an operation)."
+
+	| parameter |
+	parameter := self
+		             newParameterIn: aModel
+		             named: aName
+		             location: aLocation
+		             types: anArray
+		             pointer:
+			             aParameterOwner canonicalPointer , '/parameters/'
+			             , aParameterOwner parameters size printString.
+	aParameterOwner addParameter: parameter.
+	^ parameter
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addMediaTypeTo: aContentOwner type: aMediaType schema: aSchema in: aModel [
+	"Add and answer a MediaType of aContentOwner (a response, request body or parameter) described by aSchema."
+
+	| mediaType |
+	mediaType := aModel newMediaType
+		             mediaType: aMediaType;
+		             name: aMediaType;
+		             canonicalPointer:
+			             aContentOwner canonicalPointer , '/content/'
+			             , aMediaType;
+		             schema: aSchema;
+		             yourself.
+	aContentOwner addDirectContent: mediaType.
+	^ mediaType
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addNotFoundResponseTo: anOperation in: aModel [
+	"Add the 404 Response of anOperation, which refers to the reusable NotFound response."
+
+	(self
+		 addResponseTo: anOperation
+		 status: '404'
+		 description: 'The entity was not found.'
+		 in: aModel) ref: '#/components/responses/NotFound'
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addOperationTo: aPath method: anHttpMethod id: anOperationId summary: aString in: aModel [
+	"Add and answer the operation of aPath for anHttpMethod."
+
+	| operation |
+	operation := (aModel newOperationNamed: anOperationId)
+		             httpMethod: anHttpMethod;
+		             operationId: anOperationId;
+		             summary: aString;
+		             canonicalPointer:
+			             aPath canonicalPointer , '/' , anHttpMethod;
+		             yourself.
+	aPath addOperation: operation.
+	^ operation
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addPathNamed: aRelativePath summary: aString to: anOpenApi in: aModel [
+	"Add and answer the path item aRelativePath to the paths of anOpenApi."
+
+	| path |
+	path := (aModel newPathNamed: aRelativePath)
+		        relativePath: aRelativePath;
+		        summary: aString;
+		        canonicalPointer:
+			        '#/paths/' , (aRelativePath copyReplaceAll: '/' with: '~1');
+		        yourself.
+	anOpenApi addPath: path.
+	^ path
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addPropertyNamed: aName types: anArray to: aSchema in: aModel [
+	"Add and answer the Property aName of aSchema whose value is a new inline Schema of the given types."
+
+	| pointer |
+	pointer := aSchema canonicalPointer , '/properties/' , aName.
+	^ self
+		  addPropertyNamed: aName
+		  valueSchema:
+		  (self newSchemaIn: aModel types: anArray pointer: pointer)
+		  to: aSchema
+		  in: aModel
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addPropertyNamed: aName valueSchema: aValueSchema to: aSchema in: aModel [
+	"Add and answer the Property aName of aSchema whose value is described by aValueSchema."
+
+	| property |
+	property := (aModel newPropertyNamed: aName)
+		            canonicalPointer:
+			            aSchema canonicalPointer , '/properties/' , aName;
+		            valueSchema: aValueSchema;
+		            yourself.
+	aSchema addProperty: property.
+	^ property
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> addResponseTo: anOperation status: aStatusCode description: aString in: aModel [
+	"Add and answer the Response of anOperation for aStatusCode."
+
+	| response |
+	response := (aModel newResponseNamed: aStatusCode)
+		            statusCode: aStatusCode;
+		            description: aString;
+		            canonicalPointer:
+			            anOperation canonicalPointer , '/responses/'
+			            , aStatusCode;
+		            yourself.
+	anOperation addDirectResponse: response.
+	^ response
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildAnimalSchemasIn: aModel for: aComponents [
+	"Declare Cat, Dog, Animal (oneOf Cat and Dog, with a Discriminator and its mappings) and PetOrError (anyOf Pet and Error)."
+
+	| cat dog animal discriminator |
+	cat := self
+		       addComponentSchemaNamed: 'Cat'
+		       types: #( 'object' )
+		       in: aModel
+		       to: aComponents.
+	self
+		addPropertyNamed: 'huntingSkill'
+		types: #( 'string' )
+		to: cat
+		in: aModel.
+	dog := self
+		       addComponentSchemaNamed: 'Dog'
+		       types: #( 'object' )
+		       in: aModel
+		       to: aComponents.
+	self
+		addPropertyNamed: 'packSize'
+		types: #( 'integer' )
+		to: dog
+		in: aModel.
+	animal := self
+		          addComponentSchemaNamed: 'Animal'
+		          types: #( 'object' )
+		          in: aModel
+		          to: aComponents.
+	animal
+		addOneOf: cat;
+		addOneOf: dog.
+	discriminator := aModel newDiscriminator
+		                 propertyName: 'petType';
+		                 canonicalPointer:
+			                 '#/components/schemas/Animal/discriminator';
+		                 yourself.
+	discriminator
+		addMapping: ((aModel newDiscriminatorMappingNamed: 'cat')
+				 value: '#/components/schemas/Cat';
+				 schema: cat;
+				 canonicalPointer:
+					 '#/components/schemas/Animal/discriminator/mapping/cat';
+				 yourself);
+		addMapping: ((aModel newDiscriminatorMappingNamed: 'dog')
+				 value: '#/components/schemas/Dog';
+				 schema: dog;
+				 canonicalPointer:
+					 '#/components/schemas/Animal/discriminator/mapping/dog';
+				 yourself).
+	animal discriminatorEntity: discriminator.
+	(self
+		 addComponentSchemaNamed: 'PetOrError'
+		 types: #( 'object' )
+		 in: aModel
+		 to: aComponents)
+		addAnyOf: (self entityNamed: 'Pet' in: aComponents directSchemas);
+		addAnyOf: (self entityNamed: 'Error' in: aComponents directSchemas)
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildComponentsIn: aModel [
+	"Answer the Components holding every reusable object of the Petstore except the security schemes and the links, added once the paths exist."
+
+	| components |
+	components := aModel newComponents
+		              canonicalPointer: '#/components';
+		              yourself.
+	self buildSchemasIn: aModel for: components.
+	self buildParametersIn: aModel for: components.
+	self buildRequestBodiesIn: aModel for: components.
+	self buildSharedResponsesIn: aModel for: components.
+	self buildSharedHeadersIn: aModel for: components.
+	self buildSharedExamplesIn: aModel for: components.
+	self buildSharedCallbacksIn: aModel for: components.
+	^ components
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildErrorSchemaIn: aModel for: aComponents [
+	"Declare the Error schema with its required code and message."
+
+	| error |
+	error := self
+		         addComponentSchemaNamed: 'Error'
+		         types: #( 'object' )
+		         in: aModel
+		         to: aComponents.
+	error requiredProperties: #( 'code' 'message' ).
+	(self
+		 addPropertyNamed: 'code'
+		 types: #( 'integer' )
+		 to: error
+		 in: aModel) valueSchema format: 'int32'.
+	self
+		addPropertyNamed: 'message'
+		types: #( 'string' )
+		to: error
+		in: aModel
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildInfoIn: aModel [
+	"Answer the Info of the Petstore with its Contact and License."
+
+	^ (aModel newInfoNamed: 'Small Petstore')
+		  title: 'Small Petstore';
+		  version: '1.0.0';
+		  description:
+			  'A small Petstore API that instantiates the main concepts of the canonical OpenAPI 3.1 metamodel.';
+		  termsOfService: 'https://petstore.example.com/terms';
+		  canonicalPointer: '#/info';
+		  contact: ((aModel newContactNamed: 'API Support')
+				   url: 'https://petstore.example.com/support';
+				   email: 'support@petstore.example.com';
+				   canonicalPointer: '#/info/contact';
+				   yourself);
+		  license: ((aModel newLicenseNamed: 'Apache 2.0')
+				   url: 'https://www.apache.org/licenses/LICENSE-2.0.html';
+				   canonicalPointer: '#/info/license';
+				   yourself);
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildListPetsResponsesFor: anOperation in: aModel components: aComponents [
+	"Add the 200 Response of listPets, with the Pets array and a pagination Header, and its default Error Response."
+
+	| ok |
+	ok := self
+		      addResponseTo: anOperation
+		      status: '200'
+		      description: 'A page of pets.'
+		      in: aModel.
+	self
+		addMediaTypeTo: ok
+		type: 'application/json'
+		schema: (self entityNamed: 'Pets' in: aComponents directSchemas)
+		in: aModel.
+	ok addHeader: (self
+			 newHeaderIn: aModel
+			 named: 'X-Next'
+			 types: #( 'string' )
+			 pointer: ok canonicalPointer , '/headers/X-Next').
+	self
+		addErrorResponsesTo: anOperation
+		in: aModel
+		components: aComponents
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildParametersIn: aModel for: aComponents [
+	"Declare the reusable query Parameter limit."
+
+	| limit |
+	limit := self
+		         newParameterIn: aModel
+		         named: 'limit'
+		         location: 'query'
+		         types: #( 'integer' )
+		         pointer: '#/components/parameters/limit'.
+	limit description: 'Maximum number of items to return.'.
+	limit schema
+		format: 'int32';
+		minimum: 1;
+		maximum: 100.
+	aComponents addDirectParameter: limit
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildPathsIn: aModel for: anOpenApi [
+	"Add the path items of the Petstore. The single pet path comes first because the other paths link to its operations."
+
+	self buildPetByIdPathIn: aModel for: anOpenApi.
+	self buildPetsPathIn: aModel for: anOpenApi.
+	self buildSearchPathIn: aModel for: anOpenApi
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildPetByIdPathIn: aModel for: anOpenApi [
+	"Add /pets/{petId}: a path-level parameter shared by the getPet and deletePet operations."
+
+	| components path get delete ok json |
+	components := anOpenApi components.
+	path := self
+		        addPathNamed: '/pets/{petId}'
+		        summary: 'A single pet'
+		        to: anOpenApi
+		        in: aModel.
+	self
+		addInlineParameterTo: path
+		named: 'petId'
+		location: 'path'
+		types: #( 'integer' )
+		in: aModel.
+	get := self
+		       addOperationTo: path
+		       method: 'get'
+		       id: 'getPet'
+		       summary: 'Info for a specific pet'
+		       in: aModel.
+	get tagNames: #( 'pets' ).
+	ok := self
+		      addResponseTo: get
+		      status: '200'
+		      description: 'The requested pet.'
+		      in: aModel.
+	json := self
+		        addMediaTypeTo: ok
+		        type: 'application/json'
+		        schema:
+		        (self entityNamed: 'Pet' in: components directSchemas)
+		        in: aModel.
+	json addDirectExample: (self
+			 newExternalExampleIn: aModel
+			 pointer: json canonicalPointer , '/examples/RexExample').
+	self addNotFoundResponseTo: get in: aModel.
+	self addErrorResponsesTo: get in: aModel components: components.
+	delete := self
+		          addOperationTo: path
+		          method: 'delete'
+		          id: 'deletePet'
+		          summary: 'Delete a pet'
+		          in: aModel.
+	delete
+		tagNames: #( 'pets' );
+		deprecated: true.
+	self
+		addResponseTo: delete
+		status: '204'
+		description: 'The pet was deleted.'
+		in: aModel.
+	self addNotFoundResponseTo: delete in: aModel.
+	self addErrorResponsesTo: delete in: aModel components: components
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildPetSchemasIn: aModel for: aComponents [
+	"Declare NewPet, PetStatus, Pet (allOf NewPet and an inline schema) and Pets (array of Pet)."
+
+	| newPet status pet identifier |
+	newPet := self
+		          addComponentSchemaNamed: 'NewPet'
+		          types: #( 'object' )
+		          in: aModel
+		          to: aComponents.
+	newPet
+		title: 'New pet';
+		requiredProperties: #( 'name' );
+		additionalPropertiesAllowed: false.
+	(self
+		 addPropertyNamed: 'name'
+		 types: #( 'string' )
+		 to: newPet
+		 in: aModel) isRequired: true.
+	(self
+		 addPropertyNamed: 'tag'
+		 types: #( 'string' 'null' )
+		 to: newPet
+		 in: aModel) valueSchema isNullable: true.
+	status := self
+		          addComponentSchemaNamed: 'PetStatus'
+		          types: #( 'string' )
+		          in: aModel
+		          to: aComponents.
+	status
+		enumValues: '["available","pending","sold"]';
+		defaultValue: '"available"'.
+	pet := self
+		       addComponentSchemaNamed: 'Pet'
+		       types: #( 'object' )
+		       in: aModel
+		       to: aComponents.
+	pet exampleValue:
+		'{"id":1,"name":"Rex","tag":"dog","status":"available"}'.
+	self
+		addPropertyNamed: 'status'
+		valueSchema: status
+		to: pet
+		in: aModel.
+	identifier := self
+		              newSchemaIn: aModel
+		              types: #( 'object' )
+		              pointer: '#/components/schemas/Pet/allOf/1'.
+	(self
+		 addPropertyNamed: 'id'
+		 types: #( 'integer' )
+		 to: identifier
+		 in: aModel) valueSchema
+		format: 'int64';
+		readOnly: true.
+	pet
+		addAllOf: newPet;
+		addAllOf: identifier.
+	(self
+		 addComponentSchemaNamed: 'Pets'
+		 types: #( 'array' )
+		 in: aModel
+		 to: aComponents)
+		items: pet;
+		maxItems: 100
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildPetsPathIn: aModel for: anOpenApi [
+	"Add /pets: listPets with the shared limit parameter and createPet with the shared request body and a callback."
+
+	| components path list create created pet |
+	components := anOpenApi components.
+	pet := self entityNamed: 'Pet' in: components directSchemas.
+	path := self
+		        addPathNamed: '/pets'
+		        summary: 'The collection of pets'
+		        to: anOpenApi
+		        in: aModel.
+	list := self
+		        addOperationTo: path
+		        method: 'get'
+		        id: 'listPets'
+		        summary: 'List all pets'
+		        in: aModel.
+	list tagNames: #( 'pets' ).
+	list addParameter:
+		(self entityNamed: 'limit' in: components directParameters).
+	self
+		buildListPetsResponsesFor: list
+		in: aModel
+		components: components.
+	create := self
+		          addOperationTo: path
+		          method: 'post'
+		          id: 'createPet'
+		          summary: 'Create a pet'
+		          in: aModel.
+	create tagNames: #( 'pets' ).
+	create requestBody:
+		(self entityNamed: 'NewPetBody' in: components directRequestBodies).
+	created := self
+		           addResponseTo: create
+		           status: '201'
+		           description: 'The pet was created.'
+		           in: aModel.
+	self
+		addMediaTypeTo: created
+		type: 'application/json'
+		schema: pet
+		in: aModel.
+	created addLink: (self
+			 newLinkIn: aModel
+			 named: 'GetPetById'
+			 operation: (self operationNamed: 'getPet' in: anOpenApi)
+			 pointer: created canonicalPointer , '/links/GetPetById').
+	create addDirectCallback: (self
+			 newCallbackIn: aModel
+			 named: 'onPetCreated'
+			 pointer: create canonicalPointer , '/callbacks/onPetCreated').
+	self addErrorResponsesTo: create in: aModel components: components
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildRequestBodiesIn: aModel for: aComponents [
+	"Declare the reusable RequestBody NewPetBody with a JSON and a multipart MediaType, the latter with an Encoding."
+
+	| body newPet multipart |
+	body := (aModel newRequestBodyNamed: 'NewPetBody')
+		        description: 'The pet to add to the store.';
+		        required: true;
+		        canonicalPointer: '#/components/requestBodies/NewPetBody';
+		        yourself.
+	aComponents addDirectRequestBody: body.
+	newPet := self entityNamed: 'NewPet' in: aComponents directSchemas.
+	self
+		addMediaTypeTo: body
+		type: 'application/json'
+		schema: newPet
+		in: aModel.
+	multipart := self
+		             addMediaTypeTo: body
+		             type: 'multipart/form-data'
+		             schema: newPet
+		             in: aModel.
+	multipart addEncoding: ((aModel newEncodingNamed: 'tag')
+			 propertyName: 'tag';
+			 contentType: 'text/plain';
+			 style: 'form';
+			 explode: false;
+			 allowReserved: false;
+			 canonicalPointer: multipart canonicalPointer , '/encoding/tag';
+			 addHeader: (self
+					  newHeaderIn: aModel
+					  named: 'X-Tag-Source'
+					  types: #( 'string' )
+					  pointer:
+						  multipart canonicalPointer
+						  , '/encoding/tag/headers/X-Tag-Source');
+			 yourself)
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSchemasIn: aModel for: aComponents [
+	"Declare the reusable Schemas of the Petstore."
+
+	self buildPetSchemasIn: aModel for: aComponents.
+	self buildErrorSchemaIn: aModel for: aComponents.
+	self buildAnimalSchemasIn: aModel for: aComponents
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSearchPathIn: aModel for: anOpenApi [
+	"Add /pets/search: searchPets reuses the limit parameter already used by listPets."
+
+	| components path search |
+	components := anOpenApi components.
+	path := self
+		        addPathNamed: '/pets/search'
+		        summary: 'Search the pets'
+		        to: anOpenApi
+		        in: aModel.
+	search := self
+		          addOperationTo: path
+		          method: 'get'
+		          id: 'searchPets'
+		          summary: 'Search pets by name'
+		          in: aModel.
+	search tagNames: #( 'pets' ).
+	self
+		addInlineParameterTo: search
+		named: 'name'
+		location: 'query'
+		types: #( 'string' )
+		in: aModel.
+	search addParameter:
+		(self entityNamed: 'limit' in: components directParameters).
+	self
+		addMediaTypeTo: (self
+				 addResponseTo: search
+				 status: '200'
+				 description: 'The matching pets.'
+				 in: aModel)
+		type: 'application/json'
+		schema: (self entityNamed: 'Pets' in: components directSchemas)
+		in: aModel.
+	self addErrorResponsesTo: search in: aModel components: components
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSecurityIn: aModel for: anOpenApi [
+	"Declare the apiKey and oauth2 SecuritySchemes, require the former for the whole document and the latter with its scopes for createPet."
+
+	| apiKey oauth2 createPet |
+	apiKey := self newApiKeySchemeIn: aModel.
+	oauth2 := self newOAuth2SchemeIn: aModel.
+	anOpenApi components
+		addDirectSecurityScheme: apiKey;
+		addDirectSecurityScheme: oauth2.
+	anOpenApi addSecurityRequirement: (self
+			 newSecurityRequirementIn: aModel
+			 scheme: apiKey
+			 scopes: #(  )
+			 pointer: '#/security/0').
+	createPet := self operationNamed: 'createPet' in: anOpenApi.
+	createPet addSecurityRequirement: (self
+			 newSecurityRequirementIn: aModel
+			 scheme: oauth2
+			 scopes: oauth2 flows first scopes
+			 pointer: createPet canonicalPointer , '/security/0')
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildServersIn: aModel for: anOpenApi [
+	"Add a templated Server with its ServerVariable."
+
+	anOpenApi addServer: ((aModel newServerNamed: 'production')
+			 url: 'https://{environment}.petstore.example.com/v1';
+			 description:
+				 'Petstore server selected by the environment variable';
+			 canonicalPointer: '#/servers/0';
+			 addVariable: ((aModel newServerVariableNamed: 'environment')
+					  defaultValue: 'api';
+					  enumValues: #( 'api' 'staging' );
+					  description: 'Deployment environment';
+					  canonicalPointer: '#/servers/0/variables/environment';
+					  yourself);
+			 yourself)
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSharedCallbacksIn: aModel for: aComponents [
+	"Declare the reusable Callback PetEvent."
+
+	aComponents addDirectCallback: (self
+			 newCallbackIn: aModel
+			 named: 'PetEvent'
+			 pointer: '#/components/callbacks/PetEvent')
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSharedExamplesIn: aModel for: aComponents [
+	"Declare the reusable Example FluffyExample."
+
+	aComponents addDirectExample:
+		((aModel newExampleNamed: 'FluffyExample')
+			 summary: 'A fluffy cat';
+			 value: '{"id":2,"name":"Fluffy","tag":"cat"}';
+			 canonicalPointer: '#/components/examples/FluffyExample';
+			 yourself)
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSharedHeadersIn: aModel for: aComponents [
+	"Declare the reusable Header X-Rate-Limit."
+
+	aComponents addDirectHeader: (self
+			 newHeaderIn: aModel
+			 named: 'X-Rate-Limit'
+			 types: #( 'integer' )
+			 pointer: '#/components/headers/X-Rate-Limit')
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSharedLinksIn: aModel for: anOpenApi [
+	"Declare the reusable Link GetPetByIdShared toward the getPet operation."
+
+	anOpenApi components addDirectLink: (self
+			 newLinkIn: aModel
+			 named: 'GetPetByIdShared'
+			 operation: (self operationNamed: 'getPet' in: anOpenApi)
+			 pointer: '#/components/links/GetPetByIdShared')
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildSharedResponsesIn: aModel for: aComponents [
+	"Declare the reusable Response NotFound, whose JSON content is an Error."
+
+	| notFound |
+	notFound := (aModel newResponseNamed: 'NotFound')
+		            description: 'The entity was not found.';
+		            canonicalPointer: '#/components/responses/NotFound';
+		            yourself.
+	aComponents addDirectResponse: notFound.
+	self
+		addMediaTypeTo: notFound
+		type: 'application/json'
+		schema: (self entityNamed: 'Error' in: aComponents directSchemas)
+		in: aModel
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildTagsIn: aModel for: anOpenApi [
+	"Add two Tags, one of them with external documentation, and the external documentation of the document."
+
+	anOpenApi
+		addTag: ((aModel newTagNamed: 'pets')
+				 description: 'Everything about the pets';
+				 canonicalPointer: '#/tags/0';
+				 externalDocumentation: (self
+						  newExternalDocumentationIn: aModel
+						  pointer: '#/tags/0/externalDocs');
+				 yourself);
+		addTag: ((aModel newTagNamed: 'store')
+				 description: 'Access to the orders';
+				 canonicalPointer: '#/tags/1';
+				 yourself);
+		externalDocs:
+		(self newExternalDocumentationIn: aModel pointer: '#/externalDocs')
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildUnresolvedReferenceIn: aModel [
+	"Add a standalone Reference standing for an external $ref that was not resolved."
+
+	^ (aModel newReferenceNamed: 'Owner')
+		  target: 'https://schemas.example.com/owner.json#/Owner';
+		  summary: 'The owner of a pet';
+		  description: 'External schema that the example does not resolve.';
+		  canonicalPointer: '#/components/schemas/Pet/properties/owner';
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> buildWebhooksIn: aModel for: anOpenApi [
+	"Add the newPet webhook, a path item that is not reachable through the paths."
+
+	| path operation |
+	path := (aModel newPathNamed: 'newPet')
+		        relativePath: 'newPet';
+		        summary: 'A new pet is available';
+		        canonicalPointer: '#/webhooks/newPet';
+		        yourself.
+	anOpenApi addWebhook: path.
+	operation := self
+		             addOperationTo: path
+		             method: 'post'
+		             id: 'newPetEvent'
+		             summary: 'Receive a new pet'
+		             in: aModel.
+	operation requestBody: (self
+			 entityNamed: 'NewPetBody'
+			 in: anOpenApi components directRequestBodies).
+	self
+		addResponseTo: operation
+		status: '200'
+		description: 'The event was received.'
+		in: aModel
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> entityNamed: aName in: aCollection [
+	"Answer the entity of aCollection named aName."
+
+	^ aCollection detect: [ :each | each name = aName ]
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> exampleMinimalApi [
+	"Answer a new OPModel that holds the smallest useful API: one OpenApi with its Info, one Path, one Operation and one Response. Run it with:
+		OPModel exampleMinimalApi inspect"
+
+	<script: 'OPModel exampleMinimalApi inspect'>
+	| model openApi operation |
+	model := self new.
+	openApi := (model newOpenApiNamed: 'Minimal API')
+		           openapiVersion: '3.1.0';
+		           canonicalPointer: '#';
+		           info: ((model newInfoNamed: 'Minimal API')
+				            title: 'Minimal API';
+				            version: '1.0.0';
+				            canonicalPointer: '#/info';
+				            yourself);
+		           yourself.
+	operation := self
+		             addOperationTo: (self
+				              addPathNamed: '/ping'
+				              summary: 'Liveness probe'
+				              to: openApi
+				              in: model)
+		             method: 'get'
+		             id: 'ping'
+		             summary: 'Check that the service is alive'
+		             in: model.
+	self
+		addResponseTo: operation
+		status: '200'
+		description: 'The service is alive.'
+		in: model.
+	^ model
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> exampleSmallPetstore [
+	"Answer a new OPModel that holds a small Petstore-like API in the canonical OpenAPI 3.1 shape and instantiates every main concept of the canonical metamodel: OpenApi, Info (Contact, License), Server (ServerVariable), Tag, ExternalDocumentation, Components, Path (also as a webhook), Operation, Parameter (inline on a path, inline on an operation, reusable and shared by two operations), RequestBody, Response, MediaType, Encoding, Header, Example, Link, Callback, Schema (object, array, allOf, oneOf, anyOf, enumeration, nullable, readOnly), Property, Discriminator and its mappings, SecurityScheme (apiKey and oauth2 with OAuthFlow and SecurityScope), SecurityRequirement and an unresolved Reference.
+	The Pet schema is shared: it is the item of Pets, a member of PetOrError and the schema of three media types. Run it from a Playground, or from the class browser with the play button of this method:
+		OPModel exampleSmallPetstore inspect
+
+	PROVISIONAL ACCESSORS. The relations below carry a provisional name because an original relation toward an Entry wrapper still uses the final one. The next regeneration renames them (see FamixOpenApiGenerator>>provisionalRelationNames) and this example has to follow:
+		OPComponents>>directSchemas -> schemas
+		OPComponents>>directResponses -> responses
+		OPComponents>>directParameters -> parameters
+		OPComponents>>directRequestBodies -> requestBodies
+		OPComponents>>directHeaders -> headers
+		OPComponents>>directExamples -> examples
+		OPComponents>>directLinks -> links
+		OPComponents>>directCallbacks -> callbacks
+		OPComponents>>directSecuritySchemes -> securitySchemes
+		OPOperation>>directResponses -> responses
+		OPOperation>>directCallbacks -> callbacks
+		OPContentContainer>>directContent -> content (OPResponse, OPRequestBody, OPParameter)
+		OPMediaType>>directExamples -> examples
+		OPExternalDocsContainer>>externalDocumentation -> externalDocs"
+
+	<script: 'OPModel exampleSmallPetstore inspect'>
+	| model openApi |
+	model := self new.
+	openApi := (model newOpenApiNamed: 'Small Petstore')
+		           openapiVersion: '3.1.0';
+		           jsonSchemaDialect:
+			           'https://json-schema.org/draft/2020-12/schema';
+		           selfUrl: 'https://petstore.example.com/openapi.json';
+		           canonicalPointer: '#';
+		           info: (self buildInfoIn: model);
+		           components: (self buildComponentsIn: model);
+		           yourself.
+	self buildTagsIn: model for: openApi.
+	self buildServersIn: model for: openApi.
+	self buildPathsIn: model for: openApi.
+	self buildWebhooksIn: model for: openApi.
+	self buildSharedLinksIn: model for: openApi.
+	self buildSecurityIn: model for: openApi.
+	self buildUnresolvedReferenceIn: model.
+	^ model
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newApiKeySchemeIn: aModel [
+	"Answer the apiKey SecurityScheme api_key, read from a header."
+
+	^ (aModel newSecuritySchemeNamed: 'api_key')
+		  type: 'apiKey';
+		  inLocation: 'header';
+		  parameterName: 'X-API-Key';
+		  description: 'An API key sent in a header.';
+		  canonicalPointer: '#/components/securitySchemes/api_key';
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newCallbackIn: aModel named: aName pointer: aString [
+	"Answer a Callback named aName whose path item has a POST operation."
+
+	| callback expression path |
+	expression := '{$request.body#/callbackUrl}'.
+	callback := (aModel newCallbackNamed: aName)
+		            canonicalPointer: aString;
+		            yourself.
+	path := (aModel newPathNamed: expression)
+		        relativePath: expression;
+		        canonicalPointer: aString , '/' , expression;
+		        yourself.
+	self
+		addResponseTo: (self
+				 addOperationTo: path
+				 method: 'post'
+				 id: aName , 'Notification'
+				 summary: 'Notify the subscriber'
+				 in: aModel)
+		status: '200'
+		description: 'The subscriber acknowledged the notification.'
+		in: aModel.
+	callback addPathItem: path.
+	^ callback
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newExternalDocumentationIn: aModel pointer: aString [
+	"Answer an ExternalDocumentation of the Petstore located at aString."
+
+	^ aModel newExternalDocumentation
+		  url: 'https://petstore.example.com/docs';
+		  description: 'Find out more about the Petstore.';
+		  canonicalPointer: aString;
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newExternalExampleIn: aModel pointer: aString [
+	"Answer an Example whose value is stored outside of the document."
+
+	^ (aModel newExampleNamed: 'RexExample')
+		  summary: 'Rex, loaded from a file';
+		  externalValue: 'https://petstore.example.com/examples/rex.json';
+		  canonicalPointer: aString;
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newHeaderIn: aModel named: aName types: anArray pointer: aString [
+	"Answer a Header named aName with an inline schema of the given types, located at aString."
+
+	^ (aModel newHeaderNamed: aName)
+		  description: 'The header ' , aName;
+		  canonicalPointer: aString;
+		  schema:
+			  (self
+				   newSchemaIn: aModel
+				   types: anArray
+				   pointer: aString , '/schema');
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newLinkIn: aModel named: aName operation: anOperation pointer: aString [
+	"Answer a Link named aName toward anOperation, served by its own Server."
+
+	^ (aModel newLinkNamed: aName)
+		  operationId: anOperation operationId;
+		  operation: anOperation;
+		  requestBody: '$response.body#/id';
+		  description: 'The pet created by this call can be fetched with '
+			  , anOperation operationId;
+		  canonicalPointer: aString;
+		  server: ((aModel newServerNamed: 'links')
+				   url: 'https://links.petstore.example.com';
+				   canonicalPointer: aString , '/server';
+				   yourself);
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newOAuth2SchemeIn: aModel [
+	"Answer the oauth2 SecurityScheme petstore_auth with an implicit OAuthFlow and its SecurityScopes."
+
+	| flow pointer |
+	pointer := '#/components/securitySchemes/petstore_auth'.
+	flow := (aModel newOAuthFlowNamed: 'implicit')
+		        flowType: 'implicit';
+		        authorizationUrl:
+			        'https://petstore.example.com/oauth/authorize';
+		        refreshUrl: 'https://petstore.example.com/oauth/refresh';
+		        canonicalPointer: pointer , '/flows/implicit';
+		        yourself.
+	#( 'read:pets' 'write:pets' ) do: [ :scopeName |
+		flow addScope: ((aModel newSecurityScopeNamed: scopeName)
+				 description: 'Grants the scope ' , scopeName;
+				 canonicalPointer: flow canonicalPointer , '/scopes/' , scopeName;
+				 yourself) ].
+	^ (aModel newSecuritySchemeNamed: 'petstore_auth')
+		  type: 'oauth2';
+		  description: 'OAuth2 authentication of the Petstore.';
+		  canonicalPointer: pointer;
+		  addFlow: flow;
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newParameterIn: aModel named: aName location: aLocation types: anArray pointer: aString [
+	"Answer a Parameter named aName, located in aLocation (path, query, ...), with an inline schema of the given types."
+
+	^ (aModel newParameterNamed: aName)
+		  location: aLocation;
+		  required: aLocation = 'path';
+		  canonicalPointer: aString;
+		  schema:
+			  (self
+				   newSchemaIn: aModel
+				   types: anArray
+				   pointer: aString , '/schema');
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newSchemaIn: aModel types: anArray pointer: aString [
+	"Answer an inline Schema of the given JSON Schema types located at aString."
+
+	^ aModel newSchema
+		  types: anArray;
+		  canonicalPointer: aString;
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> newSecurityRequirementIn: aModel scheme: aSecurityScheme scopes: aCollection pointer: aString [
+	"Answer a SecurityRequirement that requires aSecurityScheme with the given SecurityScopes."
+
+	| required |
+	required := (aModel newRequiredSecuritySchemeNamed:
+			             aSecurityScheme name)
+		            securityScheme: aSecurityScheme;
+		            canonicalPointer: aString , '/' , aSecurityScheme name;
+		            yourself.
+	aCollection do: [ :each | required addSecurityScope: each ].
+	^ aModel newSecurityRequirement
+		  canonicalPointer: aString;
+		  addSecurityScheme: required;
+		  yourself
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
+OPModel class >> operationNamed: anOperationId in: anOpenApi [
+	"Answer the operation of anOpenApi whose operationId is anOperationId."
+
+	^ anOpenApi operations detect: [ :each |
+		  each operationId = anOperationId ]
+]
