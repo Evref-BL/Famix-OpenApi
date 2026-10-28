@@ -39,16 +39,17 @@ Class {
 { #category : 'meta' }
 OPContact class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Contact super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPContact >> email [
 
 	<FMProperty: #email type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute email from Contact [1]'>
 	^ email
@@ -56,6 +57,7 @@ OPContact >> email [
 
 { #category : 'accessing' }
 OPContact >> email: anObject [
+	<ignoreForCoverage>
 	<generated>
 	email := anObject
 ]
@@ -64,30 +66,25 @@ OPContact >> email: anObject [
 OPContact >> info [
 	"Relation named: #info type: #OPInfo opposite: #contact"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
-	<derived>
 	^ info
 ]
 
 { #category : 'accessing' }
 OPContact >> info: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	info := anObject
-]
-
-{ #category : 'navigation' }
-OPContact >> infoGroup [
-	<generated>
-	<navigation: 'Info'>
-	^ MooseSpecializedGroup with: self info
 ]
 
 { #category : 'accessing' }
 OPContact >> url [
 
 	<FMProperty: #url type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute url from Contact [1]'>
 	^ url
@@ -95,6 +92,7 @@ OPContact >> url [
 
 { #category : 'accessing' }
 OPContact >> url: anObject [
+	<ignoreForCoverage>
 	<generated>
 	url := anObject
 ]

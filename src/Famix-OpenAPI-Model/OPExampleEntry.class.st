@@ -13,7 +13,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `value` | `OPExampleEntry` | `exampleEntry` | `OPExample` | Reference value from ExampleEntry to Example [0..1].|
+| `value` | `OPExampleEntry` | `usedByExampleEntries` | `OPExample` | Reference value from ExampleEntry to Example [0..1].|
 
 
 ## Properties
@@ -32,10 +32,10 @@ Class {
 	#traits : 'FamixTNamedEntity + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#key => FMProperty',
 		'#components => FMOne type: #OPComponents opposite: #examples',
+		'#key => FMProperty',
 		'#mediaType => FMOne type: #OPMediaType opposite: #examples',
-		'#value => FMOne type: #OPExample opposite: #exampleEntry'
+		'#value => FMOne type: #OPExample opposite: #usedByExampleEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -45,16 +45,17 @@ Class {
 { #category : 'meta' }
 OPExampleEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ExampleEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPExampleEntry >> components [
 	"Relation named: #components type: #OPComponents opposite: #examples"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ components
@@ -63,21 +64,16 @@ OPExampleEntry >> components [
 { #category : 'accessing' }
 OPExampleEntry >> components: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	components := anObject
-]
-
-{ #category : 'navigation' }
-OPExampleEntry >> componentsGroup [
-	<generated>
-	<navigation: 'Components'>
-	^ MooseSpecializedGroup with: self components
 ]
 
 { #category : 'accessing' }
 OPExampleEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from ExampleEntry [1]'>
 	^ key
@@ -85,6 +81,7 @@ OPExampleEntry >> key [
 
 { #category : 'accessing' }
 OPExampleEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
@@ -93,6 +90,7 @@ OPExampleEntry >> key: anObject [
 OPExampleEntry >> mediaType [
 	"Relation named: #mediaType type: #OPMediaType opposite: #examples"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ mediaType
@@ -101,21 +99,16 @@ OPExampleEntry >> mediaType [
 { #category : 'accessing' }
 OPExampleEntry >> mediaType: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	mediaType := anObject
 ]
 
-{ #category : 'navigation' }
-OPExampleEntry >> mediaTypeGroup [
-	<generated>
-	<navigation: 'MediaType'>
-	^ MooseSpecializedGroup with: self mediaType
-]
-
 { #category : 'accessing' }
 OPExampleEntry >> value [
-	"Relation named: #value type: #OPExample opposite: #exampleEntry"
+	"Relation named: #value type: #OPExample opposite: #usedByExampleEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from ExampleEntry to Example [0..1].'>
 	^ value
@@ -124,6 +117,7 @@ OPExampleEntry >> value [
 { #category : 'accessing' }
 OPExampleEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

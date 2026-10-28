@@ -25,24 +25,25 @@ Trait {
 { #category : 'meta' }
 OPResponseContainer classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ResponseContainer super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPResponseContainer >> response [
 	"Relation named: #response type: #OPResponse opposite: #declaringContext"
 
+	<ignoreForCoverage>
 	<generated>
-	<derived>
 	^ response
 ]
 
 { #category : 'accessing' }
 OPResponseContainer >> response: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	response := anObject
 ]

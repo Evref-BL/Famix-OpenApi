@@ -12,7 +12,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `value` | `OPMediaTypeEntry` | `mediaTypeEntry` | `OPMediaType` | Reference value from MediaTypeEntry to MediaType [0..1].|
+| `value` | `OPMediaTypeEntry` | `usedByMediaTypeEntries` | `OPMediaType` | Reference value from MediaTypeEntry to MediaType [0..1].|
 
 
 ## Properties
@@ -31,9 +31,9 @@ Class {
 	#traits : 'FamixTNamedEntity + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#key => FMProperty',
 		'#contentContainer => FMOne type: #OPContentContainer opposite: #content',
-		'#value => FMOne type: #OPMediaType opposite: #mediaTypeEntry'
+		'#key => FMProperty',
+		'#value => FMOne type: #OPMediaType opposite: #usedByMediaTypeEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -43,16 +43,17 @@ Class {
 { #category : 'meta' }
 OPMediaTypeEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #MediaTypeEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPMediaTypeEntry >> contentContainer [
 	"Relation named: #contentContainer type: #OPContentContainer opposite: #content"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ contentContainer
@@ -61,21 +62,16 @@ OPMediaTypeEntry >> contentContainer [
 { #category : 'accessing' }
 OPMediaTypeEntry >> contentContainer: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	contentContainer := anObject
-]
-
-{ #category : 'navigation' }
-OPMediaTypeEntry >> contentContainerGroup [
-	<generated>
-	<navigation: 'ContentContainer'>
-	^ MooseSpecializedGroup with: self contentContainer
 ]
 
 { #category : 'accessing' }
 OPMediaTypeEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from MediaTypeEntry [1]'>
 	^ key
@@ -83,14 +79,16 @@ OPMediaTypeEntry >> key [
 
 { #category : 'accessing' }
 OPMediaTypeEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
 
 { #category : 'accessing' }
 OPMediaTypeEntry >> value [
-	"Relation named: #value type: #OPMediaType opposite: #mediaTypeEntry"
+	"Relation named: #value type: #OPMediaType opposite: #usedByMediaTypeEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from MediaTypeEntry to MediaType [0..1].'>
 	^ value
@@ -99,6 +97,7 @@ OPMediaTypeEntry >> value [
 { #category : 'accessing' }
 OPMediaTypeEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

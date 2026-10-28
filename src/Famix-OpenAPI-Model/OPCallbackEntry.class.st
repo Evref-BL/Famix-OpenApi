@@ -13,7 +13,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `value` | `OPCallbackEntry` | `callbackEntry` | `OPCallback` | Reference value from CallbackEntry to Callback [0..1].|
+| `value` | `OPCallbackEntry` | `usedByCallbackEntries` | `OPCallback` | Reference value from CallbackEntry to Callback [0..1].|
 
 
 ## Properties
@@ -32,10 +32,10 @@ Class {
 	#traits : 'FamixTNamedEntity + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#key => FMProperty',
 		'#components => FMOne type: #OPComponents opposite: #callbacks',
+		'#key => FMProperty',
 		'#operation => FMOne type: #OPOperation opposite: #callbacks',
-		'#value => FMOne type: #OPCallback opposite: #callbackEntry'
+		'#value => FMOne type: #OPCallback opposite: #usedByCallbackEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -45,16 +45,17 @@ Class {
 { #category : 'meta' }
 OPCallbackEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #CallbackEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPCallbackEntry >> components [
 	"Relation named: #components type: #OPComponents opposite: #callbacks"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ components
@@ -63,21 +64,16 @@ OPCallbackEntry >> components [
 { #category : 'accessing' }
 OPCallbackEntry >> components: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	components := anObject
-]
-
-{ #category : 'navigation' }
-OPCallbackEntry >> componentsGroup [
-	<generated>
-	<navigation: 'Components'>
-	^ MooseSpecializedGroup with: self components
 ]
 
 { #category : 'accessing' }
 OPCallbackEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from CallbackEntry [1]'>
 	^ key
@@ -85,6 +81,7 @@ OPCallbackEntry >> key [
 
 { #category : 'accessing' }
 OPCallbackEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
@@ -93,6 +90,7 @@ OPCallbackEntry >> key: anObject [
 OPCallbackEntry >> operation [
 	"Relation named: #operation type: #OPOperation opposite: #callbacks"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ operation
@@ -101,21 +99,16 @@ OPCallbackEntry >> operation [
 { #category : 'accessing' }
 OPCallbackEntry >> operation: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	operation := anObject
 ]
 
-{ #category : 'navigation' }
-OPCallbackEntry >> operationGroup [
-	<generated>
-	<navigation: 'Operation'>
-	^ MooseSpecializedGroup with: self operation
-]
-
 { #category : 'accessing' }
 OPCallbackEntry >> value [
-	"Relation named: #value type: #OPCallback opposite: #callbackEntry"
+	"Relation named: #value type: #OPCallback opposite: #usedByCallbackEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from CallbackEntry to Callback [0..1].'>
 	^ value
@@ -124,6 +117,7 @@ OPCallbackEntry >> value [
 { #category : 'accessing' }
 OPCallbackEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

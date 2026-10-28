@@ -25,24 +25,25 @@ Trait {
 { #category : 'meta' }
 OPParameterContainer classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ParameterContainer super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPParameterContainer >> parameter [
 	"Relation named: #parameter type: #OPParameter opposite: #declaringContext"
 
+	<ignoreForCoverage>
 	<generated>
-	<derived>
 	^ parameter
 ]
 
 { #category : 'accessing' }
 OPParameterContainer >> parameter: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	parameter := anObject
 ]

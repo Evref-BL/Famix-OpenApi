@@ -7,7 +7,7 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `containedCollections` | `OPParameter` | `paramters` | `OPContainedCollections` | |
+| `containedCollections` | `OPParameter` | `parameters` | `OPContainedCollections` | |
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
@@ -18,11 +18,11 @@ Generated from openapi2.ecore
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `declaringContext` | `OPParameter` | `parameter` | `OPParameterContainer` | Reference declaringContext from Parameter to ParameterContainer [0..1].|
-| `operation` | `OPParameter` | `parameters` | `OPOperation` | |
-| `parameterEntry` | `OPParameter` | `value` | `OPParameterEntry` | |
-| `path` | `OPParameter` | `parameters` | `OPPath` | |
-| `schema` | `OPParameter` | `parameter` | `OPSchema` | Reference schema from Parameter to Schema [0..1].|
 | `schema` | `OPSchemaContainer` | `declaringContext` | `OPSchema` | |
+| `schema` | `OPParameter` | `usedByParameters` | `OPSchema` | Reference schema from Parameter to Schema [0..1].|
+| `usedByOperations` | `OPParameter` | `parameters` | `OPOperation` | Operations using this Parameter [0..*].|
+| `usedByParameterEntries` | `OPParameter` | `value` | `OPParameterEntry` | ParameterEntry entries whose value is this Parameter [0..*].|
+| `usedByPaths` | `OPParameter` | `parameters` | `OPPath` | Paths using this Parameter [0..*].|
 
 
 ## Properties
@@ -30,7 +30,7 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `allowEmplyValue` | `Boolean` | nil | Attribute allowEmplyValue from Parameter [1]|
+| `allowEmptyValue` | `Boolean` | nil | Attribute allowEmptyValue from Parameter [1]|
 | `collectionFormat` | `String` | nil | Attribute collectionFormat from ArrayContainer [1]|
 | `default` | `String` | nil | Attribute default from JSONSchemaSubset [1]|
 | `description` | `String` | nil | Attribute description from JSONSchemaSubset [1]|
@@ -62,16 +62,16 @@ Class {
 	#traits : 'FamixTNamedEntity + OPArrayContainer + OPJSONSchemaSubset + OPReferenceable + OPSchemaContainer + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPArrayContainer classTrait + OPJSONSchemaSubset classTrait + OPReferenceable classTrait + OPSchemaContainer classTrait + OPSourceText classTrait',
 	#instVars : [
+		'#allowEmptyValue => FMProperty',
+		'#containedCollections => FMOne type: #OPContainedCollections opposite: #parameters',
+		'#declaringContext => FMOne type: #OPParameterContainer opposite: #parameter',
+		'#example => FMProperty',
 		'#location => FMProperty',
 		'#required => FMProperty',
-		'#allowEmplyValue => FMProperty',
-		'#example => FMProperty',
-		'#containedCollections => FMOne type: #OPContainedCollections opposite: #paramters',
-		'#path => FMOne type: #OPPath opposite: #parameters',
-		'#operation => FMOne type: #OPOperation opposite: #parameters',
-		'#declaringContext => FMOne type: #OPParameterContainer opposite: #parameter',
-		'#schema => FMOne type: #OPSchema opposite: #parameter',
-		'#parameterEntry => FMOne type: #OPParameterEntry opposite: #value'
+		'#schema => FMOne type: #OPSchema opposite: #usedByParameters',
+		'#usedByOperations => FMMany type: #OPOperation opposite: #parameters',
+		'#usedByParameterEntries => FMMany type: #OPParameterEntry opposite: #value',
+		'#usedByPaths => FMMany type: #OPPath opposite: #parameters'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -81,31 +81,58 @@ Class {
 { #category : 'meta' }
 OPParameter class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Parameter super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
+]
+
+{ #category : 'adding' }
+OPParameter >> addUsedByOperation: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByOperations add: anObject
+]
+
+{ #category : 'adding' }
+OPParameter >> addUsedByParameterEntry: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByParameterEntries add: anObject
+]
+
+{ #category : 'adding' }
+OPParameter >> addUsedByPath: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByPaths add: anObject
 ]
 
 { #category : 'accessing' }
-OPParameter >> allowEmplyValue [
+OPParameter >> allowEmptyValue [
 
-	<FMProperty: #allowEmplyValue type: #Boolean>
+	<FMProperty: #allowEmptyValue type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute allowEmplyValue from Parameter [1]'>
-	^ allowEmplyValue
+	<FMComment: 'Attribute allowEmptyValue from Parameter [1]'>
+	^ allowEmptyValue
 ]
 
 { #category : 'accessing' }
-OPParameter >> allowEmplyValue: anObject [
+OPParameter >> allowEmptyValue: anObject [
+	<ignoreForCoverage>
 	<generated>
-	allowEmplyValue := anObject
+	allowEmptyValue := anObject
 ]
 
 { #category : 'accessing' }
 OPParameter >> containedCollections [
-	"Relation named: #containedCollections type: #OPContainedCollections opposite: #paramters"
+	"Relation named: #containedCollections type: #OPContainedCollections opposite: #parameters"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ containedCollections
@@ -114,21 +141,16 @@ OPParameter >> containedCollections [
 { #category : 'accessing' }
 OPParameter >> containedCollections: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	containedCollections := anObject
-]
-
-{ #category : 'navigation' }
-OPParameter >> containedCollectionsGroup [
-	<generated>
-	<navigation: 'ContainedCollections'>
-	^ MooseSpecializedGroup with: self containedCollections
 ]
 
 { #category : 'accessing' }
 OPParameter >> declaringContext [
 	"Relation named: #declaringContext type: #OPParameterContainer opposite: #parameter"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference declaringContext from Parameter to ParameterContainer [0..1].'>
 	^ declaringContext
@@ -137,6 +159,7 @@ OPParameter >> declaringContext [
 { #category : 'accessing' }
 OPParameter >> declaringContext: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	declaringContext := anObject
 ]
@@ -145,6 +168,7 @@ OPParameter >> declaringContext: anObject [
 OPParameter >> example [
 
 	<FMProperty: #example type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute example from Parameter [1]'>
 	^ example
@@ -152,6 +176,7 @@ OPParameter >> example [
 
 { #category : 'accessing' }
 OPParameter >> example: anObject [
+	<ignoreForCoverage>
 	<generated>
 	example := anObject
 ]
@@ -160,6 +185,7 @@ OPParameter >> example: anObject [
 OPParameter >> location [
 
 	<FMProperty: #location type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute location from Parameter [1]'>
 	^ location
@@ -167,60 +193,16 @@ OPParameter >> location [
 
 { #category : 'accessing' }
 OPParameter >> location: anObject [
+	<ignoreForCoverage>
 	<generated>
 	location := anObject
-]
-
-{ #category : 'accessing' }
-OPParameter >> operation [
-	"Relation named: #operation type: #OPOperation opposite: #parameters"
-
-	<generated>
-	^ operation
-]
-
-{ #category : 'accessing' }
-OPParameter >> operation: anObject [
-
-	<generated>
-	operation := anObject
-]
-
-{ #category : 'accessing' }
-OPParameter >> parameterEntry [
-	"Relation named: #parameterEntry type: #OPParameterEntry opposite: #value"
-
-	<generated>
-	<derived>
-	^ parameterEntry
-]
-
-{ #category : 'accessing' }
-OPParameter >> parameterEntry: anObject [
-
-	<generated>
-	parameterEntry := anObject
-]
-
-{ #category : 'accessing' }
-OPParameter >> path [
-	"Relation named: #path type: #OPPath opposite: #parameters"
-
-	<generated>
-	^ path
-]
-
-{ #category : 'accessing' }
-OPParameter >> path: anObject [
-
-	<generated>
-	path := anObject
 ]
 
 { #category : 'accessing' }
 OPParameter >> required [
 
 	<FMProperty: #required type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute required from Parameter [1]'>
 	^ required
@@ -228,14 +210,16 @@ OPParameter >> required [
 
 { #category : 'accessing' }
 OPParameter >> required: anObject [
+	<ignoreForCoverage>
 	<generated>
 	required := anObject
 ]
 
 { #category : 'accessing' }
 OPParameter >> schema [
-	"Relation named: #schema type: #OPSchema opposite: #parameter"
+	"Relation named: #schema type: #OPSchema opposite: #usedByParameters"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference schema from Parameter to Schema [0..1].'>
 	^ schema
@@ -244,6 +228,61 @@ OPParameter >> schema [
 { #category : 'accessing' }
 OPParameter >> schema: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	schema := anObject
+]
+
+{ #category : 'accessing' }
+OPParameter >> usedByOperations [
+	"Relation named: #usedByOperations type: #OPOperation opposite: #parameters"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Operations using this Parameter [0..*].'>
+	^ usedByOperations
+]
+
+{ #category : 'accessing' }
+OPParameter >> usedByOperations: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByOperations value: anObject
+]
+
+{ #category : 'accessing' }
+OPParameter >> usedByParameterEntries [
+	"Relation named: #usedByParameterEntries type: #OPParameterEntry opposite: #value"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'ParameterEntry entries whose value is this Parameter [0..*].'>
+	^ usedByParameterEntries
+]
+
+{ #category : 'accessing' }
+OPParameter >> usedByParameterEntries: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByParameterEntries value: anObject
+]
+
+{ #category : 'accessing' }
+OPParameter >> usedByPaths [
+	"Relation named: #usedByPaths type: #OPPath opposite: #parameters"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Paths using this Parameter [0..*].'>
+	^ usedByPaths
+]
+
+{ #category : 'accessing' }
+OPParameter >> usedByPaths: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByPaths value: anObject
 ]

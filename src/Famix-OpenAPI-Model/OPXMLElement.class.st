@@ -43,16 +43,17 @@ Class {
 { #category : 'meta' }
 OPXMLElement class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #XMLElement super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPXMLElement >> attribute [
 
 	<FMProperty: #attribute type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute attribute from XMLElement [1]'>
 	^ attribute
@@ -60,6 +61,7 @@ OPXMLElement >> attribute [
 
 { #category : 'accessing' }
 OPXMLElement >> attribute: anObject [
+	<ignoreForCoverage>
 	<generated>
 	attribute := anObject
 ]
@@ -68,6 +70,7 @@ OPXMLElement >> attribute: anObject [
 OPXMLElement >> namespace [
 
 	<FMProperty: #namespace type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute namespace from XMLElement [1]'>
 	^ namespace
@@ -75,6 +78,7 @@ OPXMLElement >> namespace [
 
 { #category : 'accessing' }
 OPXMLElement >> namespace: anObject [
+	<ignoreForCoverage>
 	<generated>
 	namespace := anObject
 ]
@@ -83,6 +87,7 @@ OPXMLElement >> namespace: anObject [
 OPXMLElement >> prefix [
 
 	<FMProperty: #prefix type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute prefix from XMLElement [1]'>
 	^ prefix
@@ -90,6 +95,7 @@ OPXMLElement >> prefix [
 
 { #category : 'accessing' }
 OPXMLElement >> prefix: anObject [
+	<ignoreForCoverage>
 	<generated>
 	prefix := anObject
 ]
@@ -98,30 +104,25 @@ OPXMLElement >> prefix: anObject [
 OPXMLElement >> schema [
 	"Relation named: #schema type: #OPSchema opposite: #xml"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
-	<derived>
 	^ schema
 ]
 
 { #category : 'accessing' }
 OPXMLElement >> schema: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	schema := anObject
-]
-
-{ #category : 'navigation' }
-OPXMLElement >> schemaGroup [
-	<generated>
-	<navigation: 'Schema'>
-	^ MooseSpecializedGroup with: self schema
 ]
 
 { #category : 'accessing' }
 OPXMLElement >> wrapped [
 
 	<FMProperty: #wrapped type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute wrapped from XMLElement [1]'>
 	^ wrapped
@@ -129,6 +130,7 @@ OPXMLElement >> wrapped [
 
 { #category : 'accessing' }
 OPXMLElement >> wrapped: anObject [
+	<ignoreForCoverage>
 	<generated>
 	wrapped := anObject
 ]

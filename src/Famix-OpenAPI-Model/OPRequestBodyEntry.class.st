@@ -12,7 +12,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `value` | `OPRequestBodyEntry` | `requestBodyEntry` | `OPRequestBody` | Reference value from RequestBodyEntry to RequestBody [0..1].|
+| `value` | `OPRequestBodyEntry` | `usedByRequestBodyEntries` | `OPRequestBody` | Reference value from RequestBodyEntry to RequestBody [0..1].|
 
 
 ## Properties
@@ -31,9 +31,9 @@ Class {
 	#traits : 'FamixTNamedEntity + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#key => FMProperty',
 		'#components => FMOne type: #OPComponents opposite: #requestBodies',
-		'#value => FMOne type: #OPRequestBody opposite: #requestBodyEntry'
+		'#key => FMProperty',
+		'#value => FMOne type: #OPRequestBody opposite: #usedByRequestBodyEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -43,16 +43,17 @@ Class {
 { #category : 'meta' }
 OPRequestBodyEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #RequestBodyEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPRequestBodyEntry >> components [
 	"Relation named: #components type: #OPComponents opposite: #requestBodies"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ components
@@ -61,21 +62,16 @@ OPRequestBodyEntry >> components [
 { #category : 'accessing' }
 OPRequestBodyEntry >> components: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	components := anObject
-]
-
-{ #category : 'navigation' }
-OPRequestBodyEntry >> componentsGroup [
-	<generated>
-	<navigation: 'Components'>
-	^ MooseSpecializedGroup with: self components
 ]
 
 { #category : 'accessing' }
 OPRequestBodyEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from RequestBodyEntry [1]'>
 	^ key
@@ -83,14 +79,16 @@ OPRequestBodyEntry >> key [
 
 { #category : 'accessing' }
 OPRequestBodyEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
 
 { #category : 'accessing' }
 OPRequestBodyEntry >> value [
-	"Relation named: #value type: #OPRequestBody opposite: #requestBodyEntry"
+	"Relation named: #value type: #OPRequestBody opposite: #usedByRequestBodyEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from RequestBodyEntry to RequestBody [0..1].'>
 	^ value
@@ -99,6 +97,7 @@ OPRequestBodyEntry >> value [
 { #category : 'accessing' }
 OPRequestBodyEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

@@ -10,13 +10,17 @@ Class {
 
 { #category : 'accessing' }
 OPModel class >> allSubmetamodelsPackagesNames [
+
+	<ignoreForCoverage>
 	<generated>
 	^ #(#'Moose-Query' #'Famix-Traits')
 ]
 
 { #category : 'meta' }
 OPModel class >> annotation [
-	<FMClass: #OPModel super: #MooseModel>
+
+	<ignoreForCoverage>
+	<FMClass: #Model super: #MooseModel>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
 ]

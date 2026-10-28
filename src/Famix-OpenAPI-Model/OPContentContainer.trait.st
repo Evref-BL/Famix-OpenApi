@@ -25,14 +25,16 @@ Trait {
 { #category : 'meta' }
 OPContentContainer classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ContentContainer super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'adding' }
 OPContentContainer >> addContent: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self content add: anObject
 ]
@@ -41,22 +43,16 @@ OPContentContainer >> addContent: anObject [
 OPContentContainer >> content [
 	"Relation named: #content type: #OPMediaTypeEntry opposite: #contentContainer"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference content from ContentContainer to MediaTypeEntry [0..*].'>
-	<derived>
 	^ content
 ]
 
 { #category : 'accessing' }
 OPContentContainer >> content: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	content value: anObject
-]
-
-{ #category : 'navigation' }
-OPContentContainer >> contentGroup [
-	<generated>
-	<navigation: 'Content'>
-	^ MooseSpecializedGroup withAll: self content asSet
 ]

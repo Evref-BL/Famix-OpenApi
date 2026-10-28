@@ -57,32 +57,26 @@ Class {
 { #category : 'meta' }
 OPItemsDefinition class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ItemsDefinition super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPItemsDefinition >> arrayContainer [
 	"Relation named: #arrayContainer type: #OPArrayContainer opposite: #items"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
-	<derived>
 	^ arrayContainer
 ]
 
 { #category : 'accessing' }
 OPItemsDefinition >> arrayContainer: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	arrayContainer := anObject
-]
-
-{ #category : 'navigation' }
-OPItemsDefinition >> arrayContainerGroup [
-	<generated>
-	<navigation: 'ArrayContainer'>
-	^ MooseSpecializedGroup with: self arrayContainer
 ]

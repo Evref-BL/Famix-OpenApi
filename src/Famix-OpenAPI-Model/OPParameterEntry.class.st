@@ -14,7 +14,7 @@ Generated from openapi2.ecore
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `parameter` | `OPParameterContainer` | `declaringContext` | `OPParameter` | |
-| `value` | `OPParameterEntry` | `parameterEntry` | `OPParameter` | Reference value from ParameterEntry to Parameter [0..1].|
+| `value` | `OPParameterEntry` | `usedByParameterEntries` | `OPParameter` | Reference value from ParameterEntry to Parameter [0..1].|
 
 
 ## Properties
@@ -33,10 +33,10 @@ Class {
 	#traits : 'FamixTNamedEntity + OPParameterContainer + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPParameterContainer classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#key => FMProperty',
 		'#api => FMOne type: #OPApi opposite: #parameters',
 		'#components => FMOne type: #OPComponents opposite: #parameters',
-		'#value => FMOne type: #OPParameter opposite: #parameterEntry'
+		'#key => FMProperty',
+		'#value => FMOne type: #OPParameter opposite: #usedByParameterEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -46,16 +46,17 @@ Class {
 { #category : 'meta' }
 OPParameterEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ParameterEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPParameterEntry >> api [
 	"Relation named: #api type: #OPApi opposite: #parameters"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ api
@@ -64,21 +65,16 @@ OPParameterEntry >> api [
 { #category : 'accessing' }
 OPParameterEntry >> api: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	api := anObject
-]
-
-{ #category : 'navigation' }
-OPParameterEntry >> apiGroup [
-	<generated>
-	<navigation: 'Api'>
-	^ MooseSpecializedGroup with: self api
 ]
 
 { #category : 'accessing' }
 OPParameterEntry >> components [
 	"Relation named: #components type: #OPComponents opposite: #parameters"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ components
@@ -87,21 +83,16 @@ OPParameterEntry >> components [
 { #category : 'accessing' }
 OPParameterEntry >> components: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	components := anObject
-]
-
-{ #category : 'navigation' }
-OPParameterEntry >> componentsGroup [
-	<generated>
-	<navigation: 'Components'>
-	^ MooseSpecializedGroup with: self components
 ]
 
 { #category : 'accessing' }
 OPParameterEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from ParameterEntry [1]'>
 	^ key
@@ -109,14 +100,16 @@ OPParameterEntry >> key [
 
 { #category : 'accessing' }
 OPParameterEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
 
 { #category : 'accessing' }
 OPParameterEntry >> value [
-	"Relation named: #value type: #OPParameter opposite: #parameterEntry"
+	"Relation named: #value type: #OPParameter opposite: #usedByParameterEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from ParameterEntry to Parameter [0..1].'>
 	^ value
@@ -125,6 +118,7 @@ OPParameterEntry >> value [
 { #category : 'accessing' }
 OPParameterEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

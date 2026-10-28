@@ -39,16 +39,17 @@ Class {
 { #category : 'meta' }
 OPExternalDocs class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ExternalDocs super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPExternalDocs >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from ExternalDocs [1]'>
 	^ description
@@ -56,6 +57,7 @@ OPExternalDocs >> description [
 
 { #category : 'accessing' }
 OPExternalDocs >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
 ]
@@ -64,30 +66,25 @@ OPExternalDocs >> description: anObject [
 OPExternalDocs >> externalDocsContainer [
 	"Relation named: #externalDocsContainer type: #OPExternalDocsContainer opposite: #externalDocs"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
-	<derived>
 	^ externalDocsContainer
 ]
 
 { #category : 'accessing' }
 OPExternalDocs >> externalDocsContainer: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	externalDocsContainer := anObject
-]
-
-{ #category : 'navigation' }
-OPExternalDocs >> externalDocsContainerGroup [
-	<generated>
-	<navigation: 'ExternalDocsContainer'>
-	^ MooseSpecializedGroup with: self externalDocsContainer
 ]
 
 { #category : 'accessing' }
 OPExternalDocs >> url [
 
 	<FMProperty: #url type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute url from ExternalDocs [1]'>
 	^ url
@@ -95,6 +92,7 @@ OPExternalDocs >> url [
 
 { #category : 'accessing' }
 OPExternalDocs >> url: anObject [
+	<ignoreForCoverage>
 	<generated>
 	url := anObject
 ]

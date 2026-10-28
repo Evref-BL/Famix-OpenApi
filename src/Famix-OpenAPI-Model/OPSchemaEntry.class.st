@@ -14,7 +14,7 @@ Generated from openapi2.ecore
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `schema` | `OPSchemaContainer` | `declaringContext` | `OPSchema` | |
-| `value` | `OPSchemaEntry` | `schemaEntry` | `OPSchema` | Reference value from SchemaEntry to Schema [0..1].|
+| `value` | `OPSchemaEntry` | `usedBySchemaEntries` | `OPSchema` | Reference value from SchemaEntry to Schema [0..1].|
 
 
 ## Properties
@@ -33,10 +33,10 @@ Class {
 	#traits : 'FamixTNamedEntity + OPSchemaContainer + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPSchemaContainer classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#key => FMProperty',
 		'#api => FMOne type: #OPApi opposite: #definitions',
 		'#components => FMOne type: #OPComponents opposite: #schemas',
-		'#value => FMOne type: #OPSchema opposite: #schemaEntry'
+		'#key => FMProperty',
+		'#value => FMOne type: #OPSchema opposite: #usedBySchemaEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -46,16 +46,17 @@ Class {
 { #category : 'meta' }
 OPSchemaEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #SchemaEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPSchemaEntry >> api [
 	"Relation named: #api type: #OPApi opposite: #definitions"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ api
@@ -64,21 +65,16 @@ OPSchemaEntry >> api [
 { #category : 'accessing' }
 OPSchemaEntry >> api: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	api := anObject
-]
-
-{ #category : 'navigation' }
-OPSchemaEntry >> apiGroup [
-	<generated>
-	<navigation: 'Api'>
-	^ MooseSpecializedGroup with: self api
 ]
 
 { #category : 'accessing' }
 OPSchemaEntry >> components [
 	"Relation named: #components type: #OPComponents opposite: #schemas"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ components
@@ -87,21 +83,16 @@ OPSchemaEntry >> components [
 { #category : 'accessing' }
 OPSchemaEntry >> components: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	components := anObject
-]
-
-{ #category : 'navigation' }
-OPSchemaEntry >> componentsGroup [
-	<generated>
-	<navigation: 'Components'>
-	^ MooseSpecializedGroup with: self components
 ]
 
 { #category : 'accessing' }
 OPSchemaEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from SchemaEntry [1]'>
 	^ key
@@ -109,14 +100,16 @@ OPSchemaEntry >> key [
 
 { #category : 'accessing' }
 OPSchemaEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
 
 { #category : 'accessing' }
 OPSchemaEntry >> value [
-	"Relation named: #value type: #OPSchema opposite: #schemaEntry"
+	"Relation named: #value type: #OPSchema opposite: #usedBySchemaEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from SchemaEntry to Schema [0..1].'>
 	^ value
@@ -125,6 +118,7 @@ OPSchemaEntry >> value [
 { #category : 'accessing' }
 OPSchemaEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

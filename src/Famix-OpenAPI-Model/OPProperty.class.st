@@ -44,16 +44,17 @@ Class {
 { #category : 'meta' }
 OPProperty class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Property super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPProperty >> enum [
 
 	<FMProperty: #enum type: #Object>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute enum from Property [*] (array of strings)'>
 	^ enum
@@ -61,6 +62,7 @@ OPProperty >> enum [
 
 { #category : 'accessing' }
 OPProperty >> enum: anObject [
+	<ignoreForCoverage>
 	<generated>
 	enum := anObject
 ]
@@ -69,6 +71,7 @@ OPProperty >> enum: anObject [
 OPProperty >> required [
 
 	<FMProperty: #required type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute required from Property [1]'>
 	^ required
@@ -76,6 +79,7 @@ OPProperty >> required [
 
 { #category : 'accessing' }
 OPProperty >> required: anObject [
+	<ignoreForCoverage>
 	<generated>
 	required := anObject
 ]
@@ -84,6 +88,7 @@ OPProperty >> required: anObject [
 OPProperty >> schema [
 	"Relation named: #schema type: #OPSchema opposite: #properties"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Opposite reference schema from Property to Schema [0..1].'>
 	<container>
@@ -93,13 +98,7 @@ OPProperty >> schema [
 { #category : 'accessing' }
 OPProperty >> schema: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	schema := anObject
-]
-
-{ #category : 'navigation' }
-OPProperty >> schemaGroup [
-	<generated>
-	<navigation: 'Schema'>
-	^ MooseSpecializedGroup with: self schema
 ]

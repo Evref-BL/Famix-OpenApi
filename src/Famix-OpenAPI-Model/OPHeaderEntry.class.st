@@ -12,7 +12,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `value` | `OPHeaderEntry` | `headerEntry` | `OPHeader` | Reference value from HeaderEntry to Header [0..1].|
+| `value` | `OPHeaderEntry` | `usedByHeaderEntries` | `OPHeader` | Reference value from HeaderEntry to Header [0..1].|
 
 
 ## Properties
@@ -31,9 +31,9 @@ Class {
 	#traits : 'FamixTNamedEntity + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#key => FMProperty',
 		'#components => FMOne type: #OPComponents opposite: #headers',
-		'#value => FMOne type: #OPHeader opposite: #headerEntry'
+		'#key => FMProperty',
+		'#value => FMOne type: #OPHeader opposite: #usedByHeaderEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -43,16 +43,17 @@ Class {
 { #category : 'meta' }
 OPHeaderEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #HeaderEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPHeaderEntry >> components [
 	"Relation named: #components type: #OPComponents opposite: #headers"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ components
@@ -61,21 +62,16 @@ OPHeaderEntry >> components [
 { #category : 'accessing' }
 OPHeaderEntry >> components: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	components := anObject
-]
-
-{ #category : 'navigation' }
-OPHeaderEntry >> componentsGroup [
-	<generated>
-	<navigation: 'Components'>
-	^ MooseSpecializedGroup with: self components
 ]
 
 { #category : 'accessing' }
 OPHeaderEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from HeaderEntry [1]'>
 	^ key
@@ -83,14 +79,16 @@ OPHeaderEntry >> key [
 
 { #category : 'accessing' }
 OPHeaderEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
 
 { #category : 'accessing' }
 OPHeaderEntry >> value [
-	"Relation named: #value type: #OPHeader opposite: #headerEntry"
+	"Relation named: #value type: #OPHeader opposite: #usedByHeaderEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from HeaderEntry to Header [0..1].'>
 	^ value
@@ -99,6 +97,7 @@ OPHeaderEntry >> value [
 { #category : 'accessing' }
 OPHeaderEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

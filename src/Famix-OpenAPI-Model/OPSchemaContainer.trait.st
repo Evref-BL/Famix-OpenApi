@@ -25,24 +25,25 @@ Trait {
 { #category : 'meta' }
 OPSchemaContainer classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #SchemaContainer super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPSchemaContainer >> schema [
 	"Relation named: #schema type: #OPSchema opposite: #declaringContext"
 
+	<ignoreForCoverage>
 	<generated>
-	<derived>
 	^ schema
 ]
 
 { #category : 'accessing' }
 OPSchemaContainer >> schema: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	schema := anObject
 ]

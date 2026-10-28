@@ -12,7 +12,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `requiredSecurityScheme` | `OPSecurityScope` | `securityScopes` | `OPRequiredSecurityScheme` | |
+| `usedByRequiredSecuritySchemes` | `OPSecurityScope` | `securityScopes` | `OPRequiredSecurityScheme` | Required security schemes using this SecurityScope [0..*].|
 
 
 ## Properties
@@ -33,7 +33,7 @@ Class {
 	#instVars : [
 		'#description => FMProperty',
 		'#securityScheme => FMOne type: #OPSecurityScheme opposite: #scopes',
-		'#requiredSecurityScheme => FMOne type: #OPRequiredSecurityScheme opposite: #securityScopes'
+		'#usedByRequiredSecuritySchemes => FMMany type: #OPRequiredSecurityScheme opposite: #securityScopes'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -43,16 +43,25 @@ Class {
 { #category : 'meta' }
 OPSecurityScope class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #SecurityScope super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
+]
+
+{ #category : 'adding' }
+OPSecurityScope >> addUsedByRequiredSecurityScheme: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByRequiredSecuritySchemes add: anObject
 ]
 
 { #category : 'accessing' }
 OPSecurityScope >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from SecurityScope [1]'>
 	^ description
@@ -60,29 +69,16 @@ OPSecurityScope >> description [
 
 { #category : 'accessing' }
 OPSecurityScope >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
-]
-
-{ #category : 'accessing' }
-OPSecurityScope >> requiredSecurityScheme [
-	"Relation named: #requiredSecurityScheme type: #OPRequiredSecurityScheme opposite: #securityScopes"
-
-	<generated>
-	^ requiredSecurityScheme
-]
-
-{ #category : 'accessing' }
-OPSecurityScope >> requiredSecurityScheme: anObject [
-
-	<generated>
-	requiredSecurityScheme := anObject
 ]
 
 { #category : 'accessing' }
 OPSecurityScope >> securityScheme [
 	"Relation named: #securityScheme type: #OPSecurityScheme opposite: #scopes"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ securityScheme
@@ -91,13 +87,25 @@ OPSecurityScope >> securityScheme [
 { #category : 'accessing' }
 OPSecurityScope >> securityScheme: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	securityScheme := anObject
 ]
 
-{ #category : 'navigation' }
-OPSecurityScope >> securitySchemeGroup [
+{ #category : 'accessing' }
+OPSecurityScope >> usedByRequiredSecuritySchemes [
+	"Relation named: #usedByRequiredSecuritySchemes type: #OPRequiredSecurityScheme opposite: #securityScopes"
+
+	<ignoreForCoverage>
 	<generated>
-	<navigation: 'SecurityScheme'>
-	^ MooseSpecializedGroup with: self securityScheme
+	<FMComment: 'Required security schemes using this SecurityScope [0..*].'>
+	^ usedByRequiredSecuritySchemes
+]
+
+{ #category : 'accessing' }
+OPSecurityScope >> usedByRequiredSecuritySchemes: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByRequiredSecuritySchemes value: anObject
 ]

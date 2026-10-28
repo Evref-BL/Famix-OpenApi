@@ -22,16 +22,17 @@ Trait {
 { #category : 'meta' }
 OPSourceText classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #SourceText super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPSourceText >> sourceText [
 
 	<FMProperty: #sourceText type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute sourceText from original JSON node [1]'>
 	^ sourceText
@@ -39,6 +40,7 @@ OPSourceText >> sourceText [
 
 { #category : 'accessing' }
 OPSourceText >> sourceText: anObject [
+	<ignoreForCoverage>
 	<generated>
 	sourceText := anObject
 ]

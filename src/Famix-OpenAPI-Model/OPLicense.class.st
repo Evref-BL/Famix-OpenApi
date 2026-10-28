@@ -37,40 +37,35 @@ Class {
 { #category : 'meta' }
 OPLicense class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #License super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPLicense >> info [
 	"Relation named: #info type: #OPInfo opposite: #license"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
-	<derived>
 	^ info
 ]
 
 { #category : 'accessing' }
 OPLicense >> info: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	info := anObject
-]
-
-{ #category : 'navigation' }
-OPLicense >> infoGroup [
-	<generated>
-	<navigation: 'Info'>
-	^ MooseSpecializedGroup with: self info
 ]
 
 { #category : 'accessing' }
 OPLicense >> url [
 
 	<FMProperty: #url type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute url from License [1]'>
 	^ url
@@ -78,6 +73,7 @@ OPLicense >> url [
 
 { #category : 'accessing' }
 OPLicense >> url: anObject [
+	<ignoreForCoverage>
 	<generated>
 	url := anObject
 ]

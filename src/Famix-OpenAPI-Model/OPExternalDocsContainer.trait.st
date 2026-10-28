@@ -25,16 +25,17 @@ Trait {
 { #category : 'meta' }
 OPExternalDocsContainer classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ExternalDocsContainer super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPExternalDocsContainer >> externalDocs [
 	"Relation named: #externalDocs type: #OPExternalDocs opposite: #externalDocsContainer"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].'>
 	^ externalDocs
@@ -43,13 +44,7 @@ OPExternalDocsContainer >> externalDocs [
 { #category : 'accessing' }
 OPExternalDocsContainer >> externalDocs: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	externalDocs := anObject
-]
-
-{ #category : 'navigation' }
-OPExternalDocsContainer >> externalDocsGroup [
-	<generated>
-	<navigation: 'ExternalDocs'>
-	^ MooseSpecializedGroup with: self externalDocs
 ]

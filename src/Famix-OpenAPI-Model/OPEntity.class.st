@@ -9,16 +9,17 @@ Class {
 { #category : 'meta' }
 OPEntity class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Entity super: #MooseEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
 	<abstract>
-	^ self
 ]
 
 { #category : 'testing' }
 OPEntity class >> isAbstract [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self == OPEntity
 ]
@@ -26,6 +27,7 @@ OPEntity class >> isAbstract [
 { #category : 'meta' }
 OPEntity class >> metamodel [
 
+	<ignoreForCoverage>
 	<generated>
 	^ OPModel metamodel
 ]

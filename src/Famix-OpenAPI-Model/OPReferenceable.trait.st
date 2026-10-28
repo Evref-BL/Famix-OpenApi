@@ -22,16 +22,17 @@ Trait {
 { #category : 'meta' }
 OPReferenceable classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Referenceable super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPReferenceable >> ref [
 
 	<FMProperty: #ref type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute ref from Reference Object [1]'>
 	^ ref
@@ -39,6 +40,7 @@ OPReferenceable >> ref [
 
 { #category : 'accessing' }
 OPReferenceable >> ref: anObject [
+	<ignoreForCoverage>
 	<generated>
 	ref := anObject
 ]

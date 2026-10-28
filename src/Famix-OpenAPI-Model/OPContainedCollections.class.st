@@ -12,7 +12,7 @@ Generated from openapi2.ecore
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `paramters` | `OPContainedCollections` | `containedCollections` | `OPParameter` | Reference paramters from ContainedCollections to Parameter [0..*].|
+| `parameters` | `OPContainedCollections` | `containedCollections` | `OPParameter` | Reference parameters from ContainedCollections to Parameter [0..*].|
 | `responses` | `OPContainedCollections` | `containedCollections` | `OPResponse` | Reference responses from ContainedCollections to Response [0..*].|
 | `schemas` | `OPContainedCollections` | `containedCollections` | `OPSchema` | Reference schemas from ContainedCollections to Schema [0..*].|
 
@@ -32,10 +32,10 @@ Class {
 	#traits : 'FamixTNamedEntity + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#paramters => FMMany type: #OPParameter opposite: #containedCollections',
-		'#schemas => FMMany type: #OPSchema opposite: #containedCollections',
+		'#api => FMOne type: #OPApi opposite: #containedCollections',
+		'#parameters => FMMany type: #OPParameter opposite: #containedCollections',
 		'#responses => FMMany type: #OPResponse opposite: #containedCollections',
-		'#api => FMOne type: #OPApi opposite: #containedCollections'
+		'#schemas => FMMany type: #OPSchema opposite: #containedCollections'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -45,26 +45,32 @@ Class {
 { #category : 'meta' }
 OPContainedCollections class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ContainedCollections super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'adding' }
-OPContainedCollections >> addParamter: anObject [
+OPContainedCollections >> addParameter: anObject [
+
+	<ignoreForCoverage>
 	<generated>
-	^ self paramters add: anObject
+	^ self parameters add: anObject
 ]
 
 { #category : 'adding' }
 OPContainedCollections >> addResponse: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self responses add: anObject
 ]
 
 { #category : 'adding' }
 OPContainedCollections >> addSchema: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self schemas add: anObject
 ]
@@ -73,94 +79,70 @@ OPContainedCollections >> addSchema: anObject [
 OPContainedCollections >> api [
 	"Relation named: #api type: #OPApi opposite: #containedCollections"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
-	<derived>
 	^ api
 ]
 
 { #category : 'accessing' }
 OPContainedCollections >> api: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	api := anObject
 ]
 
-{ #category : 'navigation' }
-OPContainedCollections >> apiGroup [
+{ #category : 'accessing' }
+OPContainedCollections >> parameters [
+	"Relation named: #parameters type: #OPParameter opposite: #containedCollections"
+
+	<ignoreForCoverage>
 	<generated>
-	<navigation: 'Api'>
-	^ MooseSpecializedGroup with: self api
+	<FMComment: 'Reference parameters from ContainedCollections to Parameter [0..*].'>
+	^ parameters
 ]
 
 { #category : 'accessing' }
-OPContainedCollections >> paramters [
-	"Relation named: #paramters type: #OPParameter opposite: #containedCollections"
+OPContainedCollections >> parameters: anObject [
 
+	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference paramters from ContainedCollections to Parameter [0..*].'>
-	<derived>
-	^ paramters
-]
-
-{ #category : 'accessing' }
-OPContainedCollections >> paramters: anObject [
-
-	<generated>
-	paramters value: anObject
-]
-
-{ #category : 'navigation' }
-OPContainedCollections >> paramtersGroup [
-	<generated>
-	<navigation: 'Paramters'>
-	^ MooseSpecializedGroup withAll: self paramters asSet
+	parameters value: anObject
 ]
 
 { #category : 'accessing' }
 OPContainedCollections >> responses [
 	"Relation named: #responses type: #OPResponse opposite: #containedCollections"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference responses from ContainedCollections to Response [0..*].'>
-	<derived>
 	^ responses
 ]
 
 { #category : 'accessing' }
 OPContainedCollections >> responses: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	responses value: anObject
-]
-
-{ #category : 'navigation' }
-OPContainedCollections >> responsesGroup [
-	<generated>
-	<navigation: 'Responses'>
-	^ MooseSpecializedGroup withAll: self responses asSet
 ]
 
 { #category : 'accessing' }
 OPContainedCollections >> schemas [
 	"Relation named: #schemas type: #OPSchema opposite: #containedCollections"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference schemas from ContainedCollections to Schema [0..*].'>
-	<derived>
 	^ schemas
 ]
 
 { #category : 'accessing' }
 OPContainedCollections >> schemas: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	schemas value: anObject
-]
-
-{ #category : 'navigation' }
-OPContainedCollections >> schemasGroup [
-	<generated>
-	<navigation: 'Schemas'>
-	^ MooseSpecializedGroup withAll: self schemas asSet
 ]

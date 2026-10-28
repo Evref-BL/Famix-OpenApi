@@ -17,8 +17,8 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `headerEntry` | `OPHeader` | `value` | `OPHeaderEntry` | |
-| `schema` | `OPHeader` | `header` | `OPSchema` | Reference schema from Header to Schema [0..1].|
+| `schema` | `OPHeader` | `usedByHeaders` | `OPSchema` | Reference schema from Header to Schema [0..1].|
+| `usedByHeaderEntries` | `OPHeader` | `value` | `OPHeaderEntry` | HeaderEntry entries whose value is this Header [0..*].|
 
 
 ## Properties
@@ -55,8 +55,8 @@ Class {
 	#classTraits : 'FamixTNamedEntity classTrait + OPArrayContainer classTrait + OPJSONSchemaSubset classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#response => FMOne type: #OPResponse opposite: #headers',
-		'#schema => FMOne type: #OPSchema opposite: #header',
-		'#headerEntry => FMOne type: #OPHeaderEntry opposite: #value'
+		'#schema => FMOne type: #OPSchema opposite: #usedByHeaders',
+		'#usedByHeaderEntries => FMMany type: #OPHeaderEntry opposite: #value'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -66,32 +66,25 @@ Class {
 { #category : 'meta' }
 OPHeader class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Header super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
-{ #category : 'accessing' }
-OPHeader >> headerEntry [
-	"Relation named: #headerEntry type: #OPHeaderEntry opposite: #value"
+{ #category : 'adding' }
+OPHeader >> addUsedByHeaderEntry: anObject [
 
+	<ignoreForCoverage>
 	<generated>
-	<derived>
-	^ headerEntry
-]
-
-{ #category : 'accessing' }
-OPHeader >> headerEntry: anObject [
-
-	<generated>
-	headerEntry := anObject
+	^ self usedByHeaderEntries add: anObject
 ]
 
 { #category : 'accessing' }
 OPHeader >> response [
 	"Relation named: #response type: #OPResponse opposite: #headers"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ response
@@ -100,21 +93,16 @@ OPHeader >> response [
 { #category : 'accessing' }
 OPHeader >> response: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	response := anObject
 ]
 
-{ #category : 'navigation' }
-OPHeader >> responseGroup [
-	<generated>
-	<navigation: 'Response'>
-	^ MooseSpecializedGroup with: self response
-]
-
 { #category : 'accessing' }
 OPHeader >> schema [
-	"Relation named: #schema type: #OPSchema opposite: #header"
+	"Relation named: #schema type: #OPSchema opposite: #usedByHeaders"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference schema from Header to Schema [0..1].'>
 	^ schema
@@ -123,6 +111,25 @@ OPHeader >> schema [
 { #category : 'accessing' }
 OPHeader >> schema: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	schema := anObject
+]
+
+{ #category : 'accessing' }
+OPHeader >> usedByHeaderEntries [
+	"Relation named: #usedByHeaderEntries type: #OPHeaderEntry opposite: #value"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'HeaderEntry entries whose value is this Header [0..*].'>
+	^ usedByHeaderEntries
+]
+
+{ #category : 'accessing' }
+OPHeader >> usedByHeaderEntries: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByHeaderEntries value: anObject
 ]

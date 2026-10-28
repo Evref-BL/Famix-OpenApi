@@ -19,21 +19,21 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `additonalProperties` | `OPSchema` | `schema` | `OPSchema` | Reference additonalProperties from Schema to Schema [0..1].|
-| `allOf` | `OPSchema` | `schema` | `OPSchema` | Reference allOf from Schema to Schema [0..*].|
+| `additionalProperties` | `OPSchema` | `usedAsAdditionalPropertiesBy` | `OPSchema` | Reference additionalProperties from Schema to Schema [0..1].|
+| `allOf` | `OPSchema` | `usedAsAllOfBy` | `OPSchema` | Reference allOf from Schema to Schema [0..*].|
 | `declaringContext` | `OPSchema` | `schema` | `OPSchemaContainer` | Reference declaringContext from Schema to SchemaContainer [0..1].|
-| `header` | `OPSchema` | `schema` | `OPHeader` | |
-| `items` | `OPSchema` | `schema` | `OPSchema` | Reference items from Schema to Schema [0..1].|
-| `mediaType` | `OPSchema` | `schema` | `OPMediaType` | |
-| `parameter` | `OPSchema` | `schema` | `OPParameter` | |
-| `response` | `OPSchema` | `schema` | `OPResponse` | |
-| `schema` | `OPSchema` | `additonalProperties` | `OPSchema` | |
-| `schema` | `OPSchema` | `tupleItems` | `OPSchema` | |
-| `schema` | `OPSchema` | `items` | `OPSchema` | |
+| `items` | `OPSchema` | `usedAsItemsBy` | `OPSchema` | Reference items from Schema to Schema [0..1].|
 | `schema` | `OPSchemaContainer` | `declaringContext` | `OPSchema` | |
-| `schema` | `OPSchema` | `allOf` | `OPSchema` | |
-| `schemaEntry` | `OPSchema` | `value` | `OPSchemaEntry` | |
-| `tupleItems` | `OPSchema` | `schema` | `OPSchema` | Reference tupleItems from Schema to Schema [0..*].|
+| `tupleItems` | `OPSchema` | `usedAsTupleItemsBy` | `OPSchema` | Reference tupleItems from Schema to Schema [0..*].|
+| `usedAsAdditionalPropertiesBy` | `OPSchema` | `additionalProperties` | `OPSchema` | Schemas having this Schema as their additionalProperties [0..*].|
+| `usedAsAllOfBy` | `OPSchema` | `allOf` | `OPSchema` | Schemas having this Schema in their allOf [0..*].|
+| `usedAsItemsBy` | `OPSchema` | `items` | `OPSchema` | Schemas having this Schema as their items [0..*].|
+| `usedAsTupleItemsBy` | `OPSchema` | `tupleItems` | `OPSchema` | Schemas having this Schema in their tupleItems [0..*].|
+| `usedByHeaders` | `OPSchema` | `schema` | `OPHeader` | Headers whose schema is this Schema [0..*].|
+| `usedByMediaTypes` | `OPSchema` | `schema` | `OPMediaType` | Media types whose schema is this Schema [0..*].|
+| `usedByParameters` | `OPSchema` | `schema` | `OPParameter` | Parameters whose schema is this Schema [0..*].|
+| `usedByResponses` | `OPSchema` | `schema` | `OPResponse` | Responses whose schema is this Schema [0..*].|
+| `usedBySchemaEntries` | `OPSchema` | `value` | `OPSchemaEntry` | SchemaEntry entries whose value is this Schema [0..*].|
 
 
 ## Properties
@@ -41,7 +41,7 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `additonalPropertiesAllowed` | `Boolean` | nil | Attribute additonalPropertiesAllowed from Schema [1]|
+| `additionalPropertiesAllowed` | `Boolean` | nil | Attribute additionalPropertiesAllowed from Schema [1]|
 | `default` | `String` | nil | Attribute default from JSONSchemaSubset [1]|
 | `description` | `String` | nil | Attribute description from JSONSchemaSubset [1]|
 | `discriminator` | `String` | nil | Attribute discriminator from Schema [1]|
@@ -75,27 +75,30 @@ Class {
 	#traits : 'FamixTNamedEntity + OPExternalDocsContainer + OPJSONSchemaSubset + OPReferenceable + OPSchemaContainer + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPExternalDocsContainer classTrait + OPJSONSchemaSubset classTrait + OPReferenceable classTrait + OPSchemaContainer classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#title => FMProperty',
+		'#additionalProperties => FMOne type: #OPSchema opposite: #usedAsAdditionalPropertiesBy',
+		'#additionalPropertiesAllowed => FMProperty',
+		'#allOf => FMMany type: #OPSchema opposite: #usedAsAllOfBy',
+		'#containedCollections => FMOne type: #OPContainedCollections opposite: #schemas',
+		'#declaringContext => FMOne type: #OPSchemaContainer opposite: #schema',
+		'#discriminator => FMProperty',
+		'#example => FMProperty',
+		'#items => FMOne type: #OPSchema opposite: #usedAsItemsBy',
 		'#maxProperties => FMProperty',
 		'#minProperties => FMProperty',
-		'#example => FMProperty',
-		'#discriminator => FMProperty',
-		'#readOnly => FMProperty',
-		'#additonalPropertiesAllowed => FMProperty',
-		'#containedCollections => FMOne type: #OPContainedCollections opposite: #schemas',
-		'#parameter => FMOne type: #OPParameter opposite: #schema',
 		'#properties => FMMany type: #OPProperty opposite: #schema',
-		'#allOf => FMMany type: #OPSchema opposite: #schema',
-		'#schema => FMOne type: #OPSchema opposite: #allOf',
-		'#items => FMOne type: #OPSchema opposite: #schema',
-		'#xml => FMOne type: #OPXMLElement opposite: #schema',
-		'#additonalProperties => FMOne type: #OPSchema opposite: #schema',
-		'#declaringContext => FMOne type: #OPSchemaContainer opposite: #schema',
-		'#tupleItems => FMMany type: #OPSchema opposite: #schema',
-		'#response => FMOne type: #OPResponse opposite: #schema',
-		'#header => FMOne type: #OPHeader opposite: #schema',
-		'#mediaType => FMOne type: #OPMediaType opposite: #schema',
-		'#schemaEntry => FMOne type: #OPSchemaEntry opposite: #value'
+		'#readOnly => FMProperty',
+		'#title => FMProperty',
+		'#tupleItems => FMMany type: #OPSchema opposite: #usedAsTupleItemsBy',
+		'#usedAsAdditionalPropertiesBy => FMMany type: #OPSchema opposite: #additionalProperties',
+		'#usedAsAllOfBy => FMMany type: #OPSchema opposite: #allOf',
+		'#usedAsItemsBy => FMMany type: #OPSchema opposite: #items',
+		'#usedAsTupleItemsBy => FMMany type: #OPSchema opposite: #tupleItems',
+		'#usedByHeaders => FMMany type: #OPHeader opposite: #schema',
+		'#usedByMediaTypes => FMMany type: #OPMediaType opposite: #schema',
+		'#usedByParameters => FMMany type: #OPParameter opposite: #schema',
+		'#usedByResponses => FMMany type: #OPResponse opposite: #schema',
+		'#usedBySchemaEntries => FMMany type: #OPSchemaEntry opposite: #value',
+		'#xml => FMOne type: #OPXMLElement opposite: #schema'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -105,74 +108,157 @@ Class {
 { #category : 'meta' }
 OPSchema class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Schema super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'adding' }
 OPSchema >> addAllOf: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self allOf add: anObject
 ]
 
 { #category : 'adding' }
 OPSchema >> addProperty: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self properties add: anObject
 ]
 
 { #category : 'adding' }
 OPSchema >> addTupleItem: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self tupleItems add: anObject
 ]
 
-{ #category : 'accessing' }
-OPSchema >> additonalProperties [
-	"Relation named: #additonalProperties type: #OPSchema opposite: #schema"
+{ #category : 'adding' }
+OPSchema >> addUsedAsAdditionalPropertiesBy: anObject [
 
+	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference additonalProperties from Schema to Schema [0..1].'>
-	^ additonalProperties
+	^ self usedAsAdditionalPropertiesBy add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addUsedAsAllOfBy: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedAsAllOfBy add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addUsedAsItemsBy: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedAsItemsBy add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addUsedAsTupleItemsBy: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedAsTupleItemsBy add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addUsedByHeader: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByHeaders add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addUsedByMediaType: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByMediaTypes add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addUsedByParameter: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByParameters add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addUsedByResponse: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByResponses add: anObject
+]
+
+{ #category : 'adding' }
+OPSchema >> addUsedBySchemaEntry: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedBySchemaEntries add: anObject
 ]
 
 { #category : 'accessing' }
-OPSchema >> additonalProperties: anObject [
+OPSchema >> additionalProperties [
+	"Relation named: #additionalProperties type: #OPSchema opposite: #usedAsAdditionalPropertiesBy"
 
+	<ignoreForCoverage>
 	<generated>
-	additonalProperties := anObject
+	<FMComment: 'Reference additionalProperties from Schema to Schema [0..1].'>
+	^ additionalProperties
 ]
 
 { #category : 'accessing' }
-OPSchema >> additonalPropertiesAllowed [
+OPSchema >> additionalProperties: anObject [
 
-	<FMProperty: #additonalPropertiesAllowed type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute additonalPropertiesAllowed from Schema [1]'>
-	^ additonalPropertiesAllowed
+	additionalProperties := anObject
 ]
 
 { #category : 'accessing' }
-OPSchema >> additonalPropertiesAllowed: anObject [
+OPSchema >> additionalPropertiesAllowed [
+
+	<FMProperty: #additionalPropertiesAllowed type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
-	additonalPropertiesAllowed := anObject
+	<FMComment: 'Attribute additionalPropertiesAllowed from Schema [1]'>
+	^ additionalPropertiesAllowed
+]
+
+{ #category : 'accessing' }
+OPSchema >> additionalPropertiesAllowed: anObject [
+	<ignoreForCoverage>
+	<generated>
+	additionalPropertiesAllowed := anObject
 ]
 
 { #category : 'accessing' }
 OPSchema >> allOf [
-	"Relation named: #allOf type: #OPSchema opposite: #schema"
+	"Relation named: #allOf type: #OPSchema opposite: #usedAsAllOfBy"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference allOf from Schema to Schema [0..*].'>
-	<derived>
 	^ allOf
 ]
 
 { #category : 'accessing' }
 OPSchema >> allOf: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	allOf value: anObject
 ]
@@ -181,6 +267,7 @@ OPSchema >> allOf: anObject [
 OPSchema >> containedCollections [
 	"Relation named: #containedCollections type: #OPContainedCollections opposite: #schemas"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ containedCollections
@@ -189,21 +276,16 @@ OPSchema >> containedCollections [
 { #category : 'accessing' }
 OPSchema >> containedCollections: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	containedCollections := anObject
-]
-
-{ #category : 'navigation' }
-OPSchema >> containedCollectionsGroup [
-	<generated>
-	<navigation: 'ContainedCollections'>
-	^ MooseSpecializedGroup with: self containedCollections
 ]
 
 { #category : 'accessing' }
 OPSchema >> declaringContext [
 	"Relation named: #declaringContext type: #OPSchemaContainer opposite: #schema"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference declaringContext from Schema to SchemaContainer [0..1].'>
 	^ declaringContext
@@ -212,6 +294,7 @@ OPSchema >> declaringContext [
 { #category : 'accessing' }
 OPSchema >> declaringContext: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	declaringContext := anObject
 ]
@@ -220,6 +303,7 @@ OPSchema >> declaringContext: anObject [
 OPSchema >> discriminator [
 
 	<FMProperty: #discriminator type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute discriminator from Schema [1]'>
 	^ discriminator
@@ -227,6 +311,7 @@ OPSchema >> discriminator [
 
 { #category : 'accessing' }
 OPSchema >> discriminator: anObject [
+	<ignoreForCoverage>
 	<generated>
 	discriminator := anObject
 ]
@@ -235,6 +320,7 @@ OPSchema >> discriminator: anObject [
 OPSchema >> example [
 
 	<FMProperty: #example type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute example from Schema [1]'>
 	^ example
@@ -242,30 +328,16 @@ OPSchema >> example [
 
 { #category : 'accessing' }
 OPSchema >> example: anObject [
+	<ignoreForCoverage>
 	<generated>
 	example := anObject
 ]
 
 { #category : 'accessing' }
-OPSchema >> header [
-	"Relation named: #header type: #OPHeader opposite: #schema"
-
-	<generated>
-	<derived>
-	^ header
-]
-
-{ #category : 'accessing' }
-OPSchema >> header: anObject [
-
-	<generated>
-	header := anObject
-]
-
-{ #category : 'accessing' }
 OPSchema >> items [
-	"Relation named: #items type: #OPSchema opposite: #schema"
+	"Relation named: #items type: #OPSchema opposite: #usedAsItemsBy"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference items from Schema to Schema [0..1].'>
 	^ items
@@ -274,6 +346,7 @@ OPSchema >> items [
 { #category : 'accessing' }
 OPSchema >> items: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	items := anObject
 ]
@@ -282,6 +355,7 @@ OPSchema >> items: anObject [
 OPSchema >> maxProperties [
 
 	<FMProperty: #maxProperties type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute maxProperties from Schema [1]'>
 	^ maxProperties
@@ -289,30 +363,16 @@ OPSchema >> maxProperties [
 
 { #category : 'accessing' }
 OPSchema >> maxProperties: anObject [
+	<ignoreForCoverage>
 	<generated>
 	maxProperties := anObject
-]
-
-{ #category : 'accessing' }
-OPSchema >> mediaType [
-	"Relation named: #mediaType type: #OPMediaType opposite: #schema"
-
-	<generated>
-	<derived>
-	^ mediaType
-]
-
-{ #category : 'accessing' }
-OPSchema >> mediaType: anObject [
-
-	<generated>
-	mediaType := anObject
 ]
 
 { #category : 'accessing' }
 OPSchema >> minProperties [
 
 	<FMProperty: #minProperties type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute minProperties from Schema [1]'>
 	^ minProperties
@@ -320,54 +380,34 @@ OPSchema >> minProperties [
 
 { #category : 'accessing' }
 OPSchema >> minProperties: anObject [
+	<ignoreForCoverage>
 	<generated>
 	minProperties := anObject
-]
-
-{ #category : 'accessing' }
-OPSchema >> parameter [
-	"Relation named: #parameter type: #OPParameter opposite: #schema"
-
-	<generated>
-	<derived>
-	^ parameter
-]
-
-{ #category : 'accessing' }
-OPSchema >> parameter: anObject [
-
-	<generated>
-	parameter := anObject
 ]
 
 { #category : 'accessing' }
 OPSchema >> properties [
 	"Relation named: #properties type: #OPProperty opposite: #schema"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference properties from Schema to Property [0..*].'>
-	<derived>
 	^ properties
 ]
 
 { #category : 'accessing' }
 OPSchema >> properties: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	properties value: anObject
-]
-
-{ #category : 'navigation' }
-OPSchema >> propertiesGroup [
-	<generated>
-	<navigation: 'Properties'>
-	^ MooseSpecializedGroup withAll: self properties asSet
 ]
 
 { #category : 'accessing' }
 OPSchema >> readOnly [
 
 	<FMProperty: #readOnly type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute readOnly from Schema [1]'>
 	^ readOnly
@@ -375,61 +415,16 @@ OPSchema >> readOnly [
 
 { #category : 'accessing' }
 OPSchema >> readOnly: anObject [
+	<ignoreForCoverage>
 	<generated>
 	readOnly := anObject
-]
-
-{ #category : 'accessing' }
-OPSchema >> response [
-	"Relation named: #response type: #OPResponse opposite: #schema"
-
-	<generated>
-	<derived>
-	^ response
-]
-
-{ #category : 'accessing' }
-OPSchema >> response: anObject [
-
-	<generated>
-	response := anObject
-]
-
-{ #category : 'accessing' }
-OPSchema >> schema [
-	"Relation named: #schema type: #OPSchema opposite: #allOf"
-
-	<generated>
-	^ schema
-]
-
-{ #category : 'accessing' }
-OPSchema >> schema: anObject [
-
-	<generated>
-	schema := anObject
-]
-
-{ #category : 'accessing' }
-OPSchema >> schemaEntry [
-	"Relation named: #schemaEntry type: #OPSchemaEntry opposite: #value"
-
-	<generated>
-	<derived>
-	^ schemaEntry
-]
-
-{ #category : 'accessing' }
-OPSchema >> schemaEntry: anObject [
-
-	<generated>
-	schemaEntry := anObject
 ]
 
 { #category : 'accessing' }
 OPSchema >> title [
 
 	<FMProperty: #title type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute title from Schema [1]'>
 	^ title
@@ -437,31 +432,196 @@ OPSchema >> title [
 
 { #category : 'accessing' }
 OPSchema >> title: anObject [
+	<ignoreForCoverage>
 	<generated>
 	title := anObject
 ]
 
 { #category : 'accessing' }
 OPSchema >> tupleItems [
-	"Relation named: #tupleItems type: #OPSchema opposite: #schema"
+	"Relation named: #tupleItems type: #OPSchema opposite: #usedAsTupleItemsBy"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference tupleItems from Schema to Schema [0..*].'>
-	<derived>
 	^ tupleItems
 ]
 
 { #category : 'accessing' }
 OPSchema >> tupleItems: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	tupleItems value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedAsAdditionalPropertiesBy [
+	"Relation named: #usedAsAdditionalPropertiesBy type: #OPSchema opposite: #additionalProperties"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Schemas having this Schema as their additionalProperties [0..*].'>
+	^ usedAsAdditionalPropertiesBy
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedAsAdditionalPropertiesBy: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedAsAdditionalPropertiesBy value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedAsAllOfBy [
+	"Relation named: #usedAsAllOfBy type: #OPSchema opposite: #allOf"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Schemas having this Schema in their allOf [0..*].'>
+	^ usedAsAllOfBy
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedAsAllOfBy: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedAsAllOfBy value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedAsItemsBy [
+	"Relation named: #usedAsItemsBy type: #OPSchema opposite: #items"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Schemas having this Schema as their items [0..*].'>
+	^ usedAsItemsBy
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedAsItemsBy: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedAsItemsBy value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedAsTupleItemsBy [
+	"Relation named: #usedAsTupleItemsBy type: #OPSchema opposite: #tupleItems"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Schemas having this Schema in their tupleItems [0..*].'>
+	^ usedAsTupleItemsBy
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedAsTupleItemsBy: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedAsTupleItemsBy value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedByHeaders [
+	"Relation named: #usedByHeaders type: #OPHeader opposite: #schema"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Headers whose schema is this Schema [0..*].'>
+	^ usedByHeaders
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedByHeaders: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByHeaders value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedByMediaTypes [
+	"Relation named: #usedByMediaTypes type: #OPMediaType opposite: #schema"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Media types whose schema is this Schema [0..*].'>
+	^ usedByMediaTypes
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedByMediaTypes: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByMediaTypes value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedByParameters [
+	"Relation named: #usedByParameters type: #OPParameter opposite: #schema"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Parameters whose schema is this Schema [0..*].'>
+	^ usedByParameters
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedByParameters: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByParameters value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedByResponses [
+	"Relation named: #usedByResponses type: #OPResponse opposite: #schema"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Responses whose schema is this Schema [0..*].'>
+	^ usedByResponses
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedByResponses: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByResponses value: anObject
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedBySchemaEntries [
+	"Relation named: #usedBySchemaEntries type: #OPSchemaEntry opposite: #value"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'SchemaEntry entries whose value is this Schema [0..*].'>
+	^ usedBySchemaEntries
+]
+
+{ #category : 'accessing' }
+OPSchema >> usedBySchemaEntries: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedBySchemaEntries value: anObject
 ]
 
 { #category : 'accessing' }
 OPSchema >> xml [
 	"Relation named: #xml type: #OPXMLElement opposite: #schema"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference xml from Schema to XMLElement [0..1].'>
 	^ xml
@@ -470,13 +630,7 @@ OPSchema >> xml [
 { #category : 'accessing' }
 OPSchema >> xml: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	xml := anObject
-]
-
-{ #category : 'navigation' }
-OPSchema >> xmlGroup [
-	<generated>
-	<navigation: 'Xml'>
-	^ MooseSpecializedGroup with: self xml
 ]

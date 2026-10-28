@@ -4,11 +4,6 @@ Generated from openapi2.ecore
 ## Relations
 ======================
 
-### Parents
-| Relation | Origin | Opposite | Type | Comment |
-|---|
-| `securitySchemeEntry` | `OPSecurityScheme` | `value` | `OPSecuritySchemeEntry` | |
-
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
@@ -17,7 +12,8 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `requiredSecurityScheme` | `OPSecurityScheme` | `securityScheme` | `OPRequiredSecurityScheme` | |
+| `usedByRequiredSecuritySchemes` | `OPSecurityScheme` | `securityScheme` | `OPRequiredSecurityScheme` | Required security schemes using this SecurityScheme [0..*].|
+| `usedBySecuritySchemeEntries` | `OPSecurityScheme` | `value` | `OPSecuritySchemeEntry` | SecuritySchemeEntry entries whose value is this SecurityScheme [0..*].|
 
 
 ## Properties
@@ -45,18 +41,18 @@ Class {
 	#traits : 'FamixTNamedEntity + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#type => FMProperty',
-		'#description => FMProperty',
-		'#location => FMProperty',
-		'#scheme => FMProperty',
-		'#bearerFormat => FMProperty',
-		'#openIdConnectUrl => FMProperty',
-		'#flow => FMProperty',
 		'#authorizationUrl => FMProperty',
-		'#tokenUrl => FMProperty',
+		'#bearerFormat => FMProperty',
+		'#description => FMProperty',
+		'#flow => FMProperty',
+		'#location => FMProperty',
+		'#openIdConnectUrl => FMProperty',
+		'#scheme => FMProperty',
 		'#scopes => FMMany type: #OPSecurityScope opposite: #securityScheme',
-		'#securitySchemeEntry => FMOne type: #OPSecuritySchemeEntry opposite: #value',
-		'#requiredSecurityScheme => FMOne type: #OPRequiredSecurityScheme opposite: #securityScheme'
+		'#tokenUrl => FMProperty',
+		'#type => FMProperty',
+		'#usedByRequiredSecuritySchemes => FMMany type: #OPRequiredSecurityScheme opposite: #securityScheme',
+		'#usedBySecuritySchemeEntries => FMMany type: #OPSecuritySchemeEntry opposite: #value'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -66,22 +62,41 @@ Class {
 { #category : 'meta' }
 OPSecurityScheme class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #SecurityScheme super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'adding' }
 OPSecurityScheme >> addScope: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self scopes add: anObject
+]
+
+{ #category : 'adding' }
+OPSecurityScheme >> addUsedByRequiredSecurityScheme: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByRequiredSecuritySchemes add: anObject
+]
+
+{ #category : 'adding' }
+OPSecurityScheme >> addUsedBySecuritySchemeEntry: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedBySecuritySchemeEntries add: anObject
 ]
 
 { #category : 'accessing' }
 OPSecurityScheme >> authorizationUrl [
 
 	<FMProperty: #authorizationUrl type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute authorizationUrl from SecurityScheme [1]'>
 	^ authorizationUrl
@@ -89,6 +104,7 @@ OPSecurityScheme >> authorizationUrl [
 
 { #category : 'accessing' }
 OPSecurityScheme >> authorizationUrl: anObject [
+	<ignoreForCoverage>
 	<generated>
 	authorizationUrl := anObject
 ]
@@ -97,6 +113,7 @@ OPSecurityScheme >> authorizationUrl: anObject [
 OPSecurityScheme >> bearerFormat [
 
 	<FMProperty: #bearerFormat type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute bearerFormat from SecurityScheme [1]'>
 	^ bearerFormat
@@ -104,6 +121,7 @@ OPSecurityScheme >> bearerFormat [
 
 { #category : 'accessing' }
 OPSecurityScheme >> bearerFormat: anObject [
+	<ignoreForCoverage>
 	<generated>
 	bearerFormat := anObject
 ]
@@ -112,6 +130,7 @@ OPSecurityScheme >> bearerFormat: anObject [
 OPSecurityScheme >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from SecurityScheme [1]'>
 	^ description
@@ -119,6 +138,7 @@ OPSecurityScheme >> description [
 
 { #category : 'accessing' }
 OPSecurityScheme >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
 ]
@@ -127,6 +147,7 @@ OPSecurityScheme >> description: anObject [
 OPSecurityScheme >> flow [
 
 	<FMProperty: #flow type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute flow from SecurityScheme [1]'>
 	^ flow
@@ -134,6 +155,7 @@ OPSecurityScheme >> flow [
 
 { #category : 'accessing' }
 OPSecurityScheme >> flow: anObject [
+	<ignoreForCoverage>
 	<generated>
 	flow := anObject
 ]
@@ -142,6 +164,7 @@ OPSecurityScheme >> flow: anObject [
 OPSecurityScheme >> location [
 
 	<FMProperty: #location type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute location from SecurityScheme [1]'>
 	^ location
@@ -149,6 +172,7 @@ OPSecurityScheme >> location [
 
 { #category : 'accessing' }
 OPSecurityScheme >> location: anObject [
+	<ignoreForCoverage>
 	<generated>
 	location := anObject
 ]
@@ -157,6 +181,7 @@ OPSecurityScheme >> location: anObject [
 OPSecurityScheme >> openIdConnectUrl [
 
 	<FMProperty: #openIdConnectUrl type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute openIdConnectUrl from SecurityScheme [1]'>
 	^ openIdConnectUrl
@@ -164,30 +189,16 @@ OPSecurityScheme >> openIdConnectUrl [
 
 { #category : 'accessing' }
 OPSecurityScheme >> openIdConnectUrl: anObject [
+	<ignoreForCoverage>
 	<generated>
 	openIdConnectUrl := anObject
-]
-
-{ #category : 'accessing' }
-OPSecurityScheme >> requiredSecurityScheme [
-	"Relation named: #requiredSecurityScheme type: #OPRequiredSecurityScheme opposite: #securityScheme"
-
-	<generated>
-	<derived>
-	^ requiredSecurityScheme
-]
-
-{ #category : 'accessing' }
-OPSecurityScheme >> requiredSecurityScheme: anObject [
-
-	<generated>
-	requiredSecurityScheme := anObject
 ]
 
 { #category : 'accessing' }
 OPSecurityScheme >> scheme [
 
 	<FMProperty: #scheme type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute scheme from SecurityScheme [1]'>
 	^ scheme
@@ -195,6 +206,7 @@ OPSecurityScheme >> scheme [
 
 { #category : 'accessing' }
 OPSecurityScheme >> scheme: anObject [
+	<ignoreForCoverage>
 	<generated>
 	scheme := anObject
 ]
@@ -203,54 +215,25 @@ OPSecurityScheme >> scheme: anObject [
 OPSecurityScheme >> scopes [
 	"Relation named: #scopes type: #OPSecurityScope opposite: #securityScheme"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference scopes from SecurityScheme to SecurityScope [0..*].'>
-	<derived>
 	^ scopes
 ]
 
 { #category : 'accessing' }
 OPSecurityScheme >> scopes: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	scopes value: anObject
-]
-
-{ #category : 'navigation' }
-OPSecurityScheme >> scopesGroup [
-	<generated>
-	<navigation: 'Scopes'>
-	^ MooseSpecializedGroup withAll: self scopes asSet
-]
-
-{ #category : 'accessing' }
-OPSecurityScheme >> securitySchemeEntry [
-	"Relation named: #securitySchemeEntry type: #OPSecuritySchemeEntry opposite: #value"
-
-	<generated>
-	<container>
-	<derived>
-	^ securitySchemeEntry
-]
-
-{ #category : 'accessing' }
-OPSecurityScheme >> securitySchemeEntry: anObject [
-
-	<generated>
-	securitySchemeEntry := anObject
-]
-
-{ #category : 'navigation' }
-OPSecurityScheme >> securitySchemeEntryGroup [
-	<generated>
-	<navigation: 'SecuritySchemeEntry'>
-	^ MooseSpecializedGroup with: self securitySchemeEntry
 ]
 
 { #category : 'accessing' }
 OPSecurityScheme >> tokenUrl [
 
 	<FMProperty: #tokenUrl type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute tokenUrl from SecurityScheme [1]'>
 	^ tokenUrl
@@ -258,6 +241,7 @@ OPSecurityScheme >> tokenUrl [
 
 { #category : 'accessing' }
 OPSecurityScheme >> tokenUrl: anObject [
+	<ignoreForCoverage>
 	<generated>
 	tokenUrl := anObject
 ]
@@ -266,6 +250,7 @@ OPSecurityScheme >> tokenUrl: anObject [
 OPSecurityScheme >> type [
 
 	<FMProperty: #type type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute type from SecurityScheme [1]'>
 	^ type
@@ -273,6 +258,43 @@ OPSecurityScheme >> type [
 
 { #category : 'accessing' }
 OPSecurityScheme >> type: anObject [
+	<ignoreForCoverage>
 	<generated>
 	type := anObject
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> usedByRequiredSecuritySchemes [
+	"Relation named: #usedByRequiredSecuritySchemes type: #OPRequiredSecurityScheme opposite: #securityScheme"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Required security schemes using this SecurityScheme [0..*].'>
+	^ usedByRequiredSecuritySchemes
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> usedByRequiredSecuritySchemes: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByRequiredSecuritySchemes value: anObject
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> usedBySecuritySchemeEntries [
+	"Relation named: #usedBySecuritySchemeEntries type: #OPSecuritySchemeEntry opposite: #value"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'SecuritySchemeEntry entries whose value is this SecurityScheme [0..*].'>
+	^ usedBySecuritySchemeEntries
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> usedBySecuritySchemeEntries: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedBySecuritySchemeEntries value: anObject
 ]

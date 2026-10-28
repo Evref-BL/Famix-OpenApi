@@ -41,14 +41,16 @@ Class {
 { #category : 'meta' }
 OPSecurityRequirement class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #SecurityRequirement super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'adding' }
 OPSecurityRequirement >> addSecurityScheme: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self securitySchemes add: anObject
 ]
@@ -57,6 +59,7 @@ OPSecurityRequirement >> addSecurityScheme: anObject [
 OPSecurityRequirement >> securityContainer [
 	"Relation named: #securityContainer type: #OPSecurityContainer opposite: #security"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ securityContainer
@@ -65,37 +68,25 @@ OPSecurityRequirement >> securityContainer [
 { #category : 'accessing' }
 OPSecurityRequirement >> securityContainer: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	securityContainer := anObject
-]
-
-{ #category : 'navigation' }
-OPSecurityRequirement >> securityContainerGroup [
-	<generated>
-	<navigation: 'SecurityContainer'>
-	^ MooseSpecializedGroup with: self securityContainer
 ]
 
 { #category : 'accessing' }
 OPSecurityRequirement >> securitySchemes [
 	"Relation named: #securitySchemes type: #OPRequiredSecurityScheme opposite: #securityRequirement"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference securitySchemes from SecurityRequirement to RequiredSecurityScheme [0..*].'>
-	<derived>
 	^ securitySchemes
 ]
 
 { #category : 'accessing' }
 OPSecurityRequirement >> securitySchemes: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	securitySchemes value: anObject
-]
-
-{ #category : 'navigation' }
-OPSecurityRequirement >> securitySchemesGroup [
-	<generated>
-	<navigation: 'SecuritySchemes'>
-	^ MooseSpecializedGroup withAll: self securitySchemes asSet
 ]

@@ -12,8 +12,8 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `mediaTypeEntry` | `OPMediaType` | `value` | `OPMediaTypeEntry` | |
-| `schema` | `OPMediaType` | `mediaType` | `OPSchema` | Reference schema from MediaType to Schema [0..1].|
+| `schema` | `OPMediaType` | `usedByMediaTypes` | `OPSchema` | Reference schema from MediaType to Schema [0..1].|
+| `usedByMediaTypeEntries` | `OPMediaType` | `value` | `OPMediaTypeEntry` | MediaTypeEntry entries whose value is this MediaType [0..*].|
 
 
 ## Properties
@@ -33,9 +33,9 @@ Class {
 	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#example => FMProperty',
-		'#schema => FMOne type: #OPSchema opposite: #mediaType',
 		'#examples => FMMany type: #OPExampleEntry opposite: #mediaType',
-		'#mediaTypeEntry => FMOne type: #OPMediaTypeEntry opposite: #value'
+		'#schema => FMOne type: #OPSchema opposite: #usedByMediaTypes',
+		'#usedByMediaTypeEntries => FMMany type: #OPMediaTypeEntry opposite: #value'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -45,22 +45,33 @@ Class {
 { #category : 'meta' }
 OPMediaType class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #MediaType super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'adding' }
 OPMediaType >> addExample: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self examples add: anObject
+]
+
+{ #category : 'adding' }
+OPMediaType >> addUsedByMediaTypeEntry: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByMediaTypeEntries add: anObject
 ]
 
 { #category : 'accessing' }
 OPMediaType >> example [
 
 	<FMProperty: #example type: #Object>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute example from MediaType [1]'>
 	^ example
@@ -68,6 +79,7 @@ OPMediaType >> example [
 
 { #category : 'accessing' }
 OPMediaType >> example: anObject [
+	<ignoreForCoverage>
 	<generated>
 	example := anObject
 ]
@@ -76,46 +88,25 @@ OPMediaType >> example: anObject [
 OPMediaType >> examples [
 	"Relation named: #examples type: #OPExampleEntry opposite: #mediaType"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference examples from MediaType to ExampleEntry [0..*].'>
-	<derived>
 	^ examples
 ]
 
 { #category : 'accessing' }
 OPMediaType >> examples: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	examples value: anObject
 ]
 
-{ #category : 'navigation' }
-OPMediaType >> examplesGroup [
-	<generated>
-	<navigation: 'Examples'>
-	^ MooseSpecializedGroup withAll: self examples asSet
-]
-
-{ #category : 'accessing' }
-OPMediaType >> mediaTypeEntry [
-	"Relation named: #mediaTypeEntry type: #OPMediaTypeEntry opposite: #value"
-
-	<generated>
-	<derived>
-	^ mediaTypeEntry
-]
-
-{ #category : 'accessing' }
-OPMediaType >> mediaTypeEntry: anObject [
-
-	<generated>
-	mediaTypeEntry := anObject
-]
-
 { #category : 'accessing' }
 OPMediaType >> schema [
-	"Relation named: #schema type: #OPSchema opposite: #mediaType"
+	"Relation named: #schema type: #OPSchema opposite: #usedByMediaTypes"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference schema from MediaType to Schema [0..1].'>
 	^ schema
@@ -124,6 +115,25 @@ OPMediaType >> schema [
 { #category : 'accessing' }
 OPMediaType >> schema: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	schema := anObject
+]
+
+{ #category : 'accessing' }
+OPMediaType >> usedByMediaTypeEntries [
+	"Relation named: #usedByMediaTypeEntries type: #OPMediaTypeEntry opposite: #value"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'MediaTypeEntry entries whose value is this MediaType [0..*].'>
+	^ usedByMediaTypeEntries
+]
+
+{ #category : 'accessing' }
+OPMediaType >> usedByMediaTypeEntries: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByMediaTypeEntries value: anObject
 ]

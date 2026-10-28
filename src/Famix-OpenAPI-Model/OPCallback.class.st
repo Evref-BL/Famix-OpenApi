@@ -7,7 +7,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `callbackEntry` | `OPCallback` | `value` | `OPCallbackEntry` | |
+| `usedByCallbackEntries` | `OPCallback` | `value` | `OPCallbackEntry` | CallbackEntry entries whose value is this Callback [0..*].|
 
 
 ## Properties
@@ -26,7 +26,7 @@ Class {
 	#traits : 'FamixTNamedEntity + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#callbackEntry => FMOne type: #OPCallbackEntry opposite: #value'
+		'#usedByCallbackEntries => FMMany type: #OPCallbackEntry opposite: #value'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -36,24 +36,34 @@ Class {
 { #category : 'meta' }
 OPCallback class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Callback super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
+]
+
+{ #category : 'adding' }
+OPCallback >> addUsedByCallbackEntry: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByCallbackEntries add: anObject
 ]
 
 { #category : 'accessing' }
-OPCallback >> callbackEntry [
-	"Relation named: #callbackEntry type: #OPCallbackEntry opposite: #value"
+OPCallback >> usedByCallbackEntries [
+	"Relation named: #usedByCallbackEntries type: #OPCallbackEntry opposite: #value"
 
+	<ignoreForCoverage>
 	<generated>
-	<derived>
-	^ callbackEntry
+	<FMComment: 'CallbackEntry entries whose value is this Callback [0..*].'>
+	^ usedByCallbackEntries
 ]
 
 { #category : 'accessing' }
-OPCallback >> callbackEntry: anObject [
+OPCallback >> usedByCallbackEntries: anObject [
 
+	<ignoreForCoverage>
 	<generated>
-	callbackEntry := anObject
+	usedByCallbackEntries value: anObject
 ]

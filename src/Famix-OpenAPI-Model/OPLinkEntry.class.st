@@ -12,7 +12,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `value` | `OPLinkEntry` | `linkEntry` | `OPLink` | Reference value from LinkEntry to Link [0..1].|
+| `value` | `OPLinkEntry` | `usedByLinkEntries` | `OPLink` | Reference value from LinkEntry to Link [0..1].|
 
 
 ## Properties
@@ -31,9 +31,9 @@ Class {
 	#traits : 'FamixTNamedEntity + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#key => FMProperty',
 		'#components => FMOne type: #OPComponents opposite: #links',
-		'#value => FMOne type: #OPLink opposite: #linkEntry'
+		'#key => FMProperty',
+		'#value => FMOne type: #OPLink opposite: #usedByLinkEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -43,16 +43,17 @@ Class {
 { #category : 'meta' }
 OPLinkEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #LinkEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPLinkEntry >> components [
 	"Relation named: #components type: #OPComponents opposite: #links"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ components
@@ -61,21 +62,16 @@ OPLinkEntry >> components [
 { #category : 'accessing' }
 OPLinkEntry >> components: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	components := anObject
-]
-
-{ #category : 'navigation' }
-OPLinkEntry >> componentsGroup [
-	<generated>
-	<navigation: 'Components'>
-	^ MooseSpecializedGroup with: self components
 ]
 
 { #category : 'accessing' }
 OPLinkEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from LinkEntry [1]'>
 	^ key
@@ -83,14 +79,16 @@ OPLinkEntry >> key [
 
 { #category : 'accessing' }
 OPLinkEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
 
 { #category : 'accessing' }
 OPLinkEntry >> value [
-	"Relation named: #value type: #OPLink opposite: #linkEntry"
+	"Relation named: #value type: #OPLink opposite: #usedByLinkEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from LinkEntry to Link [0..1].'>
 	^ value
@@ -99,6 +97,7 @@ OPLinkEntry >> value [
 { #category : 'accessing' }
 OPLinkEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

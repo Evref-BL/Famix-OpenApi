@@ -7,7 +7,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `linkEntry` | `OPLink` | `value` | `OPLinkEntry` | |
+| `usedByLinkEntries` | `OPLink` | `value` | `OPLinkEntry` | LinkEntry entries whose value is this Link [0..*].|
 
 
 ## Properties
@@ -30,11 +30,11 @@ Class {
 	#traits : 'FamixTNamedEntity + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#operationRef => FMProperty',
-		'#operationId => FMProperty',
-		'#requestBody => FMProperty',
 		'#description => FMProperty',
-		'#linkEntry => FMOne type: #OPLinkEntry opposite: #value'
+		'#operationId => FMProperty',
+		'#operationRef => FMProperty',
+		'#requestBody => FMProperty',
+		'#usedByLinkEntries => FMMany type: #OPLinkEntry opposite: #value'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -44,16 +44,25 @@ Class {
 { #category : 'meta' }
 OPLink class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Link super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
+]
+
+{ #category : 'adding' }
+OPLink >> addUsedByLinkEntry: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByLinkEntries add: anObject
 ]
 
 { #category : 'accessing' }
 OPLink >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from Link [1]'>
 	^ description
@@ -61,30 +70,16 @@ OPLink >> description [
 
 { #category : 'accessing' }
 OPLink >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
-]
-
-{ #category : 'accessing' }
-OPLink >> linkEntry [
-	"Relation named: #linkEntry type: #OPLinkEntry opposite: #value"
-
-	<generated>
-	<derived>
-	^ linkEntry
-]
-
-{ #category : 'accessing' }
-OPLink >> linkEntry: anObject [
-
-	<generated>
-	linkEntry := anObject
 ]
 
 { #category : 'accessing' }
 OPLink >> operationId [
 
 	<FMProperty: #operationId type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute operationId from Link [1]'>
 	^ operationId
@@ -92,6 +87,7 @@ OPLink >> operationId [
 
 { #category : 'accessing' }
 OPLink >> operationId: anObject [
+	<ignoreForCoverage>
 	<generated>
 	operationId := anObject
 ]
@@ -100,6 +96,7 @@ OPLink >> operationId: anObject [
 OPLink >> operationRef [
 
 	<FMProperty: #operationRef type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute operationRef from Link [1]'>
 	^ operationRef
@@ -107,6 +104,7 @@ OPLink >> operationRef [
 
 { #category : 'accessing' }
 OPLink >> operationRef: anObject [
+	<ignoreForCoverage>
 	<generated>
 	operationRef := anObject
 ]
@@ -115,6 +113,7 @@ OPLink >> operationRef: anObject [
 OPLink >> requestBody [
 
 	<FMProperty: #requestBody type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute requestBody from Link [1]'>
 	^ requestBody
@@ -122,6 +121,25 @@ OPLink >> requestBody [
 
 { #category : 'accessing' }
 OPLink >> requestBody: anObject [
+	<ignoreForCoverage>
 	<generated>
 	requestBody := anObject
+]
+
+{ #category : 'accessing' }
+OPLink >> usedByLinkEntries [
+	"Relation named: #usedByLinkEntries type: #OPLinkEntry opposite: #value"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'LinkEntry entries whose value is this Link [0..*].'>
+	^ usedByLinkEntries
+]
+
+{ #category : 'accessing' }
+OPLink >> usedByLinkEntries: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByLinkEntries value: anObject
 ]

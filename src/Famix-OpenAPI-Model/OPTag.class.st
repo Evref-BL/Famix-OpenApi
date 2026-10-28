@@ -7,7 +7,7 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `anApi` | `OPTag` | `tags` | `OPApi` | |
+| `api` | `OPTag` | `tags` | `OPApi` | Opposite reference api from Tag to API [0..1].|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
@@ -31,8 +31,8 @@ Class {
 	#traits : 'FamixTNamedEntity + OPExternalDocsContainer + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPExternalDocsContainer classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#description => FMProperty',
-		'#anApi => FMOne type: #OPApi opposite: #tags'
+		'#api => FMOne type: #OPApi opposite: #tags',
+		'#description => FMProperty'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -42,39 +42,36 @@ Class {
 { #category : 'meta' }
 OPTag class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Tag super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
-OPTag >> anApi [
-	"Relation named: #anApi type: #OPApi opposite: #tags"
+OPTag >> api [
+	"Relation named: #api type: #OPApi opposite: #tags"
 
+	<ignoreForCoverage>
 	<generated>
+	<FMComment: 'Opposite reference api from Tag to API [0..1].'>
 	<container>
-	^ anApi
+	^ api
 ]
 
 { #category : 'accessing' }
-OPTag >> anApi: anObject [
+OPTag >> api: anObject [
 
+	<ignoreForCoverage>
 	<generated>
-	anApi := anObject
-]
-
-{ #category : 'navigation' }
-OPTag >> anApiGroup [
-	<generated>
-	<navigation: 'AnApi'>
-	^ MooseSpecializedGroup with: self anApi
+	api := anObject
 ]
 
 { #category : 'accessing' }
 OPTag >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from Tag [1]'>
 	^ description
@@ -82,6 +79,7 @@ OPTag >> description [
 
 { #category : 'accessing' }
 OPTag >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
 ]

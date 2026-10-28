@@ -7,14 +7,13 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `path` | `OPOperation` | `get` | `OPPath` | |
+| `path` | `OPOperation` | `operations` | `OPPath` | Opposite reference path from Operation to Path [0..1].|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `callbacks` | `OPOperation` | `operation` | `OPCallbackEntry` | Reference callbacks from Operation to CallbackEntry [0..*].|
 | `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocs` | Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].|
-| `requestBody` | `OPOperation` | `operation` | `OPRequestBody` | Reference requestBody from Operation to RequestBody [0..1].|
 | `responses` | `OPOperation` | `operation` | `OPResponseEntry` | Reference responses from Operation to ResponseEntry [1..*].|
 | `security` | `OPSecurityContainer` | `securityContainer` | `OPSecurityRequirement` | Reference security from SecurityContainer to SecurityRequirement [0..*].|
 
@@ -22,14 +21,8 @@ Generated from openapi2.ecore
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `parameter` | `OPParameterContainer` | `declaringContext` | `OPParameter` | |
-| `parameters` | `OPOperation` | `operation` | `OPParameter` | Reference parameters from Operation to Parameter [0..*].|
-| `path` | `OPOperation` | `put` | `OPPath` | |
-| `path` | `OPOperation` | `options` | `OPPath` | |
-| `path` | `OPOperation` | `trace` | `OPPath` | |
-| `path` | `OPOperation` | `patch` | `OPPath` | |
-| `path` | `OPOperation` | `delete` | `OPPath` | |
-| `path` | `OPOperation` | `post` | `OPPath` | |
-| `path` | `OPOperation` | `head` | `OPPath` | |
+| `parameters` | `OPOperation` | `usedByOperations` | `OPParameter` | Reference parameters from Operation to Parameter [0..*]. A parameter may be shared by several operations.|
+| `requestBody` | `OPOperation` | `usedByOperations` | `OPRequestBody` | Reference requestBody from Operation to RequestBody [0..1]. A request body may be shared by several operations.|
 | `response` | `OPResponseContainer` | `declaringContext` | `OPResponse` | |
 
 
@@ -41,6 +34,7 @@ Generated from openapi2.ecore
 | `consumes` | `Object` | nil | Attribute consumes from Operation [*]|
 | `deprecated` | `Boolean` | nil | Attribute deprecated from Operation [1]|
 | `description` | `String` | nil | Attribute description from Operation [1]|
+| `httpMethod` | `String` | nil | Attribute httpMethod from Operation [1]: lowercase HTTP verb (get, put, post, delete, options, head, patch, trace).|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
 | `operationId` | `String` | nil | Attribute operationId from Operation [1]|
 | `produces` | `Object` | nil | Attribute produces from Operation [*]|
@@ -56,19 +50,20 @@ Class {
 	#traits : 'FamixTNamedEntity + OPExternalDocsContainer + OPParameterContainer + OPResponseContainer + OPSecurityContainer + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPExternalDocsContainer classTrait + OPParameterContainer classTrait + OPResponseContainer classTrait + OPSecurityContainer classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#tagReferences => FMProperty',
-		'#summary => FMProperty',
-		'#description => FMProperty',
-		'#operationId => FMProperty',
+		'#callbacks => FMMany type: #OPCallbackEntry opposite: #operation',
 		'#consumes => FMProperty',
-		'#produces => FMProperty',
-		'#schemes => FMProperty',
 		'#deprecated => FMProperty',
-		'#path => FMOne type: #OPPath opposite: #get',
+		'#description => FMProperty',
+		'#httpMethod => FMProperty',
+		'#operationId => FMProperty',
+		'#parameters => FMMany type: #OPParameter opposite: #usedByOperations',
+		'#path => FMOne type: #OPPath opposite: #operations',
+		'#produces => FMProperty',
+		'#requestBody => FMOne type: #OPRequestBody opposite: #usedByOperations',
 		'#responses => FMMany type: #OPResponseEntry opposite: #operation',
-		'#parameters => FMMany type: #OPParameter opposite: #operation',
-		'#requestBody => FMOne type: #OPRequestBody opposite: #operation',
-		'#callbacks => FMMany type: #OPCallbackEntry opposite: #operation'
+		'#schemes => FMProperty',
+		'#summary => FMProperty',
+		'#tagReferences => FMProperty'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -78,26 +73,32 @@ Class {
 { #category : 'meta' }
 OPOperation class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Operation super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'adding' }
 OPOperation >> addCallback: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self callbacks add: anObject
 ]
 
 { #category : 'adding' }
 OPOperation >> addParameter: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self parameters add: anObject
 ]
 
 { #category : 'adding' }
 OPOperation >> addResponse: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self responses add: anObject
 ]
@@ -106,30 +107,25 @@ OPOperation >> addResponse: anObject [
 OPOperation >> callbacks [
 	"Relation named: #callbacks type: #OPCallbackEntry opposite: #operation"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference callbacks from Operation to CallbackEntry [0..*].'>
-	<derived>
 	^ callbacks
 ]
 
 { #category : 'accessing' }
 OPOperation >> callbacks: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	callbacks value: anObject
-]
-
-{ #category : 'navigation' }
-OPOperation >> callbacksGroup [
-	<generated>
-	<navigation: 'Callbacks'>
-	^ MooseSpecializedGroup withAll: self callbacks asSet
 ]
 
 { #category : 'accessing' }
 OPOperation >> consumes [
 
 	<FMProperty: #consumes type: #Object>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute consumes from Operation [*]'>
 	^ consumes
@@ -137,6 +133,7 @@ OPOperation >> consumes [
 
 { #category : 'accessing' }
 OPOperation >> consumes: anObject [
+	<ignoreForCoverage>
 	<generated>
 	consumes := anObject
 ]
@@ -145,6 +142,7 @@ OPOperation >> consumes: anObject [
 OPOperation >> deprecated [
 
 	<FMProperty: #deprecated type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute deprecated from Operation [1]'>
 	^ deprecated
@@ -152,6 +150,7 @@ OPOperation >> deprecated [
 
 { #category : 'accessing' }
 OPOperation >> deprecated: anObject [
+	<ignoreForCoverage>
 	<generated>
 	deprecated := anObject
 ]
@@ -160,6 +159,7 @@ OPOperation >> deprecated: anObject [
 OPOperation >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from Operation [1]'>
 	^ description
@@ -167,14 +167,33 @@ OPOperation >> description [
 
 { #category : 'accessing' }
 OPOperation >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
+]
+
+{ #category : 'accessing' }
+OPOperation >> httpMethod [
+
+	<FMProperty: #httpMethod type: #String>
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Attribute httpMethod from Operation [1]: lowercase HTTP verb (get, put, post, delete, options, head, patch, trace).'>
+	^ httpMethod
+]
+
+{ #category : 'accessing' }
+OPOperation >> httpMethod: anObject [
+	<ignoreForCoverage>
+	<generated>
+	httpMethod := anObject
 ]
 
 { #category : 'accessing' }
 OPOperation >> operationId [
 
 	<FMProperty: #operationId type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute operationId from Operation [1]'>
 	^ operationId
@@ -182,55 +201,53 @@ OPOperation >> operationId [
 
 { #category : 'accessing' }
 OPOperation >> operationId: anObject [
+	<ignoreForCoverage>
 	<generated>
 	operationId := anObject
 ]
 
 { #category : 'accessing' }
 OPOperation >> parameters [
-	"Relation named: #parameters type: #OPParameter opposite: #operation"
+	"Relation named: #parameters type: #OPParameter opposite: #usedByOperations"
 
+	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference parameters from Operation to Parameter [0..*].'>
-	<derived>
+	<FMComment: 'Reference parameters from Operation to Parameter [0..*]. A parameter may be shared by several operations.'>
 	^ parameters
 ]
 
 { #category : 'accessing' }
 OPOperation >> parameters: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	parameters value: anObject
 ]
 
 { #category : 'accessing' }
 OPOperation >> path [
-	"Relation named: #path type: #OPPath opposite: #get"
+	"Relation named: #path type: #OPPath opposite: #operations"
 
+	<ignoreForCoverage>
 	<generated>
+	<FMComment: 'Opposite reference path from Operation to Path [0..1].'>
 	<container>
-	<derived>
 	^ path
 ]
 
 { #category : 'accessing' }
 OPOperation >> path: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	path := anObject
-]
-
-{ #category : 'navigation' }
-OPOperation >> pathGroup [
-	<generated>
-	<navigation: 'Path'>
-	^ MooseSpecializedGroup with: self path
 ]
 
 { #category : 'accessing' }
 OPOperation >> produces [
 
 	<FMProperty: #produces type: #Object>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute produces from Operation [*]'>
 	^ produces
@@ -238,61 +255,52 @@ OPOperation >> produces [
 
 { #category : 'accessing' }
 OPOperation >> produces: anObject [
+	<ignoreForCoverage>
 	<generated>
 	produces := anObject
 ]
 
 { #category : 'accessing' }
 OPOperation >> requestBody [
-	"Relation named: #requestBody type: #OPRequestBody opposite: #operation"
+	"Relation named: #requestBody type: #OPRequestBody opposite: #usedByOperations"
 
+	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference requestBody from Operation to RequestBody [0..1].'>
+	<FMComment: 'Reference requestBody from Operation to RequestBody [0..1]. A request body may be shared by several operations.'>
 	^ requestBody
 ]
 
 { #category : 'accessing' }
 OPOperation >> requestBody: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	requestBody := anObject
-]
-
-{ #category : 'navigation' }
-OPOperation >> requestBodyGroup [
-	<generated>
-	<navigation: 'RequestBody'>
-	^ MooseSpecializedGroup with: self requestBody
 ]
 
 { #category : 'accessing' }
 OPOperation >> responses [
 	"Relation named: #responses type: #OPResponseEntry opposite: #operation"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference responses from Operation to ResponseEntry [1..*].'>
-	<derived>
 	^ responses
 ]
 
 { #category : 'accessing' }
 OPOperation >> responses: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	responses value: anObject
-]
-
-{ #category : 'navigation' }
-OPOperation >> responsesGroup [
-	<generated>
-	<navigation: 'Responses'>
-	^ MooseSpecializedGroup withAll: self responses asSet
 ]
 
 { #category : 'accessing' }
 OPOperation >> schemes [
 
 	<FMProperty: #schemes type: #Object>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute schemes from Operation [*]'>
 	^ schemes
@@ -300,6 +308,7 @@ OPOperation >> schemes [
 
 { #category : 'accessing' }
 OPOperation >> schemes: anObject [
+	<ignoreForCoverage>
 	<generated>
 	schemes := anObject
 ]
@@ -308,6 +317,7 @@ OPOperation >> schemes: anObject [
 OPOperation >> summary [
 
 	<FMProperty: #summary type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute summary from Operation [1]'>
 	^ summary
@@ -315,6 +325,7 @@ OPOperation >> summary [
 
 { #category : 'accessing' }
 OPOperation >> summary: anObject [
+	<ignoreForCoverage>
 	<generated>
 	summary := anObject
 ]
@@ -323,6 +334,7 @@ OPOperation >> summary: anObject [
 OPOperation >> tagReferences [
 
 	<FMProperty: #tagReferences type: #Object>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute tagReferences from Operation [*]'>
 	^ tagReferences
@@ -330,6 +342,7 @@ OPOperation >> tagReferences [
 
 { #category : 'accessing' }
 OPOperation >> tagReferences: anObject [
+	<ignoreForCoverage>
 	<generated>
 	tagReferences := anObject
 ]

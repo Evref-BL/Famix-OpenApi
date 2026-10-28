@@ -32,16 +32,17 @@ Trait {
 { #category : 'meta' }
 OPArrayContainer classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ArrayContainer super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPArrayContainer >> collectionFormat [
 
 	<FMProperty: #collectionFormat type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute collectionFormat from ArrayContainer [1]'>
 	^ collectionFormat
@@ -49,6 +50,7 @@ OPArrayContainer >> collectionFormat [
 
 { #category : 'accessing' }
 OPArrayContainer >> collectionFormat: anObject [
+	<ignoreForCoverage>
 	<generated>
 	collectionFormat := anObject
 ]
@@ -57,6 +59,7 @@ OPArrayContainer >> collectionFormat: anObject [
 OPArrayContainer >> items [
 	"Relation named: #items type: #OPItemsDefinition opposite: #arrayContainer"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference items from ArrayContainer to ItemsDefinition [0..1].'>
 	^ items
@@ -65,13 +68,7 @@ OPArrayContainer >> items [
 { #category : 'accessing' }
 OPArrayContainer >> items: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	items := anObject
-]
-
-{ #category : 'navigation' }
-OPArrayContainer >> itemsGroup [
-	<generated>
-	<navigation: 'Items'>
-	^ MooseSpecializedGroup with: self items
 ]

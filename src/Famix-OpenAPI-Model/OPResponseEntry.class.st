@@ -12,7 +12,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `value` | `OPResponseEntry` | `responseEntry` | `OPResponse` | Reference value from ResponseEntry to Response [0..1].|
+| `value` | `OPResponseEntry` | `usedByResponseEntries` | `OPResponse` | Reference value from ResponseEntry to Response [0..1].|
 
 
 ## Properties
@@ -33,7 +33,7 @@ Class {
 	#instVars : [
 		'#key => FMProperty',
 		'#operation => FMOne type: #OPOperation opposite: #responses',
-		'#value => FMOne type: #OPResponse opposite: #responseEntry'
+		'#value => FMOne type: #OPResponse opposite: #usedByResponseEntries'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -43,16 +43,17 @@ Class {
 { #category : 'meta' }
 OPResponseEntry class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #ResponseEntry super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPResponseEntry >> key [
 
 	<FMProperty: #key type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute key from ResponseEntry [1]'>
 	^ key
@@ -60,6 +61,7 @@ OPResponseEntry >> key [
 
 { #category : 'accessing' }
 OPResponseEntry >> key: anObject [
+	<ignoreForCoverage>
 	<generated>
 	key := anObject
 ]
@@ -68,6 +70,7 @@ OPResponseEntry >> key: anObject [
 OPResponseEntry >> operation [
 	"Relation named: #operation type: #OPOperation opposite: #responses"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ operation
@@ -76,21 +79,16 @@ OPResponseEntry >> operation [
 { #category : 'accessing' }
 OPResponseEntry >> operation: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	operation := anObject
 ]
 
-{ #category : 'navigation' }
-OPResponseEntry >> operationGroup [
-	<generated>
-	<navigation: 'Operation'>
-	^ MooseSpecializedGroup with: self operation
-]
-
 { #category : 'accessing' }
 OPResponseEntry >> value [
-	"Relation named: #value type: #OPResponse opposite: #responseEntry"
+	"Relation named: #value type: #OPResponse opposite: #usedByResponseEntries"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference value from ResponseEntry to Response [0..1].'>
 	^ value
@@ -99,6 +97,7 @@ OPResponseEntry >> value [
 { #category : 'accessing' }
 OPResponseEntry >> value: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

@@ -4,11 +4,6 @@ Generated from openapi2.ecore
 ## Relations
 ======================
 
-### Parents
-| Relation | Origin | Opposite | Type | Comment |
-|---|
-| `operation` | `OPRequestBody` | `requestBody` | `OPOperation` | |
-
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
@@ -17,7 +12,8 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `requestBodyEntry` | `OPRequestBody` | `value` | `OPRequestBodyEntry` | |
+| `usedByOperations` | `OPRequestBody` | `requestBody` | `OPOperation` | Operations using this RequestBody [0..*].|
+| `usedByRequestBodyEntries` | `OPRequestBody` | `value` | `OPRequestBodyEntry` | RequestBodyEntry entries whose value is this RequestBody [0..*].|
 
 
 ## Properties
@@ -40,8 +36,8 @@ Class {
 	#instVars : [
 		'#description => FMProperty',
 		'#required => FMProperty',
-		'#operation => FMOne type: #OPOperation opposite: #requestBody',
-		'#requestBodyEntry => FMOne type: #OPRequestBodyEntry opposite: #value'
+		'#usedByOperations => FMMany type: #OPOperation opposite: #requestBody',
+		'#usedByRequestBodyEntries => FMMany type: #OPRequestBodyEntry opposite: #value'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -51,16 +47,33 @@ Class {
 { #category : 'meta' }
 OPRequestBody class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #RequestBody super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
+]
+
+{ #category : 'adding' }
+OPRequestBody >> addUsedByOperation: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByOperations add: anObject
+]
+
+{ #category : 'adding' }
+OPRequestBody >> addUsedByRequestBodyEntry: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self usedByRequestBodyEntries add: anObject
 ]
 
 { #category : 'accessing' }
 OPRequestBody >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from RequestBody [1]'>
 	^ description
@@ -68,54 +81,16 @@ OPRequestBody >> description [
 
 { #category : 'accessing' }
 OPRequestBody >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
-]
-
-{ #category : 'accessing' }
-OPRequestBody >> operation [
-	"Relation named: #operation type: #OPOperation opposite: #requestBody"
-
-	<generated>
-	<container>
-	<derived>
-	^ operation
-]
-
-{ #category : 'accessing' }
-OPRequestBody >> operation: anObject [
-
-	<generated>
-	operation := anObject
-]
-
-{ #category : 'navigation' }
-OPRequestBody >> operationGroup [
-	<generated>
-	<navigation: 'Operation'>
-	^ MooseSpecializedGroup with: self operation
-]
-
-{ #category : 'accessing' }
-OPRequestBody >> requestBodyEntry [
-	"Relation named: #requestBodyEntry type: #OPRequestBodyEntry opposite: #value"
-
-	<generated>
-	<derived>
-	^ requestBodyEntry
-]
-
-{ #category : 'accessing' }
-OPRequestBody >> requestBodyEntry: anObject [
-
-	<generated>
-	requestBodyEntry := anObject
 ]
 
 { #category : 'accessing' }
 OPRequestBody >> required [
 
 	<FMProperty: #required type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute required from RequestBody [1]'>
 	^ required
@@ -123,6 +98,43 @@ OPRequestBody >> required [
 
 { #category : 'accessing' }
 OPRequestBody >> required: anObject [
+	<ignoreForCoverage>
 	<generated>
 	required := anObject
+]
+
+{ #category : 'accessing' }
+OPRequestBody >> usedByOperations [
+	"Relation named: #usedByOperations type: #OPOperation opposite: #requestBody"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Operations using this RequestBody [0..*].'>
+	^ usedByOperations
+]
+
+{ #category : 'accessing' }
+OPRequestBody >> usedByOperations: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByOperations value: anObject
+]
+
+{ #category : 'accessing' }
+OPRequestBody >> usedByRequestBodyEntries [
+	"Relation named: #usedByRequestBodyEntries type: #OPRequestBodyEntry opposite: #value"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'RequestBodyEntry entries whose value is this RequestBody [0..*].'>
+	^ usedByRequestBodyEntries
+]
+
+{ #category : 'accessing' }
+OPRequestBody >> usedByRequestBodyEntries: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByRequestBodyEntries value: anObject
 ]

@@ -52,16 +52,17 @@ Trait {
 { #category : 'meta' }
 OPJSONSchemaSubset classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #JSONSchemaSubset super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> default [
 
 	<FMProperty: #default type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute default from JSONSchemaSubset [1]'>
 	^ default
@@ -69,6 +70,7 @@ OPJSONSchemaSubset >> default [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> default: anObject [
+	<ignoreForCoverage>
 	<generated>
 	default := anObject
 ]
@@ -77,6 +79,7 @@ OPJSONSchemaSubset >> default: anObject [
 OPJSONSchemaSubset >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from JSONSchemaSubset [1]'>
 	^ description
@@ -84,6 +87,7 @@ OPJSONSchemaSubset >> description [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
 ]
@@ -92,6 +96,7 @@ OPJSONSchemaSubset >> description: anObject [
 OPJSONSchemaSubset >> enum [
 
 	<FMProperty: #enum type: #Object>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute enum from JSONSchemaSubset [*]'>
 	^ enum
@@ -99,6 +104,7 @@ OPJSONSchemaSubset >> enum [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> enum: anObject [
+	<ignoreForCoverage>
 	<generated>
 	enum := anObject
 ]
@@ -107,6 +113,7 @@ OPJSONSchemaSubset >> enum: anObject [
 OPJSONSchemaSubset >> exclusiveMaximum [
 
 	<FMProperty: #exclusiveMaximum type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute exclusiveMaximum from JSONSchemaSubset [1]'>
 	^ exclusiveMaximum
@@ -114,6 +121,7 @@ OPJSONSchemaSubset >> exclusiveMaximum [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> exclusiveMaximum: anObject [
+	<ignoreForCoverage>
 	<generated>
 	exclusiveMaximum := anObject
 ]
@@ -122,6 +130,7 @@ OPJSONSchemaSubset >> exclusiveMaximum: anObject [
 OPJSONSchemaSubset >> exclusiveMinimum [
 
 	<FMProperty: #exclusiveMinimum type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute exclusiveMinimum from JSONSchemaSubset [1]'>
 	^ exclusiveMinimum
@@ -129,6 +138,7 @@ OPJSONSchemaSubset >> exclusiveMinimum [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> exclusiveMinimum: anObject [
+	<ignoreForCoverage>
 	<generated>
 	exclusiveMinimum := anObject
 ]
@@ -137,6 +147,7 @@ OPJSONSchemaSubset >> exclusiveMinimum: anObject [
 OPJSONSchemaSubset >> format [
 
 	<FMProperty: #format type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute format from JSONSchemaSubset [1]'>
 	^ format
@@ -144,6 +155,7 @@ OPJSONSchemaSubset >> format [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> format: anObject [
+	<ignoreForCoverage>
 	<generated>
 	format := anObject
 ]
@@ -152,6 +164,7 @@ OPJSONSchemaSubset >> format: anObject [
 OPJSONSchemaSubset >> maxItems [
 
 	<FMProperty: #maxItems type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute maxItems from JSONSchemaSubset [1]'>
 	^ maxItems
@@ -159,6 +172,7 @@ OPJSONSchemaSubset >> maxItems [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> maxItems: anObject [
+	<ignoreForCoverage>
 	<generated>
 	maxItems := anObject
 ]
@@ -167,6 +181,7 @@ OPJSONSchemaSubset >> maxItems: anObject [
 OPJSONSchemaSubset >> maxLength [
 
 	<FMProperty: #maxLength type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute maxLength from JSONSchemaSubset [1]'>
 	^ maxLength
@@ -174,6 +189,7 @@ OPJSONSchemaSubset >> maxLength [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> maxLength: anObject [
+	<ignoreForCoverage>
 	<generated>
 	maxLength := anObject
 ]
@@ -182,6 +198,7 @@ OPJSONSchemaSubset >> maxLength: anObject [
 OPJSONSchemaSubset >> maximum [
 
 	<FMProperty: #maximum type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute maximum from JSONSchemaSubset [1]'>
 	^ maximum
@@ -189,6 +206,7 @@ OPJSONSchemaSubset >> maximum [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> maximum: anObject [
+	<ignoreForCoverage>
 	<generated>
 	maximum := anObject
 ]
@@ -197,6 +215,7 @@ OPJSONSchemaSubset >> maximum: anObject [
 OPJSONSchemaSubset >> minItems [
 
 	<FMProperty: #minItems type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute minItems from JSONSchemaSubset [1]'>
 	^ minItems
@@ -204,6 +223,7 @@ OPJSONSchemaSubset >> minItems [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> minItems: anObject [
+	<ignoreForCoverage>
 	<generated>
 	minItems := anObject
 ]
@@ -212,6 +232,7 @@ OPJSONSchemaSubset >> minItems: anObject [
 OPJSONSchemaSubset >> minLength [
 
 	<FMProperty: #minLength type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute minLength from JSONSchemaSubset [1]'>
 	^ minLength
@@ -219,6 +240,7 @@ OPJSONSchemaSubset >> minLength [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> minLength: anObject [
+	<ignoreForCoverage>
 	<generated>
 	minLength := anObject
 ]
@@ -227,6 +249,7 @@ OPJSONSchemaSubset >> minLength: anObject [
 OPJSONSchemaSubset >> minimum [
 
 	<FMProperty: #minimum type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute minimum from JSONSchemaSubset [1]'>
 	^ minimum
@@ -234,6 +257,7 @@ OPJSONSchemaSubset >> minimum [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> minimum: anObject [
+	<ignoreForCoverage>
 	<generated>
 	minimum := anObject
 ]
@@ -242,6 +266,7 @@ OPJSONSchemaSubset >> minimum: anObject [
 OPJSONSchemaSubset >> multipleOf [
 
 	<FMProperty: #multipleOf type: #Number>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute multipleOf from JSONSchemaSubset [1]'>
 	^ multipleOf
@@ -249,6 +274,7 @@ OPJSONSchemaSubset >> multipleOf [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> multipleOf: anObject [
+	<ignoreForCoverage>
 	<generated>
 	multipleOf := anObject
 ]
@@ -257,6 +283,7 @@ OPJSONSchemaSubset >> multipleOf: anObject [
 OPJSONSchemaSubset >> pattern [
 
 	<FMProperty: #pattern type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute pattern from JSONSchemaSubset [1]'>
 	^ pattern
@@ -264,6 +291,7 @@ OPJSONSchemaSubset >> pattern [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> pattern: anObject [
+	<ignoreForCoverage>
 	<generated>
 	pattern := anObject
 ]
@@ -272,6 +300,7 @@ OPJSONSchemaSubset >> pattern: anObject [
 OPJSONSchemaSubset >> type [
 
 	<FMProperty: #type type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute type from JSONSchemaSubset [1]'>
 	^ type
@@ -279,6 +308,7 @@ OPJSONSchemaSubset >> type [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> type: anObject [
+	<ignoreForCoverage>
 	<generated>
 	type := anObject
 ]
@@ -287,6 +317,7 @@ OPJSONSchemaSubset >> type: anObject [
 OPJSONSchemaSubset >> uniqueItems [
 
 	<FMProperty: #uniqueItems type: #Boolean>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute uniqueItems from JSONSchemaSubset [1]'>
 	^ uniqueItems
@@ -294,6 +325,7 @@ OPJSONSchemaSubset >> uniqueItems [
 
 { #category : 'accessing' }
 OPJSONSchemaSubset >> uniqueItems: anObject [
+	<ignoreForCoverage>
 	<generated>
 	uniqueItems := anObject
 ]

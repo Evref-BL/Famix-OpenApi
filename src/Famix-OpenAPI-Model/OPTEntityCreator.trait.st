@@ -14,15 +14,16 @@ Trait {
 { #category : 'meta' }
 OPTEntityCreator classSide >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #TEntityCreator super: #Object>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'entity creation' }
 OPTEntityCreator >> newApi [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPApi new
 ]
@@ -30,6 +31,7 @@ OPTEntityCreator >> newApi [
 { #category : 'entity creation' }
 OPTEntityCreator >> newApiNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPApi named: aName)
 ]
@@ -37,6 +39,7 @@ OPTEntityCreator >> newApiNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newCallback [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPCallback new
 ]
@@ -44,6 +47,7 @@ OPTEntityCreator >> newCallback [
 { #category : 'entity creation' }
 OPTEntityCreator >> newCallbackEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPCallbackEntry new
 ]
@@ -51,6 +55,7 @@ OPTEntityCreator >> newCallbackEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newCallbackEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPCallbackEntry named: aName)
 ]
@@ -58,6 +63,7 @@ OPTEntityCreator >> newCallbackEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newCallbackNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPCallback named: aName)
 ]
@@ -65,6 +71,7 @@ OPTEntityCreator >> newCallbackNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newComponents [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPComponents new
 ]
@@ -72,6 +79,7 @@ OPTEntityCreator >> newComponents [
 { #category : 'entity creation' }
 OPTEntityCreator >> newComponentsNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPComponents named: aName)
 ]
@@ -79,6 +87,7 @@ OPTEntityCreator >> newComponentsNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newContact [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPContact new
 ]
@@ -86,6 +95,7 @@ OPTEntityCreator >> newContact [
 { #category : 'entity creation' }
 OPTEntityCreator >> newContactNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPContact named: aName)
 ]
@@ -93,6 +103,7 @@ OPTEntityCreator >> newContactNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newContainedCollections [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPContainedCollections new
 ]
@@ -100,6 +111,7 @@ OPTEntityCreator >> newContainedCollections [
 { #category : 'entity creation' }
 OPTEntityCreator >> newContainedCollectionsNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPContainedCollections named: aName)
 ]
@@ -107,6 +119,7 @@ OPTEntityCreator >> newContainedCollectionsNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newExample [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPExample new
 ]
@@ -114,6 +127,7 @@ OPTEntityCreator >> newExample [
 { #category : 'entity creation' }
 OPTEntityCreator >> newExampleEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPExampleEntry new
 ]
@@ -121,6 +135,7 @@ OPTEntityCreator >> newExampleEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newExampleEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPExampleEntry named: aName)
 ]
@@ -128,6 +143,7 @@ OPTEntityCreator >> newExampleEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newExampleNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPExample named: aName)
 ]
@@ -135,6 +151,7 @@ OPTEntityCreator >> newExampleNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newExternalDocs [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPExternalDocs new
 ]
@@ -142,6 +159,7 @@ OPTEntityCreator >> newExternalDocs [
 { #category : 'entity creation' }
 OPTEntityCreator >> newExternalDocsNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPExternalDocs named: aName)
 ]
@@ -149,6 +167,7 @@ OPTEntityCreator >> newExternalDocsNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newHeader [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPHeader new
 ]
@@ -156,6 +175,7 @@ OPTEntityCreator >> newHeader [
 { #category : 'entity creation' }
 OPTEntityCreator >> newHeaderEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPHeaderEntry new
 ]
@@ -163,6 +183,7 @@ OPTEntityCreator >> newHeaderEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newHeaderEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPHeaderEntry named: aName)
 ]
@@ -170,6 +191,7 @@ OPTEntityCreator >> newHeaderEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newHeaderNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPHeader named: aName)
 ]
@@ -177,6 +199,7 @@ OPTEntityCreator >> newHeaderNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newInfo [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPInfo new
 ]
@@ -184,6 +207,7 @@ OPTEntityCreator >> newInfo [
 { #category : 'entity creation' }
 OPTEntityCreator >> newInfoNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPInfo named: aName)
 ]
@@ -191,6 +215,7 @@ OPTEntityCreator >> newInfoNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newItemsDefinition [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPItemsDefinition new
 ]
@@ -198,6 +223,7 @@ OPTEntityCreator >> newItemsDefinition [
 { #category : 'entity creation' }
 OPTEntityCreator >> newItemsDefinitionNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPItemsDefinition named: aName)
 ]
@@ -205,6 +231,7 @@ OPTEntityCreator >> newItemsDefinitionNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newLicense [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPLicense new
 ]
@@ -212,6 +239,7 @@ OPTEntityCreator >> newLicense [
 { #category : 'entity creation' }
 OPTEntityCreator >> newLicenseNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPLicense named: aName)
 ]
@@ -219,6 +247,7 @@ OPTEntityCreator >> newLicenseNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newLink [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPLink new
 ]
@@ -226,6 +255,7 @@ OPTEntityCreator >> newLink [
 { #category : 'entity creation' }
 OPTEntityCreator >> newLinkEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPLinkEntry new
 ]
@@ -233,6 +263,7 @@ OPTEntityCreator >> newLinkEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newLinkEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPLinkEntry named: aName)
 ]
@@ -240,6 +271,7 @@ OPTEntityCreator >> newLinkEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newLinkNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPLink named: aName)
 ]
@@ -247,6 +279,7 @@ OPTEntityCreator >> newLinkNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newMediaType [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPMediaType new
 ]
@@ -254,6 +287,7 @@ OPTEntityCreator >> newMediaType [
 { #category : 'entity creation' }
 OPTEntityCreator >> newMediaTypeEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPMediaTypeEntry new
 ]
@@ -261,6 +295,7 @@ OPTEntityCreator >> newMediaTypeEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newMediaTypeEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPMediaTypeEntry named: aName)
 ]
@@ -268,6 +303,7 @@ OPTEntityCreator >> newMediaTypeEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newMediaTypeNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPMediaType named: aName)
 ]
@@ -275,6 +311,7 @@ OPTEntityCreator >> newMediaTypeNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newOperation [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPOperation new
 ]
@@ -282,6 +319,7 @@ OPTEntityCreator >> newOperation [
 { #category : 'entity creation' }
 OPTEntityCreator >> newOperationNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPOperation named: aName)
 ]
@@ -289,6 +327,7 @@ OPTEntityCreator >> newOperationNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newParameter [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPParameter new
 ]
@@ -296,6 +335,7 @@ OPTEntityCreator >> newParameter [
 { #category : 'entity creation' }
 OPTEntityCreator >> newParameterEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPParameterEntry new
 ]
@@ -303,6 +343,7 @@ OPTEntityCreator >> newParameterEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newParameterEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPParameterEntry named: aName)
 ]
@@ -310,6 +351,7 @@ OPTEntityCreator >> newParameterEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newParameterNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPParameter named: aName)
 ]
@@ -317,6 +359,7 @@ OPTEntityCreator >> newParameterNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newPath [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPPath new
 ]
@@ -324,6 +367,7 @@ OPTEntityCreator >> newPath [
 { #category : 'entity creation' }
 OPTEntityCreator >> newPathNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPPath named: aName)
 ]
@@ -331,6 +375,7 @@ OPTEntityCreator >> newPathNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newProperty [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPProperty new
 ]
@@ -338,6 +383,7 @@ OPTEntityCreator >> newProperty [
 { #category : 'entity creation' }
 OPTEntityCreator >> newPropertyNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPProperty named: aName)
 ]
@@ -345,6 +391,7 @@ OPTEntityCreator >> newPropertyNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newRequestBody [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPRequestBody new
 ]
@@ -352,6 +399,7 @@ OPTEntityCreator >> newRequestBody [
 { #category : 'entity creation' }
 OPTEntityCreator >> newRequestBodyEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPRequestBodyEntry new
 ]
@@ -359,6 +407,7 @@ OPTEntityCreator >> newRequestBodyEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newRequestBodyEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPRequestBodyEntry named: aName)
 ]
@@ -366,6 +415,7 @@ OPTEntityCreator >> newRequestBodyEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newRequestBodyNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPRequestBody named: aName)
 ]
@@ -373,6 +423,7 @@ OPTEntityCreator >> newRequestBodyNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newRequiredSecurityScheme [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPRequiredSecurityScheme new
 ]
@@ -380,6 +431,7 @@ OPTEntityCreator >> newRequiredSecurityScheme [
 { #category : 'entity creation' }
 OPTEntityCreator >> newRequiredSecuritySchemeNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPRequiredSecurityScheme named: aName)
 ]
@@ -387,6 +439,7 @@ OPTEntityCreator >> newRequiredSecuritySchemeNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newResponse [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPResponse new
 ]
@@ -394,6 +447,7 @@ OPTEntityCreator >> newResponse [
 { #category : 'entity creation' }
 OPTEntityCreator >> newResponseDefinitionEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPResponseDefinitionEntry new
 ]
@@ -401,6 +455,7 @@ OPTEntityCreator >> newResponseDefinitionEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newResponseDefinitionEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPResponseDefinitionEntry named: aName)
 ]
@@ -408,6 +463,7 @@ OPTEntityCreator >> newResponseDefinitionEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newResponseEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPResponseEntry new
 ]
@@ -415,6 +471,7 @@ OPTEntityCreator >> newResponseEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newResponseEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPResponseEntry named: aName)
 ]
@@ -422,6 +479,7 @@ OPTEntityCreator >> newResponseEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newResponseNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPResponse named: aName)
 ]
@@ -429,6 +487,7 @@ OPTEntityCreator >> newResponseNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSchema [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPSchema new
 ]
@@ -436,6 +495,7 @@ OPTEntityCreator >> newSchema [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSchemaEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPSchemaEntry new
 ]
@@ -443,6 +503,7 @@ OPTEntityCreator >> newSchemaEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSchemaEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPSchemaEntry named: aName)
 ]
@@ -450,6 +511,7 @@ OPTEntityCreator >> newSchemaEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSchemaNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPSchema named: aName)
 ]
@@ -457,6 +519,7 @@ OPTEntityCreator >> newSchemaNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSecurityRequirement [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPSecurityRequirement new
 ]
@@ -464,6 +527,7 @@ OPTEntityCreator >> newSecurityRequirement [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSecurityRequirementNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPSecurityRequirement named: aName)
 ]
@@ -471,6 +535,7 @@ OPTEntityCreator >> newSecurityRequirementNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSecurityScheme [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPSecurityScheme new
 ]
@@ -478,6 +543,7 @@ OPTEntityCreator >> newSecurityScheme [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSecuritySchemeEntry [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPSecuritySchemeEntry new
 ]
@@ -485,6 +551,7 @@ OPTEntityCreator >> newSecuritySchemeEntry [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSecuritySchemeEntryNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPSecuritySchemeEntry named: aName)
 ]
@@ -492,6 +559,7 @@ OPTEntityCreator >> newSecuritySchemeEntryNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSecuritySchemeNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPSecurityScheme named: aName)
 ]
@@ -499,6 +567,7 @@ OPTEntityCreator >> newSecuritySchemeNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSecurityScope [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPSecurityScope new
 ]
@@ -506,6 +575,7 @@ OPTEntityCreator >> newSecurityScope [
 { #category : 'entity creation' }
 OPTEntityCreator >> newSecurityScopeNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPSecurityScope named: aName)
 ]
@@ -513,6 +583,7 @@ OPTEntityCreator >> newSecurityScopeNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newTag [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPTag new
 ]
@@ -520,6 +591,7 @@ OPTEntityCreator >> newTag [
 { #category : 'entity creation' }
 OPTEntityCreator >> newTagNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPTag named: aName)
 ]
@@ -527,6 +599,7 @@ OPTEntityCreator >> newTagNamed: aName [
 { #category : 'entity creation' }
 OPTEntityCreator >> newXMLElement [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: OPXMLElement new
 ]
@@ -534,6 +607,7 @@ OPTEntityCreator >> newXMLElement [
 { #category : 'entity creation' }
 OPTEntityCreator >> newXMLElementNamed: aName [
 
+	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPXMLElement named: aName)
 ]

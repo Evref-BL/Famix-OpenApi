@@ -12,20 +12,13 @@ Generated from openapi2.ecore
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `get` | `OPPath` | `path` | `OPOperation` | Reference get from Path to Operation [0..1].|
+| `operations` | `OPPath` | `path` | `OPOperation` | Reference operations from Path to Operation [0..*]: one operation per HTTP method.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `delete` | `OPPath` | `path` | `OPOperation` | Reference delete from Path to Operation [0..1].|
-| `head` | `OPPath` | `path` | `OPOperation` | Reference head from Path to Operation [0..1].|
-| `options` | `OPPath` | `path` | `OPOperation` | Reference options from Path to Operation [0..1].|
 | `parameter` | `OPParameterContainer` | `declaringContext` | `OPParameter` | |
-| `parameters` | `OPPath` | `path` | `OPParameter` | Reference parameters from Path to Parameter [0..*].|
-| `patch` | `OPPath` | `path` | `OPOperation` | Reference patch from Path to Operation [0..1].|
-| `post` | `OPPath` | `path` | `OPOperation` | Reference post from Path to Operation [0..1].|
-| `put` | `OPPath` | `path` | `OPOperation` | Reference put from Path to Operation [0..1].|
-| `trace` | `OPPath` | `path` | `OPOperation` | Reference trace from Path to Operation [0..1].|
+| `parameters` | `OPPath` | `usedByPaths` | `OPParameter` | Reference parameters from Path to Parameter [0..*]. A parameter may be shared by several paths.|
 
 
 ## Properties
@@ -47,19 +40,12 @@ Class {
 	#traits : 'FamixTNamedEntity + OPParameterContainer + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPParameterContainer classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#relativePath => FMProperty',
-		'#summary => FMProperty',
-		'#description => FMProperty',
 		'#api => FMOne type: #OPApi opposite: #paths',
-		'#get => FMOne type: #OPOperation opposite: #path',
-		'#put => FMOne type: #OPOperation opposite: #path',
-		'#post => FMOne type: #OPOperation opposite: #path',
-		'#delete => FMOne type: #OPOperation opposite: #path',
-		'#options => FMOne type: #OPOperation opposite: #path',
-		'#head => FMOne type: #OPOperation opposite: #path',
-		'#patch => FMOne type: #OPOperation opposite: #path',
-		'#trace => FMOne type: #OPOperation opposite: #path',
-		'#parameters => FMMany type: #OPParameter opposite: #path'
+		'#description => FMProperty',
+		'#operations => FMMany type: #OPOperation opposite: #path',
+		'#parameters => FMMany type: #OPParameter opposite: #usedByPaths',
+		'#relativePath => FMProperty',
+		'#summary => FMProperty'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -69,14 +55,24 @@ Class {
 { #category : 'meta' }
 OPPath class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Path super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
+]
+
+{ #category : 'adding' }
+OPPath >> addOperation: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self operations add: anObject
 ]
 
 { #category : 'adding' }
 OPPath >> addParameter: anObject [
+
+	<ignoreForCoverage>
 	<generated>
 	^ self parameters add: anObject
 ]
@@ -85,6 +81,7 @@ OPPath >> addParameter: anObject [
 OPPath >> api [
 	"Relation named: #api type: #OPApi opposite: #paths"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Opposite reference api from Path to API [0..1].'>
 	<container>
@@ -94,44 +91,16 @@ OPPath >> api [
 { #category : 'accessing' }
 OPPath >> api: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	api := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> apiGroup [
-	<generated>
-	<navigation: 'Api'>
-	^ MooseSpecializedGroup with: self api
-]
-
-{ #category : 'accessing' }
-OPPath >> delete [
-	"Relation named: #delete type: #OPOperation opposite: #path"
-
-	<generated>
-	<FMComment: 'Reference delete from Path to Operation [0..1].'>
-	^ delete
-]
-
-{ #category : 'accessing' }
-OPPath >> delete: anObject [
-
-	<generated>
-	delete := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> deleteGroup [
-	<generated>
-	<navigation: 'Delete'>
-	^ MooseSpecializedGroup with: self delete
 ]
 
 { #category : 'accessing' }
 OPPath >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from Path [1]'>
 	^ description
@@ -139,169 +108,52 @@ OPPath >> description [
 
 { #category : 'accessing' }
 OPPath >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
 ]
 
 { #category : 'accessing' }
-OPPath >> get [
-	"Relation named: #get type: #OPOperation opposite: #path"
+OPPath >> operations [
+	"Relation named: #operations type: #OPOperation opposite: #path"
 
+	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference get from Path to Operation [0..1].'>
-	^ get
+	<FMComment: 'Reference operations from Path to Operation [0..*]: one operation per HTTP method.'>
+	^ operations
 ]
 
 { #category : 'accessing' }
-OPPath >> get: anObject [
+OPPath >> operations: anObject [
 
+	<ignoreForCoverage>
 	<generated>
-	get := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> getGroup [
-	<generated>
-	<navigation: 'Get'>
-	^ MooseSpecializedGroup with: self get
-]
-
-{ #category : 'accessing' }
-OPPath >> head [
-	"Relation named: #head type: #OPOperation opposite: #path"
-
-	<generated>
-	<FMComment: 'Reference head from Path to Operation [0..1].'>
-	^ head
-]
-
-{ #category : 'accessing' }
-OPPath >> head: anObject [
-
-	<generated>
-	head := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> headGroup [
-	<generated>
-	<navigation: 'Head'>
-	^ MooseSpecializedGroup with: self head
-]
-
-{ #category : 'accessing' }
-OPPath >> options [
-	"Relation named: #options type: #OPOperation opposite: #path"
-
-	<generated>
-	<FMComment: 'Reference options from Path to Operation [0..1].'>
-	^ options
-]
-
-{ #category : 'accessing' }
-OPPath >> options: anObject [
-
-	<generated>
-	options := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> optionsGroup [
-	<generated>
-	<navigation: 'Options'>
-	^ MooseSpecializedGroup with: self options
+	operations value: anObject
 ]
 
 { #category : 'accessing' }
 OPPath >> parameters [
-	"Relation named: #parameters type: #OPParameter opposite: #path"
+	"Relation named: #parameters type: #OPParameter opposite: #usedByPaths"
 
+	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference parameters from Path to Parameter [0..*].'>
-	<derived>
+	<FMComment: 'Reference parameters from Path to Parameter [0..*]. A parameter may be shared by several paths.'>
 	^ parameters
 ]
 
 { #category : 'accessing' }
 OPPath >> parameters: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	parameters value: anObject
-]
-
-{ #category : 'accessing' }
-OPPath >> patch [
-	"Relation named: #patch type: #OPOperation opposite: #path"
-
-	<generated>
-	<FMComment: 'Reference patch from Path to Operation [0..1].'>
-	^ patch
-]
-
-{ #category : 'accessing' }
-OPPath >> patch: anObject [
-
-	<generated>
-	patch := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> patchGroup [
-	<generated>
-	<navigation: 'Patch'>
-	^ MooseSpecializedGroup with: self patch
-]
-
-{ #category : 'accessing' }
-OPPath >> post [
-	"Relation named: #post type: #OPOperation opposite: #path"
-
-	<generated>
-	<FMComment: 'Reference post from Path to Operation [0..1].'>
-	^ post
-]
-
-{ #category : 'accessing' }
-OPPath >> post: anObject [
-
-	<generated>
-	post := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> postGroup [
-	<generated>
-	<navigation: 'Post'>
-	^ MooseSpecializedGroup with: self post
-]
-
-{ #category : 'accessing' }
-OPPath >> put [
-	"Relation named: #put type: #OPOperation opposite: #path"
-
-	<generated>
-	<FMComment: 'Reference put from Path to Operation [0..1].'>
-	^ put
-]
-
-{ #category : 'accessing' }
-OPPath >> put: anObject [
-
-	<generated>
-	put := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> putGroup [
-	<generated>
-	<navigation: 'Put'>
-	^ MooseSpecializedGroup with: self put
 ]
 
 { #category : 'accessing' }
 OPPath >> relativePath [
 
 	<FMProperty: #relativePath type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute relativePath from Path [1]'>
 	^ relativePath
@@ -309,6 +161,7 @@ OPPath >> relativePath [
 
 { #category : 'accessing' }
 OPPath >> relativePath: anObject [
+	<ignoreForCoverage>
 	<generated>
 	relativePath := anObject
 ]
@@ -317,6 +170,7 @@ OPPath >> relativePath: anObject [
 OPPath >> summary [
 
 	<FMProperty: #summary type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute summary from Path [1]'>
 	^ summary
@@ -324,29 +178,7 @@ OPPath >> summary [
 
 { #category : 'accessing' }
 OPPath >> summary: anObject [
+	<ignoreForCoverage>
 	<generated>
 	summary := anObject
-]
-
-{ #category : 'accessing' }
-OPPath >> trace [
-	"Relation named: #trace type: #OPOperation opposite: #path"
-
-	<generated>
-	<FMComment: 'Reference trace from Path to Operation [0..1].'>
-	^ trace
-]
-
-{ #category : 'accessing' }
-OPPath >> trace: anObject [
-
-	<generated>
-	trace := anObject
-]
-
-{ #category : 'navigation' }
-OPPath >> traceGroup [
-	<generated>
-	<navigation: 'Trace'>
-	^ MooseSpecializedGroup with: self trace
 ]

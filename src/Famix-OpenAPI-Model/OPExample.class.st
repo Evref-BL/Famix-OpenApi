@@ -12,7 +12,7 @@ Generated from openapi2.ecore
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `exampleEntry` | `OPExample` | `value` | `OPExampleEntry` | |
+| `usedByExampleEntries` | `OPExample` | `value` | `OPExampleEntry` | ExampleEntry entries whose value is this Example [0..*].|
 
 
 ## Properties
@@ -34,9 +34,9 @@ Class {
 	#classTraits : 'FamixTNamedEntity classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#mimeType => FMProperty',
-		'#value => FMProperty',
 		'#response => FMOne type: #OPResponse opposite: #examples',
-		'#exampleEntry => FMOne type: #OPExampleEntry opposite: #value'
+		'#usedByExampleEntries => FMMany type: #OPExampleEntry opposite: #value',
+		'#value => FMProperty'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -46,32 +46,25 @@ Class {
 { #category : 'meta' }
 OPExample class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Example super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
-{ #category : 'accessing' }
-OPExample >> exampleEntry [
-	"Relation named: #exampleEntry type: #OPExampleEntry opposite: #value"
+{ #category : 'adding' }
+OPExample >> addUsedByExampleEntry: anObject [
 
+	<ignoreForCoverage>
 	<generated>
-	<derived>
-	^ exampleEntry
-]
-
-{ #category : 'accessing' }
-OPExample >> exampleEntry: anObject [
-
-	<generated>
-	exampleEntry := anObject
+	^ self usedByExampleEntries add: anObject
 ]
 
 { #category : 'accessing' }
 OPExample >> mimeType [
 
 	<FMProperty: #mimeType type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute mimeType from Example [1]'>
 	^ mimeType
@@ -79,6 +72,7 @@ OPExample >> mimeType [
 
 { #category : 'accessing' }
 OPExample >> mimeType: anObject [
+	<ignoreForCoverage>
 	<generated>
 	mimeType := anObject
 ]
@@ -87,6 +81,7 @@ OPExample >> mimeType: anObject [
 OPExample >> response [
 	"Relation named: #response type: #OPResponse opposite: #examples"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
 	^ response
@@ -95,21 +90,34 @@ OPExample >> response [
 { #category : 'accessing' }
 OPExample >> response: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	response := anObject
 ]
 
-{ #category : 'navigation' }
-OPExample >> responseGroup [
+{ #category : 'accessing' }
+OPExample >> usedByExampleEntries [
+	"Relation named: #usedByExampleEntries type: #OPExampleEntry opposite: #value"
+
+	<ignoreForCoverage>
 	<generated>
-	<navigation: 'Response'>
-	^ MooseSpecializedGroup with: self response
+	<FMComment: 'ExampleEntry entries whose value is this Example [0..*].'>
+	^ usedByExampleEntries
+]
+
+{ #category : 'accessing' }
+OPExample >> usedByExampleEntries: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	usedByExampleEntries value: anObject
 ]
 
 { #category : 'accessing' }
 OPExample >> value [
 
 	<FMProperty: #value type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute value from Example [1]'>
 	^ value
@@ -117,6 +125,7 @@ OPExample >> value [
 
 { #category : 'accessing' }
 OPExample >> value: anObject [
+	<ignoreForCoverage>
 	<generated>
 	value := anObject
 ]

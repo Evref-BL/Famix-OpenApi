@@ -51,40 +51,35 @@ Class {
 { #category : 'meta' }
 OPInfo class >> annotation [
 
+	<ignoreForCoverage>
 	<FMClass: #Info super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-	^ self
 ]
 
 { #category : 'accessing' }
 OPInfo >> api [
 	"Relation named: #api type: #OPApi opposite: #info"
 
+	<ignoreForCoverage>
 	<generated>
 	<container>
-	<derived>
 	^ api
 ]
 
 { #category : 'accessing' }
 OPInfo >> api: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	api := anObject
-]
-
-{ #category : 'navigation' }
-OPInfo >> apiGroup [
-	<generated>
-	<navigation: 'Api'>
-	^ MooseSpecializedGroup with: self api
 ]
 
 { #category : 'accessing' }
 OPInfo >> contact [
 	"Relation named: #contact type: #OPContact opposite: #info"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference contact from Info to Contact [0..1].'>
 	^ contact
@@ -93,21 +88,16 @@ OPInfo >> contact [
 { #category : 'accessing' }
 OPInfo >> contact: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	contact := anObject
-]
-
-{ #category : 'navigation' }
-OPInfo >> contactGroup [
-	<generated>
-	<navigation: 'Contact'>
-	^ MooseSpecializedGroup with: self contact
 ]
 
 { #category : 'accessing' }
 OPInfo >> description [
 
 	<FMProperty: #description type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute description from Info [1]'>
 	^ description
@@ -115,6 +105,7 @@ OPInfo >> description [
 
 { #category : 'accessing' }
 OPInfo >> description: anObject [
+	<ignoreForCoverage>
 	<generated>
 	description := anObject
 ]
@@ -123,6 +114,7 @@ OPInfo >> description: anObject [
 OPInfo >> license [
 	"Relation named: #license type: #OPLicense opposite: #info"
 
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Reference license from Info to License [0..1].'>
 	^ license
@@ -131,21 +123,16 @@ OPInfo >> license [
 { #category : 'accessing' }
 OPInfo >> license: anObject [
 
+	<ignoreForCoverage>
 	<generated>
 	license := anObject
-]
-
-{ #category : 'navigation' }
-OPInfo >> licenseGroup [
-	<generated>
-	<navigation: 'License'>
-	^ MooseSpecializedGroup with: self license
 ]
 
 { #category : 'accessing' }
 OPInfo >> termsOfService [
 
 	<FMProperty: #termsOfService type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute termsOfService from Info [1]'>
 	^ termsOfService
@@ -153,6 +140,7 @@ OPInfo >> termsOfService [
 
 { #category : 'accessing' }
 OPInfo >> termsOfService: anObject [
+	<ignoreForCoverage>
 	<generated>
 	termsOfService := anObject
 ]
@@ -161,6 +149,7 @@ OPInfo >> termsOfService: anObject [
 OPInfo >> title [
 
 	<FMProperty: #title type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute title from Info [1]'>
 	^ title
@@ -168,6 +157,7 @@ OPInfo >> title [
 
 { #category : 'accessing' }
 OPInfo >> title: anObject [
+	<ignoreForCoverage>
 	<generated>
 	title := anObject
 ]
@@ -176,6 +166,7 @@ OPInfo >> title: anObject [
 OPInfo >> version [
 
 	<FMProperty: #version type: #String>
+	<ignoreForCoverage>
 	<generated>
 	<FMComment: 'Attribute version from Info [1]'>
 	^ version
@@ -183,6 +174,7 @@ OPInfo >> version [
 
 { #category : 'accessing' }
 OPInfo >> version: anObject [
+	<ignoreForCoverage>
 	<generated>
 	version := anObject
 ]
