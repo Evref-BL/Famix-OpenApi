@@ -146,13 +146,6 @@ OPOperation >> callbacks: anObject [
 	callbacks value: anObject
 ]
 
-{ #category : 'as yet unclassified' }
-OPOperation >> declaringOpenApi [
-	"Answer the OpenAPI document declaring the receiver through its path item, or nil when the receiver has no path item."
-
-	^ self path ifNotNil: [ :aPath | aPath declaringOpenApi ]
-]
-
 { #category : 'accessing' }
 OPOperation >> deprecated [
 
@@ -185,19 +178,6 @@ OPOperation >> description: anObject [
 	<ignoreForCoverage>
 	<generated>
 	description := anObject
-]
-
-{ #category : 'as yet unclassified' }
-OPOperation >> effectiveParameters [
-	"Answer the parameters that apply to the receiver: its own parameters followed by the parameters of its path item. A parameter of the operation overrides a path parameter with the same name and location."
-
-	| ownParameters |
-	ownParameters := self parameters asOrderedCollection.
-	self path ifNil: [ ^ ownParameters ].
-	^ ownParameters , (self path parameters reject: [ :pathParameter |
-		   ownParameters anySatisfy: [ :each |
-			   each name = pathParameter name and: [
-				   each location = pathParameter location ] ] ])
 ]
 
 { #category : 'accessing' }
@@ -393,19 +373,6 @@ OPOperation >> tagNames: anObject [
 	<ignoreForCoverage>
 	<generated>
 	tagNames := anObject
-]
-
-{ #category : 'as yet unclassified' }
-OPOperation >> tags [
-	"Answer the Tag entities named by #tagNames, in the order of #tagNames. A name that is not declared by the document is skipped; the answer is empty when the receiver is not attached to a document."
-
-	| document |
-	document := self declaringOpenApi.
-	document ifNil: [ ^ #(  ) ].
-	^ self tagNames
-		  flatCollect: [ :tagName |
-		  document tags select: [ :tag | tag name = tagName ] ]
-		  as: OrderedCollection
 ]
 
 { #category : 'accessing' }
