@@ -1,6 +1,17 @@
 Extension { #name : 'OPPath' }
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
+OPPath >> declaringOpenApi [
+	"Answer the OpenAPI document declaring the receiver, as a path, a webhook, a reusable path item or a callback path item. Answer nil when the receiver is not attached to a document."
+
+	self openApi ifNotNil: [ :document | ^ document ].
+	self webhookOf ifNotNil: [ :document | ^ document ].
+	self components ifNotNil: [ :reusableObjects |
+		^ reusableObjects openApi ].
+	^ self callback ifNotNil: [ :aCallback | aCallback declaringOpenApi ]
+]
+
+{ #category : '*Famix-OpenAPI-Model-Extension' }
 OPPath >> delete [
 	"Answer the operation declared with the DELETE method, or nil."
 
