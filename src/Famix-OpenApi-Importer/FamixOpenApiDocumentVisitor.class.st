@@ -1,0 +1,288 @@
+"
+I read the root of a document: the OpenApi entity (versions, dialect, $self), its Info (Contact, License), servers (with variables), tags, external documentation, specification extensions and the empty Components skeleton. The other top level keys (paths, webhooks, security, the sections of the components other than the schemas, and the Swagger 2 parameters, responses, securityDefinitions, consumes and produces) are left to the visitors of the next steps: see #keysHandledByLaterSteps.
+"
+Class {
+	#name : 'FamixOpenApiDocumentVisitor',
+	#superclass : 'FamixOpenApiNodeVisitor',
+	#category : 'Famix-OpenApi-Importer',
+	#package : 'Famix-OpenApi-Importer'
+}
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> contactIn: anInfoNode [
+	"Answer the Contact of the Info node, or nil."
+
+	| node contact |
+	node := self dictionaryAt: 'contact' in: anInfoNode at: '#/info'.
+	node ifNil: [ ^ nil ].
+	contact := self
+		           newEntity: OPContact
+		           named:
+		           (self stringAt: 'name' in: node at: '#/info/contact')
+		           pointer: '#/info/contact'.
+	contact
+		url: (self stringAt: 'url' in: node at: '#/info/contact');
+		email: (self stringAt: 'email' in: node at: '#/info/contact');
+		extensions: (self
+				 extensionsOf: node
+				 known: #( 'name' 'url' 'email' )
+				 at: '#/info/contact').
+	context recordSourceTextOf: contact from: node category: #inline.
+	^ contact
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> fillRoot: aRoot [
+	"Set the attributes of the root: versions, dialect, $self and extensions."
+
+	aRoot
+		sourceVersion: self specVersion sourceVersion;
+		openapiVersion: self specVersion canonicalVersion;
+		jsonSchemaDialect:
+			(self stringAt: 'jsonSchemaDialect' in: self json at: '#');
+		selfUrl: (self stringAt: '$self' in: self json at: '#');
+		extensions:
+			(self extensionsOf: self json known: self knownRootKeys at: '#').
+	context recordSourceTextOf: aRoot from: self json category: #root
+]
+
+{ #category : 'known keys' }
+FamixOpenApiDocumentVisitor >> keysHandledByLaterSteps [
+	"TODO list: the top level keys that the visitors of the next steps will read (B: paths, webhooks, security, components sections; C: Swagger 2 consumes, produces, parameters, responses, securityDefinitions). They are not reported as unknown keywords yet."
+
+	^ self specVersion isSwagger2
+		  ifTrue: [
+			  #( 'paths' 'security' 'consumes' 'produces' 'parameters'
+			     'responses' 'securityDefinitions' ) ]
+		  ifFalse: [ #( 'paths' 'webhooks' 'security' 'components' ) ]
+]
+
+{ #category : 'known keys' }
+FamixOpenApiDocumentVisitor >> keysReadHere [
+	"Answer the top level keys read by this visitor (and, for the schemas, by the schema visitor)."
+
+	^ self specVersion isSwagger2
+		  ifTrue: [
+			  #( 'swagger' 'info' 'host' 'basePath' 'schemes' 'tags' 'externalDocs'
+			     'definitions' ) ]
+		  ifFalse: [
+			  #( 'openapi' 'info' 'jsonSchemaDialect' '$self' 'servers'
+			     'tags' 'externalDocs' ) ]
+]
+
+{ #category : 'known keys' }
+FamixOpenApiDocumentVisitor >> knownComponentKeys [
+	"Answer the keys of a components object: the schemas, and the sections left to the later steps."
+
+	^ #( 'schemas' 'responses' 'parameters' 'examples' 'requestBodies'
+	     'headers' 'securitySchemes' 'links' 'callbacks' 'pathItems' )
+]
+
+{ #category : 'known keys' }
+FamixOpenApiDocumentVisitor >> knownRootKeys [
+	"Answer the top level keys that are not unknown: the ones read here and the ones left to the later steps."
+
+	^ self keysReadHere , self keysHandledByLaterSteps
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> licenseIn: anInfoNode [
+	"Answer the License of the Info node, or nil. Its identifier has no slot: it goes to the extensions."
+
+	| node license |
+	node := self dictionaryAt: 'license' in: anInfoNode at: '#/info'.
+	node ifNil: [ ^ nil ].
+	license := self
+		           newEntity: OPLicense
+		           named:
+		           (self stringAt: 'name' in: node at: '#/info/license')
+		           pointer: '#/info/license'.
+	license
+		url: (self stringAt: 'url' in: node at: '#/info/license');
+		extensions: (context
+				 extensionsTextOf: node
+				 known: #( 'name' 'url' 'identifier' )
+				 extra: #( 'identifier' )
+				 unmodelled: #(  )
+				 at: '#/info/license').
+	context recordSourceTextOf: license from: node category: #inline.
+	^ license
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> serverFrom: aNode at: aPointer [
+	"Answer the Server described by aNode with its variables."
+
+	| server variables |
+	server := self newEntity: OPServer named: nil pointer: aPointer.
+	server
+		url: (self stringAt: 'url' in: aNode at: aPointer);
+		description: (self stringAt: 'description' in: aNode at: aPointer);
+		extensions: (self
+				 extensionsOf: aNode
+				 known: #( 'url' 'description' 'variables' )
+				 at: aPointer).
+	context recordSourceTextOf: server from: aNode category: #inline.
+	variables := self dictionaryAt: 'variables' in: aNode at: aPointer.
+	variables ifNotNil: [
+		variables keysAndValuesDo: [ :key :node |
+			| pointer |
+			pointer := self
+				           pointer: aPointer
+				           appending: 'variables'
+				           appending: key.
+			node isDictionary
+				ifTrue: [
+					server addVariable:
+						(self serverVariableNamed: key from: node at: pointer) ]
+				ifFalse: [
+				context wrongNodeAt: pointer expecting: 'an object' found: node ] ] ].
+	^ server
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> serverVariableNamed: aName from: aNode at: aPointer [
+	"Answer the ServerVariable aName described by aNode."
+
+	| variable values |
+	variable := self
+		            newEntity: OPServerVariable
+		            named: aName
+		            pointer: aPointer.
+	values := self listAt: 'enum' in: aNode at: aPointer.
+	variable
+		defaultValue: (self stringAt: 'default' in: aNode at: aPointer);
+		description: (self stringAt: 'description' in: aNode at: aPointer);
+		enumValues: ((values ifNil: [ #(  ) ]) select: #isString) asArray;
+		extensions: (self
+				 extensionsOf: aNode
+				 known: #( 'default' 'description' 'enum' )
+				 at: aPointer).
+	context recordSourceTextOf: variable from: aNode category: #inline.
+	^ variable
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> tagFrom: aNode at: aPointer [
+	"Answer the Tag described by aNode."
+
+	| tag |
+	tag := self
+		       newEntity: OPTag
+		       named: (self stringAt: 'name' in: aNode at: aPointer)
+		       pointer: aPointer.
+	tag
+		description: (self stringAt: 'description' in: aNode at: aPointer);
+		externalDocs: (self externalDocsIn: aNode at: aPointer);
+		extensions: (self
+				 extensionsOf: aNode
+				 known: #( 'name' 'description' 'externalDocs' )
+				 at: aPointer).
+	context recordSourceTextOf: tag from: aNode category: #inline.
+	^ tag
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> visit [
+	"Read the root entity and what hangs directly from it: info, servers, tags, external documentation, extensions and the components skeleton."
+
+	| root |
+	root := self newEntity: OPOpenApi named: nil pointer: '#'.
+	context openApi: root.
+	self fillRoot: root.
+	self guard: [ self visitInfo ] at: '#/info'.
+	self guard: [ self visitServers ] at: '#/servers'.
+	self guard: [ self visitTags ] at: '#/tags'.
+	self
+		guard: [
+		root externalDocs: (self externalDocsIn: self json at: '#') ]
+		at: '#/externalDocs'.
+	self guard: [ self visitComponentsSkeleton ] at: '#/components'
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> visitComponentsSkeleton [
+	"Create the Components entity when the document has components (Swagger 2: definitions) and keep its extensions. Its sections are filled by the visitors of each kind of component."
+
+	| node |
+	self specVersion isSwagger2 ifTrue: [
+		(self json includesKey: 'definitions') ifTrue: [
+			context ensureComponents ].
+		^ self ].
+	node := self dictionaryAt: 'components' in: self json at: '#'.
+	node ifNil: [ ^ self ].
+	context ensureComponents extensions: (self
+			 extensionsOf: node
+			 known: self knownComponentKeys
+			 at: '#/components').
+	context
+		recordSourceTextOf: context components
+		from: node
+		category: #root
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> visitInfo [
+	"Read the Info with its Contact and License."
+
+	| node info |
+	node := self dictionaryAt: 'info' in: self json at: '#'.
+	node ifNil: [ ^ self ].
+	info := self
+		        newEntity: OPInfo
+		        named: (self stringAt: 'title' in: node at: '#/info')
+		        pointer: '#/info'.
+	info
+		title: info name;
+		version: (self stringAt: 'version' in: node at: '#/info');
+		description: (self stringAt: 'description' in: node at: '#/info');
+		termsOfService:
+			(self stringAt: 'termsOfService' in: node at: '#/info');
+		contact: (self contactIn: node);
+		license: (self licenseIn: node);
+		extensions: (context
+				 extensionsTextOf: node
+				 known:
+					 #( 'title' 'version' 'description' 'termsOfService'
+					    'contact' 'license' )
+				 extra: #( 'summary' )
+				 unmodelled: #(  )
+				 at: '#/info').
+	context recordSourceTextOf: info from: node category: #inline.
+	self openApi info: info.
+	self openApi name: info name
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> visitServers [
+	"Read the servers as the version normalises them (Swagger 2 host, basePath and schemes become servers; a missing list gives the default server)."
+
+	| servers |
+	servers := self specVersion serversFrom: self json.
+	servers withIndexDo: [ :node :position |
+		| pointer |
+		pointer := self pointer: '#/servers' appending: position - 1.
+		self
+			guard: [
+			self openApi addServer: (self serverFrom: node at: pointer) ]
+			at: pointer ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> visitTags [
+	"Read the tags declared by the document."
+
+	| tags |
+	tags := self listAt: 'tags' in: self json at: '#'.
+	tags ifNil: [ ^ self ].
+	tags withIndexDo: [ :node :position |
+		| pointer |
+		pointer := self pointer: '#/tags' appending: position - 1.
+		node isDictionary
+			ifTrue: [
+				self
+					guard: [ self openApi addTag: (self tagFrom: node at: pointer) ]
+					at: pointer ]
+			ifFalse: [
+			context wrongNodeAt: pointer expecting: 'an object' found: node ] ]
+]

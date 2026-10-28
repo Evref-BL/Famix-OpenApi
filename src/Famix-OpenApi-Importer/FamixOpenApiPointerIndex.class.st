@@ -75,6 +75,18 @@ FamixOpenApiPointerIndex >> followAliasesFrom: aRefString site: aSitePointer [
 	^ current
 ]
 
+{ #category : 'registering' }
+FamixOpenApiPointerIndex >> forgetEntities: anIdentitySet [
+	"Forget every pointer that holds an entity of anIdentitySet (entities the importer removed from the model)."
+
+	| forgotten |
+	forgotten := (entities keys select: [ :pointer |
+		              anIdentitySet includes: (entities at: pointer) ])
+		             asSet.
+	forgotten do: [ :pointer | entities removeKey: pointer ].
+	order := order reject: [ :pointer | forgotten includes: pointer ]
+]
+
 { #category : 'testing' }
 FamixOpenApiPointerIndex >> includesPointer: aPointer [
 	"Answer whether aPointer holds an entity or an alias."
@@ -152,6 +164,16 @@ FamixOpenApiPointerIndex >> registerAlias: aPointer to: aRefString [
 				  , ' is already registered; keeping the first definition' ].
 	order add: aPointer.
 	aliases at: aPointer put: aRefString
+]
+
+{ #category : 'registering' }
+FamixOpenApiPointerIndex >> replaceEntities: anIdentityDictionary [
+	"Make every pointer that holds a key of anIdentityDictionary hold the associated entity instead (the importer merges or replaces entities and the pointers of the old ones must resolve to the new ones)."
+
+	entities keys do: [ :pointer |
+		anIdentityDictionary
+			at: (entities at: pointer)
+			ifPresent: [ :replacement | entities at: pointer put: replacement ] ]
 ]
 
 { #category : 'initialization' }
