@@ -1,12 +1,12 @@
 "
-Generated from openapi2.ecore
+Keeps the text of the JSON node an entity was built from, for traceability.
 
 ## Properties
 ======================
 
 | Name | Type | Default value | Comment |
 |---|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Trait {
@@ -34,7 +34,7 @@ OPSourceText >> sourceText [
 	<FMProperty: #sourceText type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute sourceText from original JSON node [1]'>
+	<FMComment: 'Text of the JSON node the entity was built from.'>
 	^ sourceText
 ]
 

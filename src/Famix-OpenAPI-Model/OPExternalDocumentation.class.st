@@ -7,8 +7,8 @@ A reference to external documentation (OpenAPI External Documentation Object).
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `externalDocsContainer` | `OPExternalDocumentation` | `externalDocumentation` | `OPExternalDocsContainer` | Opposite reference externalDocsContainer from ExternalDocumentation to ExternalDocsContainer [0..1]: the operation, schema or tag that declares the documentation.|
-| `openApi` | `OPExternalDocumentation` | `externalDocs` | `OPOpenApi` | Opposite reference openApi from ExternalDocumentation to OpenApi [0..1].|
+| `externalDocsContainer` | `OPExternalDocumentation` | `externalDocs` | `OPExternalDocsContainer` | The operation, schema or tag the external documentation belongs to.|
+| `openApi` | `OPExternalDocumentation` | `externalDocs` | `OPOpenApi` | The document the external documentation belongs to.|
 
 
 ## Properties
@@ -16,12 +16,12 @@ A reference to external documentation (OpenAPI External Documentation Object).
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Description of the external documentation [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description of the external documentation.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `url` | `String` | nil | URL of the external documentation [1].|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `url` | `String` | nil | URL of the external documentation.|
 
 "
 Class {
@@ -31,7 +31,7 @@ Class {
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#description => FMProperty',
-		'#externalDocsContainer => FMOne type: #OPExternalDocsContainer opposite: #externalDocumentation',
+		'#externalDocsContainer => FMOne type: #OPExternalDocsContainer opposite: #externalDocs',
 		'#openApi => FMOne type: #OPOpenApi opposite: #externalDocs',
 		'#url => FMProperty'
 	],
@@ -55,7 +55,7 @@ OPExternalDocumentation >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Description of the external documentation [1].'>
+	<FMComment: 'Description of the external documentation.'>
 	^ description
 ]
 
@@ -68,11 +68,11 @@ OPExternalDocumentation >> description: anObject [
 
 { #category : 'accessing' }
 OPExternalDocumentation >> externalDocsContainer [
-	"Relation named: #externalDocsContainer type: #OPExternalDocsContainer opposite: #externalDocumentation"
+	"Relation named: #externalDocsContainer type: #OPExternalDocsContainer opposite: #externalDocs"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference externalDocsContainer from ExternalDocumentation to ExternalDocsContainer [0..1]: the operation, schema or tag that declares the documentation.'>
+	<FMComment: 'The operation, schema or tag the external documentation belongs to.'>
 	<container>
 	^ externalDocsContainer
 ]
@@ -91,7 +91,7 @@ OPExternalDocumentation >> openApi [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference openApi from ExternalDocumentation to OpenApi [0..1].'>
+	<FMComment: 'The document the external documentation belongs to.'>
 	<container>
 	^ openApi
 ]
@@ -110,7 +110,7 @@ OPExternalDocumentation >> url [
 	<FMProperty: #url type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'URL of the external documentation [1].'>
+	<FMComment: 'URL of the external documentation.'>
 	^ url
 ]
 

@@ -21,43 +21,11 @@ OPTEntityCreator classSide >> annotation [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newApi [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPApi new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newApiNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPApi named: aName)
-]
-
-{ #category : 'entity creation' }
 OPTEntityCreator >> newCallback [
 
 	<ignoreForCoverage>
 	<generated>
 	^ self add: OPCallback new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newCallbackEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPCallbackEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newCallbackEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPCallbackEntry named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -98,22 +66,6 @@ OPTEntityCreator >> newContactNamed: aName [
 	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPContact named: aName)
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newContainedCollections [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPContainedCollections new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newContainedCollectionsNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPContainedCollections named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -173,43 +125,11 @@ OPTEntityCreator >> newExample [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newExampleEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPExampleEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newExampleEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPExampleEntry named: aName)
-]
-
-{ #category : 'entity creation' }
 OPTEntityCreator >> newExampleNamed: aName [
 
 	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPExample named: aName)
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newExternalDocs [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPExternalDocs new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newExternalDocsNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPExternalDocs named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -237,22 +157,6 @@ OPTEntityCreator >> newHeader [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newHeaderEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPHeaderEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newHeaderEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPHeaderEntry named: aName)
-]
-
-{ #category : 'entity creation' }
 OPTEntityCreator >> newHeaderNamed: aName [
 
 	<ignoreForCoverage>
@@ -274,22 +178,6 @@ OPTEntityCreator >> newInfoNamed: aName [
 	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPInfo named: aName)
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newItemsDefinition [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPItemsDefinition new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newItemsDefinitionNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPItemsDefinition named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -317,22 +205,6 @@ OPTEntityCreator >> newLink [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newLinkEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPLinkEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newLinkEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPLinkEntry named: aName)
-]
-
-{ #category : 'entity creation' }
 OPTEntityCreator >> newLinkNamed: aName [
 
 	<ignoreForCoverage>
@@ -346,22 +218,6 @@ OPTEntityCreator >> newMediaType [
 	<ignoreForCoverage>
 	<generated>
 	^ self add: OPMediaType new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newMediaTypeEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPMediaTypeEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newMediaTypeEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPMediaTypeEntry named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -429,22 +285,6 @@ OPTEntityCreator >> newParameter [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newParameterEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPParameterEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newParameterEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPParameterEntry named: aName)
-]
-
-{ #category : 'entity creation' }
 OPTEntityCreator >> newParameterNamed: aName [
 
 	<ignoreForCoverage>
@@ -509,22 +349,6 @@ OPTEntityCreator >> newRequestBody [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newRequestBodyEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPRequestBodyEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newRequestBodyEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPRequestBodyEntry named: aName)
-]
-
-{ #category : 'entity creation' }
 OPTEntityCreator >> newRequestBodyNamed: aName [
 
 	<ignoreForCoverage>
@@ -533,59 +357,11 @@ OPTEntityCreator >> newRequestBodyNamed: aName [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newRequiredSecurityScheme [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPRequiredSecurityScheme new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newRequiredSecuritySchemeNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPRequiredSecurityScheme named: aName)
-]
-
-{ #category : 'entity creation' }
 OPTEntityCreator >> newResponse [
 
 	<ignoreForCoverage>
 	<generated>
 	^ self add: OPResponse new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newResponseDefinitionEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPResponseDefinitionEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newResponseDefinitionEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPResponseDefinitionEntry named: aName)
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newResponseEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPResponseEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newResponseEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPResponseEntry named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -605,22 +381,6 @@ OPTEntityCreator >> newSchema [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newSchemaEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPSchemaEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newSchemaEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPSchemaEntry named: aName)
-]
-
-{ #category : 'entity creation' }
 OPTEntityCreator >> newSchemaNamed: aName [
 
 	<ignoreForCoverage>
@@ -637,6 +397,22 @@ OPTEntityCreator >> newSecurityRequirement [
 ]
 
 { #category : 'entity creation' }
+OPTEntityCreator >> newSecurityRequirementItem [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPSecurityRequirementItem new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newSecurityRequirementItemNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPSecurityRequirementItem named: aName)
+]
+
+{ #category : 'entity creation' }
 OPTEntityCreator >> newSecurityRequirementNamed: aName [
 
 	<ignoreForCoverage>
@@ -650,22 +426,6 @@ OPTEntityCreator >> newSecurityScheme [
 	<ignoreForCoverage>
 	<generated>
 	^ self add: OPSecurityScheme new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newSecuritySchemeEntry [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: OPSecuritySchemeEntry new
-]
-
-{ #category : 'entity creation' }
-OPTEntityCreator >> newSecuritySchemeEntryNamed: aName [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self add: (OPSecuritySchemeEntry named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -741,17 +501,17 @@ OPTEntityCreator >> newTagNamed: aName [
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newXMLElement [
+OPTEntityCreator >> newXmlElement [
 
 	<ignoreForCoverage>
 	<generated>
-	^ self add: OPXMLElement new
+	^ self add: OPXmlElement new
 ]
 
 { #category : 'entity creation' }
-OPTEntityCreator >> newXMLElementNamed: aName [
+OPTEntityCreator >> newXmlElementNamed: aName [
 
 	<ignoreForCoverage>
 	<generated>
-	^ self add: (OPXMLElement named: aName)
+	^ self add: (OPXmlElement named: aName)
 ]

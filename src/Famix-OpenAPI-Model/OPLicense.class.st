@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+License of the API (OpenAPI License Object).
 
 ## Relations
 ======================
@@ -7,7 +7,7 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `info` | `OPLicense` | `license` | `OPInfo` | |
+| `info` | `OPLicense` | `license` | `OPInfo` | The Info declaring the license.|
 
 
 ## Properties
@@ -15,11 +15,11 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `url` | `String` | nil | Attribute url from License [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `url` | `String` | nil | URL of the license text.|
 
 "
 Class {
@@ -51,6 +51,7 @@ OPLicense >> info [
 
 	<ignoreForCoverage>
 	<generated>
+	<FMComment: 'The Info declaring the license.'>
 	<container>
 	^ info
 ]
@@ -69,7 +70,7 @@ OPLicense >> url [
 	<FMProperty: #url type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute url from License [1]'>
+	<FMComment: 'URL of the license text.'>
 	^ url
 ]
 

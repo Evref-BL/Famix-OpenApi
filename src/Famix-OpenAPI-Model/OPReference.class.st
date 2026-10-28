@@ -1,18 +1,27 @@
 "
-Placeholder for a $ref that cannot be resolved to an entity of the model, for instance a reference to an external document (OpenAPI Reference Object).
+A $ref that cannot be resolved to an entity of the model, for instance a reference to an external document (OpenAPI Reference Object). It is owned by the root OpenApi.
+
+## Relations
+======================
+
+### Parents
+| Relation | Origin | Opposite | Type | Comment |
+|---|
+| `openApi` | `OPReference` | `unresolvedReferences` | `OPOpenApi` | The document in which the unresolved reference appears.|
+
 
 ## Properties
 ======================
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Description overriding the one of the referenced object [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description overriding the one of the referenced object.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `summary` | `String` | nil | Summary overriding the one of the referenced object [1].|
-| `target` | `String` | nil | The $ref URI that could not be resolved [1].|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `summary` | `String` | nil | Summary overriding the one of the referenced object.|
+| `target` | `String` | nil | The $ref URI that could not be resolved.|
 
 "
 Class {
@@ -22,6 +31,7 @@ Class {
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#description => FMProperty',
+		'#openApi => FMOne type: #OPOpenApi opposite: #unresolvedReferences',
 		'#summary => FMProperty',
 		'#target => FMProperty'
 	],
@@ -45,7 +55,7 @@ OPReference >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Description overriding the one of the referenced object [1].'>
+	<FMComment: 'Description overriding the one of the referenced object.'>
 	^ description
 ]
 
@@ -57,12 +67,31 @@ OPReference >> description: anObject [
 ]
 
 { #category : 'accessing' }
+OPReference >> openApi [
+	"Relation named: #openApi type: #OPOpenApi opposite: #unresolvedReferences"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'The document in which the unresolved reference appears.'>
+	<container>
+	^ openApi
+]
+
+{ #category : 'accessing' }
+OPReference >> openApi: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	openApi := anObject
+]
+
+{ #category : 'accessing' }
 OPReference >> summary [
 
 	<FMProperty: #summary type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Summary overriding the one of the referenced object [1].'>
+	<FMComment: 'Summary overriding the one of the referenced object.'>
 	^ summary
 ]
 
@@ -79,7 +108,7 @@ OPReference >> target [
 	<FMProperty: #target type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'The $ref URI that could not be resolved [1].'>
+	<FMComment: 'The $ref URI that could not be resolved.'>
 	^ target
 ]
 

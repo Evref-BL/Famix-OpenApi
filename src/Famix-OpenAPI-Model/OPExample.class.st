@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+An example value (OpenAPI Example Object), inline or reusable.
 
 ## Relations
 ======================
@@ -7,15 +7,9 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `components` | `OPExample` | `directExamples` | `OPComponents` | Opposite reference components from Example to Components [0..1], when the object is a reusable one.|
-| `mediaType` | `OPExample` | `directExamples` | `OPMediaType` | Opposite reference mediaType from Example to MediaType [0..1].|
-| `parameter` | `OPExample` | `examples` | `OPParameter` | Opposite reference parameter from Example to Parameter [0..1].|
-| `response` | `OPExample` | `examples` | `OPResponse` | |
-
-### Other
-| Relation | Origin | Opposite | Type | Comment |
-|---|
-| `usedByExampleEntries` | `OPExample` | `value` | `OPExampleEntry` | ExampleEntry entries whose value is this Example [0..*].|
+| `components` | `OPExample` | `examples` | `OPComponents` | The components owning the object, when it is a reusable one.|
+| `mediaType` | `OPExample` | `examples` | `OPMediaType` | The media type declaring the example.|
+| `parameter` | `OPExample` | `examples` | `OPParameter` | The parameter declaring the example.|
 
 
 ## Properties
@@ -23,15 +17,14 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
-| `externalValue` | `String` | nil | URL of a document holding the example value [1].|
-| `mimeType` | `String` | nil | Attribute mimeType from Example [1]|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
+| `externalValue` | `String` | nil | URL of a document holding the example value.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `ref` | `String` | nil | Attribute ref from Reference Object [1]|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `summary` | `String` | nil | Short description of the example [1].|
-| `value` | `String` | nil | Attribute value from Example [1]|
+| `ref` | `String` | nil | The $ref, as written in the source, that designates the reusable object this entity is or was copied from (for example #/components/schemas/Pet). Empty when the entity is not the result of a reference.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `summary` | `String` | nil | Short description of the example.|
+| `value` | `String` | nil | Value of the example, as JSON text.|
 
 "
 Class {
@@ -40,14 +33,11 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#components => FMOne type: #OPComponents opposite: #directExamples',
+		'#components => FMOne type: #OPComponents opposite: #examples',
 		'#externalValue => FMProperty',
-		'#mediaType => FMOne type: #OPMediaType opposite: #directExamples',
-		'#mimeType => FMProperty',
+		'#mediaType => FMOne type: #OPMediaType opposite: #examples',
 		'#parameter => FMOne type: #OPParameter opposite: #examples',
-		'#response => FMOne type: #OPResponse opposite: #examples',
 		'#summary => FMProperty',
-		'#usedByExampleEntries => FMMany type: #OPExampleEntry opposite: #value',
 		'#value => FMProperty'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
@@ -64,21 +54,13 @@ OPExample class >> annotation [
 	<generated>
 ]
 
-{ #category : 'adding' }
-OPExample >> addUsedByExampleEntry: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self usedByExampleEntries add: anObject
-]
-
 { #category : 'accessing' }
 OPExample >> components [
-	"Relation named: #components type: #OPComponents opposite: #directExamples"
+	"Relation named: #components type: #OPComponents opposite: #examples"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference components from Example to Components [0..1], when the object is a reusable one.'>
+	<FMComment: 'The components owning the object, when it is a reusable one.'>
 	<container>
 	^ components
 ]
@@ -97,7 +79,7 @@ OPExample >> externalValue [
 	<FMProperty: #externalValue type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'URL of a document holding the example value [1].'>
+	<FMComment: 'URL of a document holding the example value.'>
 	^ externalValue
 ]
 
@@ -110,11 +92,11 @@ OPExample >> externalValue: anObject [
 
 { #category : 'accessing' }
 OPExample >> mediaType [
-	"Relation named: #mediaType type: #OPMediaType opposite: #directExamples"
+	"Relation named: #mediaType type: #OPMediaType opposite: #examples"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference mediaType from Example to MediaType [0..1].'>
+	<FMComment: 'The media type declaring the example.'>
 	<container>
 	^ mediaType
 ]
@@ -128,29 +110,12 @@ OPExample >> mediaType: anObject [
 ]
 
 { #category : 'accessing' }
-OPExample >> mimeType [
-
-	<FMProperty: #mimeType type: #String>
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Attribute mimeType from Example [1]'>
-	^ mimeType
-]
-
-{ #category : 'accessing' }
-OPExample >> mimeType: anObject [
-	<ignoreForCoverage>
-	<generated>
-	mimeType := anObject
-]
-
-{ #category : 'accessing' }
 OPExample >> parameter [
 	"Relation named: #parameter type: #OPParameter opposite: #examples"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference parameter from Example to Parameter [0..1].'>
+	<FMComment: 'The parameter declaring the example.'>
 	<container>
 	^ parameter
 ]
@@ -164,30 +129,12 @@ OPExample >> parameter: anObject [
 ]
 
 { #category : 'accessing' }
-OPExample >> response [
-	"Relation named: #response type: #OPResponse opposite: #examples"
-
-	<ignoreForCoverage>
-	<generated>
-	<container>
-	^ response
-]
-
-{ #category : 'accessing' }
-OPExample >> response: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	response := anObject
-]
-
-{ #category : 'accessing' }
 OPExample >> summary [
 
 	<FMProperty: #summary type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Short description of the example [1].'>
+	<FMComment: 'Short description of the example.'>
 	^ summary
 ]
 
@@ -199,30 +146,12 @@ OPExample >> summary: anObject [
 ]
 
 { #category : 'accessing' }
-OPExample >> usedByExampleEntries [
-	"Relation named: #usedByExampleEntries type: #OPExampleEntry opposite: #value"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'ExampleEntry entries whose value is this Example [0..*].'>
-	^ usedByExampleEntries
-]
-
-{ #category : 'accessing' }
-OPExample >> usedByExampleEntries: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	usedByExampleEntries value: anObject
-]
-
-{ #category : 'accessing' }
 OPExample >> value [
 
 	<FMProperty: #value type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute value from Example [1]'>
+	<FMComment: 'Value of the example, as JSON text.'>
 	^ value
 ]
 

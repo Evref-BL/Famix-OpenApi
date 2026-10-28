@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+A scope offered by an OAuth2 flow, with its description. Scopes exist only under OAuthFlow.
 
 ## Relations
 ======================
@@ -7,13 +7,7 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `oauthFlow` | `OPSecurityScope` | `scopes` | `OPOAuthFlow` | Opposite reference oauthFlow from SecurityScope to OAuthFlow [0..1].|
-| `securityScheme` | `OPSecurityScope` | `scopes` | `OPSecurityScheme` | |
-
-### Other
-| Relation | Origin | Opposite | Type | Comment |
-|---|
-| `usedByRequiredSecuritySchemes` | `OPSecurityScope` | `securityScopes` | `OPRequiredSecurityScheme` | Required security schemes using this SecurityScope [0..*].|
+| `oauthFlow` | `OPSecurityScope` | `scopes` | `OPOAuthFlow` | The flow offering the scope.|
 
 
 ## Properties
@@ -21,11 +15,11 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Attribute description from SecurityScope [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description of what the scope grants.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -35,9 +29,7 @@ Class {
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#description => FMProperty',
-		'#oauthFlow => FMOne type: #OPOAuthFlow opposite: #scopes',
-		'#securityScheme => FMOne type: #OPSecurityScheme opposite: #scopes',
-		'#usedByRequiredSecuritySchemes => FMMany type: #OPRequiredSecurityScheme opposite: #securityScopes'
+		'#oauthFlow => FMOne type: #OPOAuthFlow opposite: #scopes'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -53,21 +45,13 @@ OPSecurityScope class >> annotation [
 	<generated>
 ]
 
-{ #category : 'adding' }
-OPSecurityScope >> addUsedByRequiredSecurityScheme: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self usedByRequiredSecuritySchemes add: anObject
-]
-
 { #category : 'accessing' }
 OPSecurityScope >> description [
 
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute description from SecurityScope [1]'>
+	<FMComment: 'Description of what the scope grants.'>
 	^ description
 ]
 
@@ -84,7 +68,7 @@ OPSecurityScope >> oauthFlow [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference oauthFlow from SecurityScope to OAuthFlow [0..1].'>
+	<FMComment: 'The flow offering the scope.'>
 	<container>
 	^ oauthFlow
 ]
@@ -95,40 +79,4 @@ OPSecurityScope >> oauthFlow: anObject [
 	<ignoreForCoverage>
 	<generated>
 	oauthFlow := anObject
-]
-
-{ #category : 'accessing' }
-OPSecurityScope >> securityScheme [
-	"Relation named: #securityScheme type: #OPSecurityScheme opposite: #scopes"
-
-	<ignoreForCoverage>
-	<generated>
-	<container>
-	^ securityScheme
-]
-
-{ #category : 'accessing' }
-OPSecurityScope >> securityScheme: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	securityScheme := anObject
-]
-
-{ #category : 'accessing' }
-OPSecurityScope >> usedByRequiredSecuritySchemes [
-	"Relation named: #usedByRequiredSecuritySchemes type: #OPRequiredSecurityScheme opposite: #securityScopes"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Required security schemes using this SecurityScope [0..*].'>
-	^ usedByRequiredSecuritySchemes
-]
-
-{ #category : 'accessing' }
-OPSecurityScope >> usedByRequiredSecuritySchemes: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	usedByRequiredSecuritySchemes value: anObject
 ]

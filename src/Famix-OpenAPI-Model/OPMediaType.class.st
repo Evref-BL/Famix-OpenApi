@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+The description of a payload for one media type, such as application/json (OpenAPI Media Type Object).
 
 ## Relations
 ======================
@@ -7,20 +7,18 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `contentOwner` | `OPMediaType` | `directContent` | `OPContentContainer` | Opposite reference contentOwner from MediaType to ContentContainer [0..1]: the response, request body or parameter that declares the media type.|
+| `contentOwner` | `OPMediaType` | `content` | `OPContentContainer` | The response, request body or parameter declaring the media type.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `directExamples` | `OPMediaType` | `mediaType` | `OPExample` | Reference directExamples from MediaType to Example [0..*]: examples of the media type (provisional name of examples).|
-| `encodings` | `OPMediaType` | `mediaType` | `OPEncoding` | Reference encodings from MediaType to Encoding [0..*]: serialization rules of the schema properties.|
-| `examples` | `OPMediaType` | `mediaType` | `OPExampleEntry` | Reference examples from MediaType to ExampleEntry [0..*].|
+| `encodings` | `OPMediaType` | `mediaType` | `OPEncoding` | Serialization rules of the schema properties.|
+| `examples` | `OPMediaType` | `mediaType` | `OPExample` | Examples of the media type.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `schema` | `OPMediaType` | `usedByMediaTypes` | `OPSchema` | Reference schema from MediaType to Schema [0..1].|
-| `usedByMediaTypeEntries` | `OPMediaType` | `value` | `OPMediaTypeEntry` | MediaTypeEntry entries whose value is this MediaType [0..*].|
+| `schema` | `OPMediaType` | `usedByMediaTypes` | `OPSchema` | Schema of the payload.|
 
 
 ## Properties
@@ -28,12 +26,11 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `example` | `Object` | nil | Attribute example from MediaType [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
-| `mediaType` | `String` | nil | Media type (MIME type) described, for example application/json [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
+| `mediaType` | `String` | nil | Media type (MIME type) described, for example application/json.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -42,14 +39,11 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#contentOwner => FMOne type: #OPContentContainer opposite: #directContent',
-		'#directExamples => FMMany type: #OPExample opposite: #mediaType',
+		'#contentOwner => FMOne type: #OPContentContainer opposite: #content',
 		'#encodings => FMMany type: #OPEncoding opposite: #mediaType',
-		'#example => FMProperty',
-		'#examples => FMMany type: #OPExampleEntry opposite: #mediaType',
+		'#examples => FMMany type: #OPExample opposite: #mediaType',
 		'#mediaType => FMProperty',
-		'#schema => FMOne type: #OPSchema opposite: #usedByMediaTypes',
-		'#usedByMediaTypeEntries => FMMany type: #OPMediaTypeEntry opposite: #value'
+		'#schema => FMOne type: #OPSchema opposite: #usedByMediaTypes'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -63,14 +57,6 @@ OPMediaType class >> annotation [
 	<FMClass: #MediaType super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
-]
-
-{ #category : 'adding' }
-OPMediaType >> addDirectExample: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self directExamples add: anObject
 ]
 
 { #category : 'adding' }
@@ -89,21 +75,13 @@ OPMediaType >> addExample: anObject [
 	^ self examples add: anObject
 ]
 
-{ #category : 'adding' }
-OPMediaType >> addUsedByMediaTypeEntry: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self usedByMediaTypeEntries add: anObject
-]
-
 { #category : 'accessing' }
 OPMediaType >> contentOwner [
-	"Relation named: #contentOwner type: #OPContentContainer opposite: #directContent"
+	"Relation named: #contentOwner type: #OPContentContainer opposite: #content"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference contentOwner from MediaType to ContentContainer [0..1]: the response, request body or parameter that declares the media type.'>
+	<FMComment: 'The response, request body or parameter declaring the media type.'>
 	<container>
 	^ contentOwner
 ]
@@ -117,30 +95,12 @@ OPMediaType >> contentOwner: anObject [
 ]
 
 { #category : 'accessing' }
-OPMediaType >> directExamples [
-	"Relation named: #directExamples type: #OPExample opposite: #mediaType"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Reference directExamples from MediaType to Example [0..*]: examples of the media type (provisional name of examples).'>
-	^ directExamples
-]
-
-{ #category : 'accessing' }
-OPMediaType >> directExamples: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	directExamples value: anObject
-]
-
-{ #category : 'accessing' }
 OPMediaType >> encodings [
 	"Relation named: #encodings type: #OPEncoding opposite: #mediaType"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference encodings from MediaType to Encoding [0..*]: serialization rules of the schema properties.'>
+	<FMComment: 'Serialization rules of the schema properties.'>
 	^ encodings
 ]
 
@@ -153,29 +113,12 @@ OPMediaType >> encodings: anObject [
 ]
 
 { #category : 'accessing' }
-OPMediaType >> example [
-
-	<FMProperty: #example type: #Object>
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Attribute example from MediaType [1]'>
-	^ example
-]
-
-{ #category : 'accessing' }
-OPMediaType >> example: anObject [
-	<ignoreForCoverage>
-	<generated>
-	example := anObject
-]
-
-{ #category : 'accessing' }
 OPMediaType >> examples [
-	"Relation named: #examples type: #OPExampleEntry opposite: #mediaType"
+	"Relation named: #examples type: #OPExample opposite: #mediaType"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference examples from MediaType to ExampleEntry [0..*].'>
+	<FMComment: 'Examples of the media type.'>
 	^ examples
 ]
 
@@ -193,7 +136,7 @@ OPMediaType >> mediaType [
 	<FMProperty: #mediaType type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Media type (MIME type) described, for example application/json [1].'>
+	<FMComment: 'Media type (MIME type) described, for example application/json.'>
 	^ mediaType
 ]
 
@@ -210,7 +153,7 @@ OPMediaType >> schema [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference schema from MediaType to Schema [0..1].'>
+	<FMComment: 'Schema of the payload.'>
 	^ schema
 ]
 
@@ -220,22 +163,4 @@ OPMediaType >> schema: anObject [
 	<ignoreForCoverage>
 	<generated>
 	schema := anObject
-]
-
-{ #category : 'accessing' }
-OPMediaType >> usedByMediaTypeEntries [
-	"Relation named: #usedByMediaTypeEntries type: #OPMediaTypeEntry opposite: #value"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'MediaTypeEntry entries whose value is this MediaType [0..*].'>
-	^ usedByMediaTypeEntries
-]
-
-{ #category : 'accessing' }
-OPMediaType >> usedByMediaTypeEntries: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	usedByMediaTypeEntries value: anObject
 ]

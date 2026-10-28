@@ -1,12 +1,12 @@
 "
-Generated from openapi2.ecore
+Entities that can be designated by a $ref (reusable objects) and keep the reference they come from.
 
 ## Properties
 ======================
 
 | Name | Type | Default value | Comment |
 |---|
-| `ref` | `String` | nil | Attribute ref from Reference Object [1]|
+| `ref` | `String` | nil | The $ref, as written in the source, that designates the reusable object this entity is or was copied from (for example #/components/schemas/Pet). Empty when the entity is not the result of a reference.|
 
 "
 Trait {
@@ -34,7 +34,7 @@ OPReferenceable >> ref [
 	<FMProperty: #ref type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute ref from Reference Object [1]'>
+	<FMComment: 'The $ref, as written in the source, that designates the reusable object this entity is or was copied from (for example #/components/schemas/Pet). Empty when the entity is not the result of a reference.'>
 	^ ref
 ]
 

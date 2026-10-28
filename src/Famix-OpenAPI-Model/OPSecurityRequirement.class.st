@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+An alternative of the security of an API or of an operation (OpenAPI Security Requirement Object). All its items must be satisfied together (logical AND); the requirements of the same list are alternatives (logical OR).
 
 ## Relations
 ======================
@@ -7,14 +7,13 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `openApi` | `OPSecurityRequirement` | `securityRequirements` | `OPOpenApi` | Opposite reference openApi from SecurityRequirement to OpenApi [0..1].|
-| `operation` | `OPSecurityRequirement` | `securityRequirements` | `OPOperation` | Opposite reference operation from SecurityRequirement to Operation [0..1].|
-| `securityContainer` | `OPSecurityRequirement` | `security` | `OPSecurityContainer` | |
+| `openApi` | `OPSecurityRequirement` | `securityRequirements` | `OPOpenApi` | The document declaring the requirement as its default security.|
+| `operation` | `OPSecurityRequirement` | `securityRequirements` | `OPOperation` | The operation declaring the requirement.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `securitySchemes` | `OPSecurityRequirement` | `securityRequirement` | `OPRequiredSecurityScheme` | Reference securitySchemes from SecurityRequirement to RequiredSecurityScheme [0..*].|
+| `items` | `OPSecurityRequirement` | `requirement` | `OPSecurityRequirementItem` | Schemes that must all be satisfied together (logical AND).|
 
 
 ## Properties
@@ -22,10 +21,10 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -34,10 +33,9 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
+		'#items => FMMany type: #OPSecurityRequirementItem opposite: #requirement',
 		'#openApi => FMOne type: #OPOpenApi opposite: #securityRequirements',
-		'#operation => FMOne type: #OPOperation opposite: #securityRequirements',
-		'#securityContainer => FMOne type: #OPSecurityContainer opposite: #security',
-		'#securitySchemes => FMMany type: #OPRequiredSecurityScheme opposite: #securityRequirement'
+		'#operation => FMOne type: #OPOperation opposite: #securityRequirements'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -54,11 +52,29 @@ OPSecurityRequirement class >> annotation [
 ]
 
 { #category : 'adding' }
-OPSecurityRequirement >> addSecurityScheme: anObject [
+OPSecurityRequirement >> addItem: anObject [
 
 	<ignoreForCoverage>
 	<generated>
-	^ self securitySchemes add: anObject
+	^ self items add: anObject
+]
+
+{ #category : 'accessing' }
+OPSecurityRequirement >> items [
+	"Relation named: #items type: #OPSecurityRequirementItem opposite: #requirement"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Schemes that must all be satisfied together (logical AND).'>
+	^ items
+]
+
+{ #category : 'accessing' }
+OPSecurityRequirement >> items: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	items value: anObject
 ]
 
 { #category : 'accessing' }
@@ -67,7 +83,7 @@ OPSecurityRequirement >> openApi [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference openApi from SecurityRequirement to OpenApi [0..1].'>
+	<FMComment: 'The document declaring the requirement as its default security.'>
 	<container>
 	^ openApi
 ]
@@ -86,7 +102,7 @@ OPSecurityRequirement >> operation [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference operation from SecurityRequirement to Operation [0..1].'>
+	<FMComment: 'The operation declaring the requirement.'>
 	<container>
 	^ operation
 ]
@@ -97,40 +113,4 @@ OPSecurityRequirement >> operation: anObject [
 	<ignoreForCoverage>
 	<generated>
 	operation := anObject
-]
-
-{ #category : 'accessing' }
-OPSecurityRequirement >> securityContainer [
-	"Relation named: #securityContainer type: #OPSecurityContainer opposite: #security"
-
-	<ignoreForCoverage>
-	<generated>
-	<container>
-	^ securityContainer
-]
-
-{ #category : 'accessing' }
-OPSecurityRequirement >> securityContainer: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	securityContainer := anObject
-]
-
-{ #category : 'accessing' }
-OPSecurityRequirement >> securitySchemes [
-	"Relation named: #securitySchemes type: #OPRequiredSecurityScheme opposite: #securityRequirement"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Reference securitySchemes from SecurityRequirement to RequiredSecurityScheme [0..*].'>
-	^ securitySchemes
-]
-
-{ #category : 'accessing' }
-OPSecurityRequirement >> securitySchemes: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	securitySchemes value: anObject
 ]

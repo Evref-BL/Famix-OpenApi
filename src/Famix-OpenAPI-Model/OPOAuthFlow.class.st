@@ -7,12 +7,12 @@ One OAuth2 flow of a security scheme (OpenAPI OAuth Flow Object): implicit, pass
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `securityScheme` | `OPOAuthFlow` | `flows` | `OPSecurityScheme` | Opposite reference securityScheme from OAuthFlow to SecurityScheme [0..1].|
+| `securityScheme` | `OPOAuthFlow` | `flows` | `OPSecurityScheme` | The security scheme declaring the flow.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `scopes` | `OPOAuthFlow` | `oauthFlow` | `OPSecurityScope` | Reference scopes from OAuthFlow to SecurityScope [0..*]: scopes of the flow with their description.|
+| `scopes` | `OPOAuthFlow` | `oauthFlow` | `OPSecurityScope` | Scopes offered by the flow, with their description.|
 
 
 ## Properties
@@ -20,14 +20,14 @@ One OAuth2 flow of a security scheme (OpenAPI OAuth Flow Object): implicit, pass
 
 | Name | Type | Default value | Comment |
 |---|
-| `authorizationUrl` | `String` | nil | Authorization URL of the flow [1].|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
-| `flowType` | `String` | nil | Kind of flow: implicit, password, clientCredentials or authorizationCode [1].|
+| `authorizationUrl` | `String` | nil | Authorization URL of the flow.|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
+| `flowType` | `String` | nil | Kind of flow: implicit, password, clientCredentials or authorizationCode.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `refreshUrl` | `String` | nil | URL used to obtain refresh tokens [1].|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `tokenUrl` | `String` | nil | Token URL of the flow [1].|
+| `refreshUrl` | `String` | nil | URL used to obtain refresh tokens.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `tokenUrl` | `String` | nil | Token URL of the flow.|
 
 "
 Class {
@@ -71,7 +71,7 @@ OPOAuthFlow >> authorizationUrl [
 	<FMProperty: #authorizationUrl type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Authorization URL of the flow [1].'>
+	<FMComment: 'Authorization URL of the flow.'>
 	^ authorizationUrl
 ]
 
@@ -88,7 +88,7 @@ OPOAuthFlow >> flowType [
 	<FMProperty: #flowType type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Kind of flow: implicit, password, clientCredentials or authorizationCode [1].'>
+	<FMComment: 'Kind of flow: implicit, password, clientCredentials or authorizationCode.'>
 	^ flowType
 ]
 
@@ -105,7 +105,7 @@ OPOAuthFlow >> refreshUrl [
 	<FMProperty: #refreshUrl type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'URL used to obtain refresh tokens [1].'>
+	<FMComment: 'URL used to obtain refresh tokens.'>
 	^ refreshUrl
 ]
 
@@ -122,7 +122,7 @@ OPOAuthFlow >> scopes [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference scopes from OAuthFlow to SecurityScope [0..*]: scopes of the flow with their description.'>
+	<FMComment: 'Scopes offered by the flow, with their description.'>
 	^ scopes
 ]
 
@@ -140,7 +140,7 @@ OPOAuthFlow >> securityScheme [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference securityScheme from OAuthFlow to SecurityScheme [0..1].'>
+	<FMComment: 'The security scheme declaring the flow.'>
 	<container>
 	^ securityScheme
 ]
@@ -159,7 +159,7 @@ OPOAuthFlow >> tokenUrl [
 	<FMProperty: #tokenUrl type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Token URL of the flow [1].'>
+	<FMComment: 'Token URL of the flow.'>
 	^ tokenUrl
 ]
 

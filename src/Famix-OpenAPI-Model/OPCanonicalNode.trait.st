@@ -1,13 +1,13 @@
 "
-Common part of the entities of the canonical OpenAPI 3.1 shape: the JSON pointer of the entity in the canonical document and its specification extensions (x-* keys).
+Common part of the entities of the model: the JSON pointer of the entity in the canonical OpenAPI 3.1 document and its specification extensions (x-* keys).
 
 ## Properties
 ======================
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 
 "
 Trait {
@@ -36,7 +36,7 @@ OPCanonicalNode >> canonicalPointer [
 	<FMProperty: #canonicalPointer type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].'>
+	<FMComment: 'JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.'>
 	^ canonicalPointer
 ]
 
@@ -53,7 +53,7 @@ OPCanonicalNode >> extensions [
 	<FMProperty: #extensions type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Specification extensions (x-* keys) of the source node, as a JSON object text [1].'>
+	<FMComment: 'Specification extensions (x-* keys) of the source node, as a JSON object text.'>
 	^ extensions
 ]
 

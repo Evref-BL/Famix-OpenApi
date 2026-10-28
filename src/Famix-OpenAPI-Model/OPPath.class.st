@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+A path item (OpenAPI Path Item Object): the operations available on one relative path, declared in the paths, in the webhooks, in a callback or among the reusable path items.
 
 ## Relations
 ======================
@@ -7,23 +7,21 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `api` | `OPPath` | `paths` | `OPApi` | Opposite reference api from Path to API [0..1].|
-| `callback` | `OPPath` | `pathItems` | `OPCallback` | Opposite reference callback from Path to Callback [0..1], when the path item is declared by a callback.|
-| `components` | `OPPath` | `pathItems` | `OPComponents` | Opposite reference components from Path to Components [0..1], when the path item is a reusable one.|
-| `openApi` | `OPPath` | `paths` | `OPOpenApi` | Opposite reference openApi from Path to OpenApi [0..1], when the path item is declared in paths.|
-| `webhookOf` | `OPPath` | `webhooks` | `OPOpenApi` | Opposite reference webhookOf from Path to OpenApi [0..1], when the path item is declared in webhooks.|
+| `callback` | `OPPath` | `pathItems` | `OPCallback` | The callback declaring the path item.|
+| `components` | `OPPath` | `pathItems` | `OPComponents` | The components owning the object, when it is a reusable one.|
+| `openApi` | `OPPath` | `paths` | `OPOpenApi` | The document declaring the path item in its paths.|
+| `webhookOf` | `OPPath` | `webhooks` | `OPOpenApi` | The document declaring the path item in its webhooks.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `operations` | `OPPath` | `path` | `OPOperation` | Reference operations from Path to Operation [0..*]: one operation per HTTP method.|
-| `servers` | `OPPath` | `path` | `OPServer` | Reference servers from Path to Server [0..*]: servers overriding the document ones for this path item.|
+| `operations` | `OPPath` | `path` | `OPOperation` | Operations of the path item, one per HTTP method.|
+| `servers` | `OPPath` | `path` | `OPServer` | Servers overriding the ones of the document for this path item.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `parameter` | `OPParameterContainer` | `declaringContext` | `OPParameter` | |
-| `parameters` | `OPPath` | `usedByPaths` | `OPParameter` | Reference parameters from Path to Parameter [0..*]. A parameter may be shared by several paths.|
+| `parameters` | `OPPath` | `usedByPaths` | `OPParameter` | Parameters shared by all the operations of the path item. A parameter may be shared by several paths.|
 
 
 ## Properties
@@ -31,23 +29,22 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Attribute description from Path [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description of the path item.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `ref` | `String` | nil | Attribute ref from Reference Object [1]|
-| `relativePath` | `String` | nil | Attribute relativePath from Path [1]|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `summary` | `String` | nil | Attribute summary from Path [1]|
+| `ref` | `String` | nil | The $ref, as written in the source, that designates the reusable object this entity is or was copied from (for example #/components/schemas/Pet). Empty when the entity is not the result of a reference.|
+| `relativePath` | `String` | nil | Relative path of the path item, for example /pets/{petId}.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `summary` | `String` | nil | Short summary of the path item.|
 
 "
 Class {
 	#name : 'OPPath',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPParameterContainer + OPReferenceable + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPParameterContainer classTrait + OPReferenceable classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPReferenceable + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#api => FMOne type: #OPApi opposite: #paths',
 		'#callback => FMOne type: #OPCallback opposite: #pathItems',
 		'#components => FMOne type: #OPComponents opposite: #pathItems',
 		'#description => FMProperty',
@@ -98,31 +95,12 @@ OPPath >> addServer: anObject [
 ]
 
 { #category : 'accessing' }
-OPPath >> api [
-	"Relation named: #api type: #OPApi opposite: #paths"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Opposite reference api from Path to API [0..1].'>
-	<container>
-	^ api
-]
-
-{ #category : 'accessing' }
-OPPath >> api: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	api := anObject
-]
-
-{ #category : 'accessing' }
 OPPath >> callback [
 	"Relation named: #callback type: #OPCallback opposite: #pathItems"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference callback from Path to Callback [0..1], when the path item is declared by a callback.'>
+	<FMComment: 'The callback declaring the path item.'>
 	<container>
 	^ callback
 ]
@@ -141,7 +119,7 @@ OPPath >> components [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference components from Path to Components [0..1], when the path item is a reusable one.'>
+	<FMComment: 'The components owning the object, when it is a reusable one.'>
 	<container>
 	^ components
 ]
@@ -160,7 +138,7 @@ OPPath >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute description from Path [1]'>
+	<FMComment: 'Description of the path item.'>
 	^ description
 ]
 
@@ -177,7 +155,7 @@ OPPath >> openApi [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference openApi from Path to OpenApi [0..1], when the path item is declared in paths.'>
+	<FMComment: 'The document declaring the path item in its paths.'>
 	<container>
 	^ openApi
 ]
@@ -196,7 +174,7 @@ OPPath >> operations [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference operations from Path to Operation [0..*]: one operation per HTTP method.'>
+	<FMComment: 'Operations of the path item, one per HTTP method.'>
 	^ operations
 ]
 
@@ -214,7 +192,7 @@ OPPath >> parameters [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference parameters from Path to Parameter [0..*]. A parameter may be shared by several paths.'>
+	<FMComment: 'Parameters shared by all the operations of the path item. A parameter may be shared by several paths.'>
 	^ parameters
 ]
 
@@ -232,7 +210,7 @@ OPPath >> relativePath [
 	<FMProperty: #relativePath type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute relativePath from Path [1]'>
+	<FMComment: 'Relative path of the path item, for example /pets/{petId}.'>
 	^ relativePath
 ]
 
@@ -249,7 +227,7 @@ OPPath >> servers [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference servers from Path to Server [0..*]: servers overriding the document ones for this path item.'>
+	<FMComment: 'Servers overriding the ones of the document for this path item.'>
 	^ servers
 ]
 
@@ -267,7 +245,7 @@ OPPath >> summary [
 	<FMProperty: #summary type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute summary from Path [1]'>
+	<FMComment: 'Short summary of the path item.'>
 	^ summary
 ]
 
@@ -284,7 +262,7 @@ OPPath >> webhookOf [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference webhookOf from Path to OpenApi [0..1], when the path item is declared in webhooks.'>
+	<FMComment: 'The document declaring the path item in its webhooks.'>
 	<container>
 	^ webhookOf
 ]

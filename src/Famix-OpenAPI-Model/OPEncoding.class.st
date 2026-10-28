@@ -7,12 +7,12 @@ Serialization rules applied to one property of a media type schema (OpenAPI Enco
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `mediaType` | `OPEncoding` | `encodings` | `OPMediaType` | Opposite reference mediaType from Encoding to MediaType [0..1].|
+| `mediaType` | `OPEncoding` | `encodings` | `OPMediaType` | The media type declaring the encoding.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `headers` | `OPEncoding` | `encoding` | `OPHeader` | Reference headers from Encoding to Header [0..*]: headers sent with the encoded part.|
+| `headers` | `OPEncoding` | `encoding` | `OPHeader` | Headers sent with the encoded part.|
 
 
 ## Properties
@@ -20,15 +20,15 @@ Serialization rules applied to one property of a media type schema (OpenAPI Enco
 
 | Name | Type | Default value | Comment |
 |---|
-| `allowReserved` | `Boolean` | nil | Whether reserved characters are left unescaped [1].|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `contentType` | `String` | nil | Content type(s) accepted for the property [1].|
-| `explode` | `Boolean` | nil | Whether array and object values generate separate parameters [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `allowReserved` | `Boolean` | nil | Whether reserved characters are left unescaped.|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `contentType` | `String` | nil | Content type or types accepted for the property.|
+| `explode` | `Boolean` | nil | Whether array and object values generate separate parameters.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `propertyName` | `String` | nil | Name of the media type schema property this encoding applies to [1].|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `style` | `String` | nil | Serialization style of the property [1].|
+| `propertyName` | `String` | nil | Name of the media type schema property this encoding applies to.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `style` | `String` | nil | Serialization style of the property.|
 
 "
 Class {
@@ -73,7 +73,7 @@ OPEncoding >> allowReserved [
 	<FMProperty: #allowReserved type: #Boolean>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Whether reserved characters are left unescaped [1].'>
+	<FMComment: 'Whether reserved characters are left unescaped.'>
 	^ allowReserved
 ]
 
@@ -90,7 +90,7 @@ OPEncoding >> contentType [
 	<FMProperty: #contentType type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Content type(s) accepted for the property [1].'>
+	<FMComment: 'Content type or types accepted for the property.'>
 	^ contentType
 ]
 
@@ -107,7 +107,7 @@ OPEncoding >> explode [
 	<FMProperty: #explode type: #Boolean>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Whether array and object values generate separate parameters [1].'>
+	<FMComment: 'Whether array and object values generate separate parameters.'>
 	^ explode
 ]
 
@@ -124,7 +124,7 @@ OPEncoding >> headers [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference headers from Encoding to Header [0..*]: headers sent with the encoded part.'>
+	<FMComment: 'Headers sent with the encoded part.'>
 	^ headers
 ]
 
@@ -142,7 +142,7 @@ OPEncoding >> mediaType [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference mediaType from Encoding to MediaType [0..1].'>
+	<FMComment: 'The media type declaring the encoding.'>
 	<container>
 	^ mediaType
 ]
@@ -161,7 +161,7 @@ OPEncoding >> propertyName [
 	<FMProperty: #propertyName type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Name of the media type schema property this encoding applies to [1].'>
+	<FMComment: 'Name of the media type schema property this encoding applies to.'>
 	^ propertyName
 ]
 
@@ -178,7 +178,7 @@ OPEncoding >> style [
 	<FMProperty: #style type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Serialization style of the property [1].'>
+	<FMComment: 'Serialization style of the property.'>
 	^ style
 ]
 

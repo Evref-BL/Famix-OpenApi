@@ -1,5 +1,5 @@
 "
-One entry of the mapping of a Discriminator: a discriminating value (its name) bound to the schema it selects.
+One entry of the mapping of a Discriminator: a discriminating value (its name) bound to the Schema it selects.
 
 ## Relations
 ======================
@@ -7,12 +7,12 @@ One entry of the mapping of a Discriminator: a discriminating value (its name) b
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `discriminator` | `OPDiscriminatorMapping` | `mapping` | `OPDiscriminator` | Opposite reference discriminator from DiscriminatorMapping to Discriminator [0..1].|
+| `discriminator` | `OPDiscriminatorMapping` | `mapping` | `OPDiscriminator` | The discriminator declaring the mapping.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `schema` | `OPDiscriminatorMapping` | `usedByDiscriminatorMappings` | `OPSchema` | Reference schema from DiscriminatorMapping to Schema [0..1]: the selected schema.|
+| `schema` | `OPDiscriminatorMapping` | `usedByDiscriminatorMappings` | `OPSchema` | The schema selected by the discriminating value.|
 
 
 ## Properties
@@ -20,11 +20,11 @@ One entry of the mapping of a Discriminator: a discriminating value (its name) b
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `value` | `String` | nil | Name or reference of the schema selected by the discriminating value, as written in the source [1].|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `value` | `String` | nil | Name or reference of the schema selected by the discriminating value, as written in the source.|
 
 "
 Class {
@@ -57,7 +57,7 @@ OPDiscriminatorMapping >> discriminator [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference discriminator from DiscriminatorMapping to Discriminator [0..1].'>
+	<FMComment: 'The discriminator declaring the mapping.'>
 	<container>
 	^ discriminator
 ]
@@ -76,7 +76,7 @@ OPDiscriminatorMapping >> schema [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference schema from DiscriminatorMapping to Schema [0..1]: the selected schema.'>
+	<FMComment: 'The schema selected by the discriminating value.'>
 	^ schema
 ]
 
@@ -94,7 +94,7 @@ OPDiscriminatorMapping >> value [
 	<FMProperty: #value type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Name or reference of the schema selected by the discriminating value, as written in the source [1].'>
+	<FMComment: 'Name or reference of the schema selected by the discriminating value, as written in the source.'>
 	^ value
 ]
 

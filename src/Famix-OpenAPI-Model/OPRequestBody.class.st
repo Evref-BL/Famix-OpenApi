@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+The payload an operation accepts (OpenAPI Request Body Object), described by media types. It may be shared by several operations.
 
 ## Relations
 ======================
@@ -7,19 +7,17 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `components` | `OPRequestBody` | `directRequestBodies` | `OPComponents` | Opposite reference components from RequestBody to Components [0..1], when the object is a reusable one.|
+| `components` | `OPRequestBody` | `requestBodies` | `OPComponents` | The components owning the object, when it is a reusable one.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `content` | `OPContentContainer` | `contentContainer` | `OPMediaTypeEntry` | Reference content from ContentContainer to MediaTypeEntry [0..*].|
-| `directContent` | `OPContentContainer` | `contentOwner` | `OPMediaType` | Reference directContent from ContentContainer to MediaType [0..*]: payload descriptions by media type (provisional name of content).|
+| `content` | `OPContentContainer` | `contentOwner` | `OPMediaType` | Payload descriptions of the entity, one per media type.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `usedByOperations` | `OPRequestBody` | `requestBody` | `OPOperation` | Operations using this RequestBody [0..*].|
-| `usedByRequestBodyEntries` | `OPRequestBody` | `value` | `OPRequestBodyEntry` | RequestBodyEntry entries whose value is this RequestBody [0..*].|
+| `usedByOperations` | `OPRequestBody` | `requestBody` | `OPOperation` | Operations using this request body.|
 
 
 ## Properties
@@ -27,13 +25,13 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Attribute description from RequestBody [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description of the request body.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `ref` | `String` | nil | Attribute ref from Reference Object [1]|
-| `required` | `Boolean` | nil | Attribute required from RequestBody [1]|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `ref` | `String` | nil | The $ref, as written in the source, that designates the reusable object this entity is or was copied from (for example #/components/schemas/Pet). Empty when the entity is not the result of a reference.|
+| `required` | `Boolean` | nil | Whether the request body is mandatory.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -42,11 +40,10 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPContentContainer + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPContentContainer classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#components => FMOne type: #OPComponents opposite: #directRequestBodies',
+		'#components => FMOne type: #OPComponents opposite: #requestBodies',
 		'#description => FMProperty',
 		'#required => FMProperty',
-		'#usedByOperations => FMMany type: #OPOperation opposite: #requestBody',
-		'#usedByRequestBodyEntries => FMMany type: #OPRequestBodyEntry opposite: #value'
+		'#usedByOperations => FMMany type: #OPOperation opposite: #requestBody'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -70,21 +67,13 @@ OPRequestBody >> addUsedByOperation: anObject [
 	^ self usedByOperations add: anObject
 ]
 
-{ #category : 'adding' }
-OPRequestBody >> addUsedByRequestBodyEntry: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self usedByRequestBodyEntries add: anObject
-]
-
 { #category : 'accessing' }
 OPRequestBody >> components [
-	"Relation named: #components type: #OPComponents opposite: #directRequestBodies"
+	"Relation named: #components type: #OPComponents opposite: #requestBodies"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference components from RequestBody to Components [0..1], when the object is a reusable one.'>
+	<FMComment: 'The components owning the object, when it is a reusable one.'>
 	<container>
 	^ components
 ]
@@ -103,7 +92,7 @@ OPRequestBody >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute description from RequestBody [1]'>
+	<FMComment: 'Description of the request body.'>
 	^ description
 ]
 
@@ -120,7 +109,7 @@ OPRequestBody >> required [
 	<FMProperty: #required type: #Boolean>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute required from RequestBody [1]'>
+	<FMComment: 'Whether the request body is mandatory.'>
 	^ required
 ]
 
@@ -137,7 +126,7 @@ OPRequestBody >> usedByOperations [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Operations using this RequestBody [0..*].'>
+	<FMComment: 'Operations using this request body.'>
 	^ usedByOperations
 ]
 
@@ -147,22 +136,4 @@ OPRequestBody >> usedByOperations: anObject [
 	<ignoreForCoverage>
 	<generated>
 	usedByOperations value: anObject
-]
-
-{ #category : 'accessing' }
-OPRequestBody >> usedByRequestBodyEntries [
-	"Relation named: #usedByRequestBodyEntries type: #OPRequestBodyEntry opposite: #value"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'RequestBodyEntry entries whose value is this RequestBody [0..*].'>
-	^ usedByRequestBodyEntries
-]
-
-{ #category : 'accessing' }
-OPRequestBody >> usedByRequestBodyEntries: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	usedByRequestBodyEntries value: anObject
 ]

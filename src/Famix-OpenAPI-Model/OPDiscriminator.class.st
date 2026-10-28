@@ -7,12 +7,12 @@ Hint used to select, among oneOf/anyOf/allOf alternatives, the schema matching a
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `schema` | `OPDiscriminator` | `discriminatorEntity` | `OPSchema` | Opposite reference schema from Discriminator to Schema [0..1].|
+| `schema` | `OPDiscriminator` | `discriminator` | `OPSchema` | The schema declaring the discriminator.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `mapping` | `OPDiscriminator` | `discriminator` | `OPDiscriminatorMapping` | Reference mapping from Discriminator to DiscriminatorMapping [0..*].|
+| `mapping` | `OPDiscriminator` | `discriminator` | `OPDiscriminatorMapping` | Explicit bindings of discriminating values to schemas.|
 
 
 ## Properties
@@ -20,11 +20,11 @@ Hint used to select, among oneOf/anyOf/allOf alternatives, the schema matching a
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `propertyName` | `String` | nil | Name of the property whose value discriminates the schemas [1].|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `propertyName` | `String` | nil | Name of the property whose value discriminates the schemas.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -35,7 +35,7 @@ Class {
 	#instVars : [
 		'#mapping => FMMany type: #OPDiscriminatorMapping opposite: #discriminator',
 		'#propertyName => FMProperty',
-		'#schema => FMOne type: #OPSchema opposite: #discriminatorEntity'
+		'#schema => FMOne type: #OPSchema opposite: #discriminator'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -65,7 +65,7 @@ OPDiscriminator >> mapping [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference mapping from Discriminator to DiscriminatorMapping [0..*].'>
+	<FMComment: 'Explicit bindings of discriminating values to schemas.'>
 	^ mapping
 ]
 
@@ -83,7 +83,7 @@ OPDiscriminator >> propertyName [
 	<FMProperty: #propertyName type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Name of the property whose value discriminates the schemas [1].'>
+	<FMComment: 'Name of the property whose value discriminates the schemas.'>
 	^ propertyName
 ]
 
@@ -96,11 +96,11 @@ OPDiscriminator >> propertyName: anObject [
 
 { #category : 'accessing' }
 OPDiscriminator >> schema [
-	"Relation named: #schema type: #OPSchema opposite: #discriminatorEntity"
+	"Relation named: #schema type: #OPSchema opposite: #discriminator"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference schema from Discriminator to Schema [0..1].'>
+	<FMComment: 'The schema declaring the discriminator.'>
 	<container>
 	^ schema
 ]

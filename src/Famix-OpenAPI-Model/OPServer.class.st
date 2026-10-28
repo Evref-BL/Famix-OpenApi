@@ -1,5 +1,5 @@
 "
-A server hosting the API (OpenAPI Server Object), declared at document, path item or operation level.
+A server hosting the API (OpenAPI Server Object), declared at document, path item, operation or link level.
 
 ## Relations
 ======================
@@ -7,15 +7,15 @@ A server hosting the API (OpenAPI Server Object), declared at document, path ite
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `link` | `OPServer` | `server` | `OPLink` | Opposite reference link from Server to Link [0..1], when the server is declared by a link.|
-| `openApi` | `OPServer` | `servers` | `OPOpenApi` | Opposite reference openApi from Server to OpenApi [0..1], when the server is declared at document level.|
-| `operation` | `OPServer` | `servers` | `OPOperation` | Opposite reference operation from Server to Operation [0..1], when the server is declared by an operation.|
-| `path` | `OPServer` | `servers` | `OPPath` | Opposite reference path from Server to Path [0..1], when the server is declared by a path item.|
+| `link` | `OPServer` | `server` | `OPLink` | The link declaring the server.|
+| `openApi` | `OPServer` | `servers` | `OPOpenApi` | The document declaring the server, when it is declared at document level.|
+| `operation` | `OPServer` | `servers` | `OPOperation` | The operation declaring the server.|
+| `path` | `OPServer` | `servers` | `OPPath` | The path item declaring the server.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `variables` | `OPServer` | `server` | `OPServerVariable` | Reference variables from Server to ServerVariable [0..*]: substitutions of the URL template.|
+| `variables` | `OPServer` | `server` | `OPServerVariable` | Variables substituted in the URL template of the server.|
 
 
 ## Properties
@@ -23,12 +23,12 @@ A server hosting the API (OpenAPI Server Object), declared at document, path ite
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Description of the server [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description of the server.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `url` | `String` | nil | URL template of the server [1].|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `url` | `String` | nil | URL template of the server.|
 
 "
 Class {
@@ -73,7 +73,7 @@ OPServer >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Description of the server [1].'>
+	<FMComment: 'Description of the server.'>
 	^ description
 ]
 
@@ -90,7 +90,7 @@ OPServer >> link [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference link from Server to Link [0..1], when the server is declared by a link.'>
+	<FMComment: 'The link declaring the server.'>
 	<container>
 	^ link
 ]
@@ -109,7 +109,7 @@ OPServer >> openApi [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference openApi from Server to OpenApi [0..1], when the server is declared at document level.'>
+	<FMComment: 'The document declaring the server, when it is declared at document level.'>
 	<container>
 	^ openApi
 ]
@@ -128,7 +128,7 @@ OPServer >> operation [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference operation from Server to Operation [0..1], when the server is declared by an operation.'>
+	<FMComment: 'The operation declaring the server.'>
 	<container>
 	^ operation
 ]
@@ -147,7 +147,7 @@ OPServer >> path [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference path from Server to Path [0..1], when the server is declared by a path item.'>
+	<FMComment: 'The path item declaring the server.'>
 	<container>
 	^ path
 ]
@@ -166,7 +166,7 @@ OPServer >> url [
 	<FMProperty: #url type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'URL template of the server [1].'>
+	<FMComment: 'URL template of the server.'>
 	^ url
 ]
 
@@ -183,7 +183,7 @@ OPServer >> variables [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference variables from Server to ServerVariable [0..*]: substitutions of the URL template.'>
+	<FMComment: 'Variables substituted in the URL template of the server.'>
 	^ variables
 ]
 

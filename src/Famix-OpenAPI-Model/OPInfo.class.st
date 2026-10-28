@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+Metadata of the API: title, version, description, terms of service, contact and license (OpenAPI Info Object).
 
 ## Relations
 ======================
@@ -7,14 +7,13 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `api` | `OPInfo` | `info` | `OPApi` | |
-| `openApi` | `OPInfo` | `info` | `OPOpenApi` | Opposite reference openApi from Info to OpenApi [0..1].|
+| `openApi` | `OPInfo` | `info` | `OPOpenApi` | The document the Info describes.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `contact` | `OPInfo` | `info` | `OPContact` | Reference contact from Info to Contact [0..1].|
-| `license` | `OPInfo` | `info` | `OPLicense` | Reference license from Info to License [0..1].|
+| `contact` | `OPInfo` | `info` | `OPContact` | Contact of the API.|
+| `license` | `OPInfo` | `info` | `OPLicense` | License of the API.|
 
 
 ## Properties
@@ -22,14 +21,14 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Attribute description from Info [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description of the API.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `termsOfService` | `String` | nil | Attribute termsOfService from Info [1]|
-| `title` | `String` | nil | Attribute title from Info [1]|
-| `version` | `String` | nil | Attribute version from Info [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `termsOfService` | `String` | nil | URL of the terms of service of the API.|
+| `title` | `String` | nil | Title of the API.|
+| `version` | `String` | nil | Version of the API (not the one of the specification).|
 
 "
 Class {
@@ -38,7 +37,6 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#api => FMOne type: #OPApi opposite: #info',
 		'#contact => FMOne type: #OPContact opposite: #info',
 		'#description => FMProperty',
 		'#license => FMOne type: #OPLicense opposite: #info',
@@ -62,30 +60,12 @@ OPInfo class >> annotation [
 ]
 
 { #category : 'accessing' }
-OPInfo >> api [
-	"Relation named: #api type: #OPApi opposite: #info"
-
-	<ignoreForCoverage>
-	<generated>
-	<container>
-	^ api
-]
-
-{ #category : 'accessing' }
-OPInfo >> api: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	api := anObject
-]
-
-{ #category : 'accessing' }
 OPInfo >> contact [
 	"Relation named: #contact type: #OPContact opposite: #info"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference contact from Info to Contact [0..1].'>
+	<FMComment: 'Contact of the API.'>
 	^ contact
 ]
 
@@ -103,7 +83,7 @@ OPInfo >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute description from Info [1]'>
+	<FMComment: 'Description of the API.'>
 	^ description
 ]
 
@@ -120,7 +100,7 @@ OPInfo >> license [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference license from Info to License [0..1].'>
+	<FMComment: 'License of the API.'>
 	^ license
 ]
 
@@ -138,7 +118,7 @@ OPInfo >> openApi [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference openApi from Info to OpenApi [0..1].'>
+	<FMComment: 'The document the Info describes.'>
 	<container>
 	^ openApi
 ]
@@ -157,7 +137,7 @@ OPInfo >> termsOfService [
 	<FMProperty: #termsOfService type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute termsOfService from Info [1]'>
+	<FMComment: 'URL of the terms of service of the API.'>
 	^ termsOfService
 ]
 
@@ -174,7 +154,7 @@ OPInfo >> title [
 	<FMProperty: #title type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute title from Info [1]'>
+	<FMComment: 'Title of the API.'>
 	^ title
 ]
 
@@ -191,7 +171,7 @@ OPInfo >> version [
 	<FMProperty: #version type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute version from Info [1]'>
+	<FMComment: 'Version of the API (not the one of the specification).'>
 	^ version
 ]
 

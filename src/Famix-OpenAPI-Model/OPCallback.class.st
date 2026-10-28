@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+Requests an operation may send to a URL given at runtime (OpenAPI Callback Object), described by path items.
 
 ## Relations
 ======================
@@ -7,18 +7,13 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `components` | `OPCallback` | `directCallbacks` | `OPComponents` | Opposite reference components from Callback to Components [0..1], when the object is a reusable one.|
-| `operation` | `OPCallback` | `directCallbacks` | `OPOperation` | Opposite reference operation from Callback to Operation [0..1], when the callback is declared inline by an operation.|
+| `components` | `OPCallback` | `callbacks` | `OPComponents` | The components owning the object, when it is a reusable one.|
+| `operation` | `OPCallback` | `callbacks` | `OPOperation` | The operation owning the callback, when it is declared inline.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `pathItems` | `OPCallback` | `callback` | `OPPath` | Reference pathItems from Callback to Path [0..*]: path items describing the requests sent to the callback URL expressions.|
-
-### Other
-| Relation | Origin | Opposite | Type | Comment |
-|---|
-| `usedByCallbackEntries` | `OPCallback` | `value` | `OPCallbackEntry` | CallbackEntry entries whose value is this Callback [0..*].|
+| `pathItems` | `OPCallback` | `callback` | `OPPath` | Path items describing the requests sent to the callback URL expressions.|
 
 
 ## Properties
@@ -26,11 +21,11 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `ref` | `String` | nil | Attribute ref from Reference Object [1]|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `ref` | `String` | nil | The $ref, as written in the source, that designates the reusable object this entity is or was copied from (for example #/components/schemas/Pet). Empty when the entity is not the result of a reference.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -39,10 +34,9 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#components => FMOne type: #OPComponents opposite: #directCallbacks',
-		'#operation => FMOne type: #OPOperation opposite: #directCallbacks',
-		'#pathItems => FMMany type: #OPPath opposite: #callback',
-		'#usedByCallbackEntries => FMMany type: #OPCallbackEntry opposite: #value'
+		'#components => FMOne type: #OPComponents opposite: #callbacks',
+		'#operation => FMOne type: #OPOperation opposite: #callbacks',
+		'#pathItems => FMMany type: #OPPath opposite: #callback'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -66,21 +60,13 @@ OPCallback >> addPathItem: anObject [
 	^ self pathItems add: anObject
 ]
 
-{ #category : 'adding' }
-OPCallback >> addUsedByCallbackEntry: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self usedByCallbackEntries add: anObject
-]
-
 { #category : 'accessing' }
 OPCallback >> components [
-	"Relation named: #components type: #OPComponents opposite: #directCallbacks"
+	"Relation named: #components type: #OPComponents opposite: #callbacks"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference components from Callback to Components [0..1], when the object is a reusable one.'>
+	<FMComment: 'The components owning the object, when it is a reusable one.'>
 	<container>
 	^ components
 ]
@@ -95,11 +81,11 @@ OPCallback >> components: anObject [
 
 { #category : 'accessing' }
 OPCallback >> operation [
-	"Relation named: #operation type: #OPOperation opposite: #directCallbacks"
+	"Relation named: #operation type: #OPOperation opposite: #callbacks"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference operation from Callback to Operation [0..1], when the callback is declared inline by an operation.'>
+	<FMComment: 'The operation owning the callback, when it is declared inline.'>
 	<container>
 	^ operation
 ]
@@ -118,7 +104,7 @@ OPCallback >> pathItems [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference pathItems from Callback to Path [0..*]: path items describing the requests sent to the callback URL expressions.'>
+	<FMComment: 'Path items describing the requests sent to the callback URL expressions.'>
 	^ pathItems
 ]
 
@@ -128,22 +114,4 @@ OPCallback >> pathItems: anObject [
 	<ignoreForCoverage>
 	<generated>
 	pathItems value: anObject
-]
-
-{ #category : 'accessing' }
-OPCallback >> usedByCallbackEntries [
-	"Relation named: #usedByCallbackEntries type: #OPCallbackEntry opposite: #value"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'CallbackEntry entries whose value is this Callback [0..*].'>
-	^ usedByCallbackEntries
-]
-
-{ #category : 'accessing' }
-OPCallback >> usedByCallbackEntries: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	usedByCallbackEntries value: anObject
 ]

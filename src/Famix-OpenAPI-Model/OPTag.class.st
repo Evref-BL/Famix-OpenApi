@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+A tag declared by the document to group operations (OpenAPI Tag Object).
 
 ## Relations
 ======================
@@ -7,14 +7,12 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `api` | `OPTag` | `tags` | `OPApi` | Opposite reference api from Tag to API [0..1].|
-| `openApi` | `OPTag` | `tags` | `OPOpenApi` | Opposite reference openApi from Tag to OpenApi [0..1].|
+| `openApi` | `OPTag` | `tags` | `OPOpenApi` | The document declaring the tag.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocs` | Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].|
-| `externalDocumentation` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocumentation` | Reference externalDocumentation from ExternalDocsContainer to ExternalDocumentation [0..1]: provisional name of externalDocs.|
+| `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocumentation` | External documentation of the entity.|
 
 
 ## Properties
@@ -22,11 +20,11 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Attribute description from Tag [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description of the tag.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -35,7 +33,6 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPExternalDocsContainer + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPExternalDocsContainer classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#api => FMOne type: #OPApi opposite: #tags',
 		'#description => FMProperty',
 		'#openApi => FMOne type: #OPOpenApi opposite: #tags'
 	],
@@ -54,31 +51,12 @@ OPTag class >> annotation [
 ]
 
 { #category : 'accessing' }
-OPTag >> api [
-	"Relation named: #api type: #OPApi opposite: #tags"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Opposite reference api from Tag to API [0..1].'>
-	<container>
-	^ api
-]
-
-{ #category : 'accessing' }
-OPTag >> api: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	api := anObject
-]
-
-{ #category : 'accessing' }
 OPTag >> description [
 
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute description from Tag [1]'>
+	<FMComment: 'Description of the tag.'>
 	^ description
 ]
 
@@ -95,7 +73,7 @@ OPTag >> openApi [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference openApi from Tag to OpenApi [0..1].'>
+	<FMComment: 'The document declaring the tag.'>
 	<container>
 	^ openApi
 ]

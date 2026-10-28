@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+A link from a response to an operation that can be followed with values of the response (OpenAPI Link Object).
 
 ## Relations
 ======================
@@ -7,19 +7,18 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `components` | `OPLink` | `directLinks` | `OPComponents` | Opposite reference components from Link to Components [0..1], when the object is a reusable one.|
-| `response` | `OPLink` | `links` | `OPResponse` | Opposite reference response from Link to Response [0..1].|
+| `components` | `OPLink` | `links` | `OPComponents` | The components owning the object, when it is a reusable one.|
+| `response` | `OPLink` | `links` | `OPResponse` | The response declaring the link.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `server` | `OPLink` | `link` | `OPServer` | Reference server from Link to Server [0..1]: server used by the linked operation.|
+| `server` | `OPLink` | `link` | `OPServer` | Server used by the linked operation.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `operation` | `OPLink` | `usedByLinks` | `OPOperation` | Reference operation from Link to Operation [0..1]: the linked operation (operationId or operationRef resolved).|
-| `usedByLinkEntries` | `OPLink` | `value` | `OPLinkEntry` | LinkEntry entries whose value is this Link [0..*].|
+| `operation` | `OPLink` | `usedByLinks` | `OPOperation` | The linked operation (operationId or operationRef resolved).|
 
 
 ## Properties
@@ -27,15 +26,15 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `description` | `String` | nil | Attribute description from Link [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `description` | `String` | nil | Description of the link.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `operationId` | `String` | nil | Attribute operationId from Link [1]|
-| `operationRef` | `String` | nil | Attribute operationRef from Link [1]|
-| `ref` | `String` | nil | Attribute ref from Reference Object [1]|
-| `requestBody` | `String` | nil | Attribute requestBody from Link [1]|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `operationId` | `String` | nil | operationId of the linked operation.|
+| `operationRef` | `String` | nil | URI reference of the linked operation (operationRef field).|
+| `ref` | `String` | nil | The $ref, as written in the source, that designates the reusable object this entity is or was copied from (for example #/components/schemas/Pet). Empty when the entity is not the result of a reference.|
+| `requestBody` | `String` | nil | Expression or literal used as request body of the linked operation.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -44,15 +43,14 @@ Class {
 	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPReferenceable + OPSourceText',
 	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#components => FMOne type: #OPComponents opposite: #directLinks',
+		'#components => FMOne type: #OPComponents opposite: #links',
 		'#description => FMProperty',
 		'#operation => FMOne type: #OPOperation opposite: #usedByLinks',
 		'#operationId => FMProperty',
 		'#operationRef => FMProperty',
 		'#requestBody => FMProperty',
 		'#response => FMOne type: #OPResponse opposite: #links',
-		'#server => FMOne type: #OPServer opposite: #link',
-		'#usedByLinkEntries => FMMany type: #OPLinkEntry opposite: #value'
+		'#server => FMOne type: #OPServer opposite: #link'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -68,21 +66,13 @@ OPLink class >> annotation [
 	<generated>
 ]
 
-{ #category : 'adding' }
-OPLink >> addUsedByLinkEntry: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self usedByLinkEntries add: anObject
-]
-
 { #category : 'accessing' }
 OPLink >> components [
-	"Relation named: #components type: #OPComponents opposite: #directLinks"
+	"Relation named: #components type: #OPComponents opposite: #links"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference components from Link to Components [0..1], when the object is a reusable one.'>
+	<FMComment: 'The components owning the object, when it is a reusable one.'>
 	<container>
 	^ components
 ]
@@ -101,7 +91,7 @@ OPLink >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute description from Link [1]'>
+	<FMComment: 'Description of the link.'>
 	^ description
 ]
 
@@ -118,7 +108,7 @@ OPLink >> operation [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference operation from Link to Operation [0..1]: the linked operation (operationId or operationRef resolved).'>
+	<FMComment: 'The linked operation (operationId or operationRef resolved).'>
 	^ operation
 ]
 
@@ -136,7 +126,7 @@ OPLink >> operationId [
 	<FMProperty: #operationId type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute operationId from Link [1]'>
+	<FMComment: 'operationId of the linked operation.'>
 	^ operationId
 ]
 
@@ -153,7 +143,7 @@ OPLink >> operationRef [
 	<FMProperty: #operationRef type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute operationRef from Link [1]'>
+	<FMComment: 'URI reference of the linked operation (operationRef field).'>
 	^ operationRef
 ]
 
@@ -170,7 +160,7 @@ OPLink >> requestBody [
 	<FMProperty: #requestBody type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute requestBody from Link [1]'>
+	<FMComment: 'Expression or literal used as request body of the linked operation.'>
 	^ requestBody
 ]
 
@@ -187,7 +177,7 @@ OPLink >> response [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference response from Link to Response [0..1].'>
+	<FMComment: 'The response declaring the link.'>
 	<container>
 	^ response
 ]
@@ -206,7 +196,7 @@ OPLink >> server [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference server from Link to Server [0..1]: server used by the linked operation.'>
+	<FMComment: 'Server used by the linked operation.'>
 	^ server
 ]
 
@@ -216,22 +206,4 @@ OPLink >> server: anObject [
 	<ignoreForCoverage>
 	<generated>
 	server := anObject
-]
-
-{ #category : 'accessing' }
-OPLink >> usedByLinkEntries [
-	"Relation named: #usedByLinkEntries type: #OPLinkEntry opposite: #value"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'LinkEntry entries whose value is this Link [0..*].'>
-	^ usedByLinkEntries
-]
-
-{ #category : 'accessing' }
-OPLink >> usedByLinkEntries: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	usedByLinkEntries value: anObject
 ]

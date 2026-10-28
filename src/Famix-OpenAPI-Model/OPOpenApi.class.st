@@ -1,5 +1,5 @@
 "
-An OpenAPI description document (OpenAPI Object), root of the canonical 3.1 shape. Swagger 2.0 and OpenAPI 3.0.x documents are normalised to this shape by the importer.
+An OpenAPI description document (OpenAPI Object), root of the model. Swagger 2.0 and OpenAPI 3.0.x documents are normalised by the importer to the OpenAPI 3.1 shape described by this model.
 
 ## Relations
 ======================
@@ -7,14 +7,15 @@ An OpenAPI description document (OpenAPI Object), root of the canonical 3.1 shap
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `components` | `OPOpenApi` | `openApi` | `OPComponents` | Reference components from OpenApi to Components [0..1]: reusable objects of the API.|
-| `externalDocs` | `OPOpenApi` | `openApi` | `OPExternalDocumentation` | Reference externalDocs from OpenApi to ExternalDocumentation [0..1].|
-| `info` | `OPOpenApi` | `openApi` | `OPInfo` | Reference info from OpenApi to Info [0..1]: metadata of the API.|
-| `paths` | `OPOpenApi` | `openApi` | `OPPath` | Reference paths from OpenApi to Path [0..*]: the path items of the API.|
-| `securityRequirements` | `OPOpenApi` | `openApi` | `OPSecurityRequirement` | Reference securityRequirements from OpenApi to SecurityRequirement [0..*]: security applied to every operation by default.|
-| `servers` | `OPOpenApi` | `openApi` | `OPServer` | Reference servers from OpenApi to Server [0..*]: servers hosting the API.|
-| `tags` | `OPOpenApi` | `openApi` | `OPTag` | Reference tags from OpenApi to Tag [0..*]: tags declared by the document.|
-| `webhooks` | `OPOpenApi` | `webhookOf` | `OPPath` | Reference webhooks from OpenApi to Path [0..*]: path items describing the requests the API may send (OpenAPI 3.1 webhooks).|
+| `components` | `OPOpenApi` | `openApi` | `OPComponents` | Reusable objects of the API.|
+| `externalDocs` | `OPOpenApi` | `openApi` | `OPExternalDocumentation` | External documentation of the API as a whole.|
+| `info` | `OPOpenApi` | `openApi` | `OPInfo` | Metadata of the API.|
+| `paths` | `OPOpenApi` | `openApi` | `OPPath` | Path items of the API.|
+| `securityRequirements` | `OPOpenApi` | `openApi` | `OPSecurityRequirement` | Security requirements applied to every operation by default, as alternatives.|
+| `servers` | `OPOpenApi` | `openApi` | `OPServer` | Servers hosting the API.|
+| `tags` | `OPOpenApi` | `openApi` | `OPTag` | Tags declared by the document.|
+| `unresolvedReferences` | `OPOpenApi` | `openApi` | `OPReference` | References that could not be resolved to an entity of the model, for example references to external documents.|
+| `webhooks` | `OPOpenApi` | `webhookOf` | `OPPath` | Path items describing the requests the API may send (OpenAPI 3.1 webhooks).|
 
 
 ## Properties
@@ -22,14 +23,14 @@ An OpenAPI description document (OpenAPI Object), root of the canonical 3.1 shap
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
-| `jsonSchemaDialect` | `String` | nil | URI of the JSON Schema dialect used by the schemas of the document (jsonSchemaDialect field) [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
+| `jsonSchemaDialect` | `String` | nil | URI of the JSON Schema dialect used by the schemas of the document (jsonSchemaDialect field).|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `openapiVersion` | `String` | nil | Value of the openapi field of the canonical document [1].|
-| `selfUrl` | `String` | nil | URI under which the document is available ($self field) [1].|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `sourceVersion` | `String` | nil | Version of the specification as read from the source document: 2.0, 3.0.x or 3.1.x [1].|
+| `openapiVersion` | `String` | nil | Value of the openapi field of the canonical document.|
+| `selfUrl` | `String` | nil | URI under which the document is available ($self field).|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `sourceVersion` | `String` | nil | Version of the specification of the source document: 2.0, 3.0.x or 3.1.x.|
 
 "
 Class {
@@ -49,6 +50,7 @@ Class {
 		'#servers => FMMany type: #OPServer opposite: #openApi',
 		'#sourceVersion => FMProperty',
 		'#tags => FMMany type: #OPTag opposite: #openApi',
+		'#unresolvedReferences => FMMany type: #OPReference opposite: #openApi',
 		'#webhooks => FMMany type: #OPPath opposite: #webhookOf'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
@@ -98,6 +100,14 @@ OPOpenApi >> addTag: anObject [
 ]
 
 { #category : 'adding' }
+OPOpenApi >> addUnresolvedReference: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self unresolvedReferences add: anObject
+]
+
+{ #category : 'adding' }
 OPOpenApi >> addWebhook: anObject [
 
 	<ignoreForCoverage>
@@ -111,7 +121,7 @@ OPOpenApi >> components [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference components from OpenApi to Components [0..1]: reusable objects of the API.'>
+	<FMComment: 'Reusable objects of the API.'>
 	^ components
 ]
 
@@ -129,7 +139,7 @@ OPOpenApi >> externalDocs [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference externalDocs from OpenApi to ExternalDocumentation [0..1].'>
+	<FMComment: 'External documentation of the API as a whole.'>
 	^ externalDocs
 ]
 
@@ -147,7 +157,7 @@ OPOpenApi >> info [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference info from OpenApi to Info [0..1]: metadata of the API.'>
+	<FMComment: 'Metadata of the API.'>
 	^ info
 ]
 
@@ -165,7 +175,7 @@ OPOpenApi >> jsonSchemaDialect [
 	<FMProperty: #jsonSchemaDialect type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'URI of the JSON Schema dialect used by the schemas of the document (jsonSchemaDialect field) [1].'>
+	<FMComment: 'URI of the JSON Schema dialect used by the schemas of the document (jsonSchemaDialect field).'>
 	^ jsonSchemaDialect
 ]
 
@@ -182,7 +192,7 @@ OPOpenApi >> openapiVersion [
 	<FMProperty: #openapiVersion type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Value of the openapi field of the canonical document [1].'>
+	<FMComment: 'Value of the openapi field of the canonical document.'>
 	^ openapiVersion
 ]
 
@@ -199,7 +209,7 @@ OPOpenApi >> paths [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference paths from OpenApi to Path [0..*]: the path items of the API.'>
+	<FMComment: 'Path items of the API.'>
 	^ paths
 ]
 
@@ -217,7 +227,7 @@ OPOpenApi >> securityRequirements [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference securityRequirements from OpenApi to SecurityRequirement [0..*]: security applied to every operation by default.'>
+	<FMComment: 'Security requirements applied to every operation by default, as alternatives.'>
 	^ securityRequirements
 ]
 
@@ -235,7 +245,7 @@ OPOpenApi >> selfUrl [
 	<FMProperty: #selfUrl type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'URI under which the document is available ($self field) [1].'>
+	<FMComment: 'URI under which the document is available ($self field).'>
 	^ selfUrl
 ]
 
@@ -252,7 +262,7 @@ OPOpenApi >> servers [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference servers from OpenApi to Server [0..*]: servers hosting the API.'>
+	<FMComment: 'Servers hosting the API.'>
 	^ servers
 ]
 
@@ -270,7 +280,7 @@ OPOpenApi >> sourceVersion [
 	<FMProperty: #sourceVersion type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Version of the specification as read from the source document: 2.0, 3.0.x or 3.1.x [1].'>
+	<FMComment: 'Version of the specification of the source document: 2.0, 3.0.x or 3.1.x.'>
 	^ sourceVersion
 ]
 
@@ -287,7 +297,7 @@ OPOpenApi >> tags [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference tags from OpenApi to Tag [0..*]: tags declared by the document.'>
+	<FMComment: 'Tags declared by the document.'>
 	^ tags
 ]
 
@@ -300,12 +310,30 @@ OPOpenApi >> tags: anObject [
 ]
 
 { #category : 'accessing' }
+OPOpenApi >> unresolvedReferences [
+	"Relation named: #unresolvedReferences type: #OPReference opposite: #openApi"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'References that could not be resolved to an entity of the model, for example references to external documents.'>
+	^ unresolvedReferences
+]
+
+{ #category : 'accessing' }
+OPOpenApi >> unresolvedReferences: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	unresolvedReferences value: anObject
+]
+
+{ #category : 'accessing' }
 OPOpenApi >> webhooks [
 	"Relation named: #webhooks type: #OPPath opposite: #webhookOf"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference webhooks from OpenApi to Path [0..*]: path items describing the requests the API may send (OpenAPI 3.1 webhooks).'>
+	<FMComment: 'Path items describing the requests the API may send (OpenAPI 3.1 webhooks).'>
 	^ webhooks
 ]
 

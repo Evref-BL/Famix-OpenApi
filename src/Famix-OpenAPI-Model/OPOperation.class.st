@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+An HTTP operation of a path item (OpenAPI Operation Object): one verb on one path, with its parameters, request body, responses, callbacks and security.
 
 ## Relations
 ======================
@@ -7,29 +7,23 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `path` | `OPOperation` | `operations` | `OPPath` | Opposite reference path from Operation to Path [0..1].|
+| `path` | `OPOperation` | `operations` | `OPPath` | The path item declaring the operation.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `callbacks` | `OPOperation` | `operation` | `OPCallbackEntry` | Reference callbacks from Operation to CallbackEntry [0..*].|
-| `directCallbacks` | `OPOperation` | `operation` | `OPCallback` | Reference directCallbacks from Operation to Callback [0..*]: callbacks the operation may trigger (provisional name of callbacks).|
-| `directResponses` | `OPOperation` | `operation` | `OPResponse` | Reference directResponses from Operation to Response [0..*]: responses by status code (provisional name of responses).|
-| `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocs` | Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].|
-| `externalDocumentation` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocumentation` | Reference externalDocumentation from ExternalDocsContainer to ExternalDocumentation [0..1]: provisional name of externalDocs.|
-| `responses` | `OPOperation` | `operation` | `OPResponseEntry` | Reference responses from Operation to ResponseEntry [1..*].|
-| `security` | `OPSecurityContainer` | `securityContainer` | `OPSecurityRequirement` | Reference security from SecurityContainer to SecurityRequirement [0..*].|
-| `securityRequirements` | `OPOperation` | `operation` | `OPSecurityRequirement` | Reference securityRequirements from Operation to SecurityRequirement [0..*]: security of the operation, overriding the document one.|
-| `servers` | `OPOperation` | `operation` | `OPServer` | Reference servers from Operation to Server [0..*]: servers overriding the ones of the path item for this operation.|
+| `callbacks` | `OPOperation` | `operation` | `OPCallback` | Callbacks the operation may trigger.|
+| `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocumentation` | External documentation of the entity.|
+| `responses` | `OPOperation` | `operation` | `OPResponse` | Responses of the operation, one per status code.|
+| `securityRequirements` | `OPOperation` | `operation` | `OPSecurityRequirement` | Security requirements of the operation, as alternatives; they replace the ones of the document. See #effectiveSecurity.|
+| `servers` | `OPOperation` | `operation` | `OPServer` | Servers overriding the ones of the path item for this operation.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `parameter` | `OPParameterContainer` | `declaringContext` | `OPParameter` | |
-| `parameters` | `OPOperation` | `usedByOperations` | `OPParameter` | Reference parameters from Operation to Parameter [0..*]. A parameter may be shared by several operations.|
-| `requestBody` | `OPOperation` | `usedByOperations` | `OPRequestBody` | Reference requestBody from Operation to RequestBody [0..1]. A request body may be shared by several operations.|
-| `response` | `OPResponseContainer` | `declaringContext` | `OPResponse` | |
-| `usedByLinks` | `OPOperation` | `operation` | `OPLink` | Links targeting this Operation [0..*].|
+| `parameters` | `OPOperation` | `usedByOperations` | `OPParameter` | Parameters of the operation. A parameter may be shared by several operations.|
+| `requestBody` | `OPOperation` | `usedByOperations` | `OPRequestBody` | Request body accepted by the operation. A request body may be shared by several operations.|
+| `usedByLinks` | `OPOperation` | `operation` | `OPLink` | Links targeting this operation.|
 
 
 ## Properties
@@ -37,47 +31,39 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `consumes` | `Object` | nil | Attribute consumes from Operation [*]|
-| `deprecated` | `Boolean` | nil | Attribute deprecated from Operation [1]|
-| `description` | `String` | nil | Attribute description from Operation [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
-| `httpMethod` | `String` | nil | Attribute httpMethod from Operation [1]: lowercase HTTP verb (get, put, post, delete, options, head, patch, trace).|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `deprecated` | `Boolean` | nil | Whether the operation is deprecated.|
+| `description` | `String` | nil | Description of the operation.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
+| `httpMethod` | `String` | nil | Lowercase HTTP verb of the operation: get, put, post, delete, options, head, patch or trace.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `operationId` | `String` | nil | Attribute operationId from Operation [1]|
-| `produces` | `Object` | nil | Attribute produces from Operation [*]|
-| `schemes` | `Object` | nil | Attribute schemes from Operation [*]|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `summary` | `String` | nil | Attribute summary from Operation [1]|
-| `tagNames` | `String` | #() | Names of the tags of the operation as written in the source [*] (strings). Use #tags to get the Tag entities.|
-| `tagReferences` | `Object` | nil | Attribute tagReferences from Operation [*]|
+| `operationId` | `String` | nil | Unique identifier of the operation in the document.|
+| `securityDisabled` | `Boolean` | false | True when the operation explicitly disables the security of the document (security: [] in the source); false otherwise. See #effectiveSecurity.|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `summary` | `String` | nil | Short summary of the operation.|
+| `tagNames` | `String` | #() | Names of the tags of the operation as written in the source. Use #tags to get the Tag entities.|
 
 "
 Class {
 	#name : 'OPOperation',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPExternalDocsContainer + OPParameterContainer + OPResponseContainer + OPSecurityContainer + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPExternalDocsContainer classTrait + OPParameterContainer classTrait + OPResponseContainer classTrait + OPSecurityContainer classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPExternalDocsContainer + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPExternalDocsContainer classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#callbacks => FMMany type: #OPCallbackEntry opposite: #operation',
-		'#consumes => FMProperty',
+		'#callbacks => FMMany type: #OPCallback opposite: #operation',
 		'#deprecated => FMProperty',
 		'#description => FMProperty',
-		'#directCallbacks => FMMany type: #OPCallback opposite: #operation',
-		'#directResponses => FMMany type: #OPResponse opposite: #operation',
 		'#httpMethod => FMProperty',
 		'#operationId => FMProperty',
 		'#parameters => FMMany type: #OPParameter opposite: #usedByOperations',
 		'#path => FMOne type: #OPPath opposite: #operations',
-		'#produces => FMProperty',
 		'#requestBody => FMOne type: #OPRequestBody opposite: #usedByOperations',
-		'#responses => FMMany type: #OPResponseEntry opposite: #operation',
-		'#schemes => FMProperty',
+		'#responses => FMMany type: #OPResponse opposite: #operation',
+		'#securityDisabled => FMProperty defaultValue: false',
 		'#securityRequirements => FMMany type: #OPSecurityRequirement opposite: #operation',
 		'#servers => FMMany type: #OPServer opposite: #operation',
 		'#summary => FMProperty',
 		'#tagNames => FMProperty defaultValue: #()',
-		'#tagReferences => FMProperty',
 		'#usedByLinks => FMMany type: #OPLink opposite: #operation'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
@@ -100,22 +86,6 @@ OPOperation >> addCallback: anObject [
 	<ignoreForCoverage>
 	<generated>
 	^ self callbacks add: anObject
-]
-
-{ #category : 'adding' }
-OPOperation >> addDirectCallback: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self directCallbacks add: anObject
-]
-
-{ #category : 'adding' }
-OPOperation >> addDirectResponse: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	^ self directResponses add: anObject
 ]
 
 { #category : 'adding' }
@@ -160,11 +130,11 @@ OPOperation >> addUsedByLink: anObject [
 
 { #category : 'accessing' }
 OPOperation >> callbacks [
-	"Relation named: #callbacks type: #OPCallbackEntry opposite: #operation"
+	"Relation named: #callbacks type: #OPCallback opposite: #operation"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference callbacks from Operation to CallbackEntry [0..*].'>
+	<FMComment: 'Callbacks the operation may trigger.'>
 	^ callbacks
 ]
 
@@ -176,21 +146,11 @@ OPOperation >> callbacks: anObject [
 	callbacks value: anObject
 ]
 
-{ #category : 'accessing' }
-OPOperation >> consumes [
+{ #category : 'as yet unclassified' }
+OPOperation >> declaringOpenApi [
+	"Answer the OpenAPI document declaring the receiver through its path item, or nil when the receiver has no path item."
 
-	<FMProperty: #consumes type: #Object>
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Attribute consumes from Operation [*]'>
-	^ consumes
-]
-
-{ #category : 'accessing' }
-OPOperation >> consumes: anObject [
-	<ignoreForCoverage>
-	<generated>
-	consumes := anObject
+	^ self path ifNotNil: [ :aPath | aPath declaringOpenApi ]
 ]
 
 { #category : 'accessing' }
@@ -199,7 +159,7 @@ OPOperation >> deprecated [
 	<FMProperty: #deprecated type: #Boolean>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute deprecated from Operation [1]'>
+	<FMComment: 'Whether the operation is deprecated.'>
 	^ deprecated
 ]
 
@@ -216,7 +176,7 @@ OPOperation >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute description from Operation [1]'>
+	<FMComment: 'Description of the operation.'>
 	^ description
 ]
 
@@ -227,40 +187,17 @@ OPOperation >> description: anObject [
 	description := anObject
 ]
 
-{ #category : 'accessing' }
-OPOperation >> directCallbacks [
-	"Relation named: #directCallbacks type: #OPCallback opposite: #operation"
+{ #category : 'as yet unclassified' }
+OPOperation >> effectiveParameters [
+	"Answer the parameters that apply to the receiver: its own parameters followed by the parameters of its path item. A parameter of the operation overrides a path parameter with the same name and location."
 
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Reference directCallbacks from Operation to Callback [0..*]: callbacks the operation may trigger (provisional name of callbacks).'>
-	^ directCallbacks
-]
-
-{ #category : 'accessing' }
-OPOperation >> directCallbacks: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	directCallbacks value: anObject
-]
-
-{ #category : 'accessing' }
-OPOperation >> directResponses [
-	"Relation named: #directResponses type: #OPResponse opposite: #operation"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Reference directResponses from Operation to Response [0..*]: responses by status code (provisional name of responses).'>
-	^ directResponses
-]
-
-{ #category : 'accessing' }
-OPOperation >> directResponses: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	directResponses value: anObject
+	| ownParameters |
+	ownParameters := self parameters asOrderedCollection.
+	self path ifNil: [ ^ ownParameters ].
+	^ ownParameters , (self path parameters reject: [ :pathParameter |
+		   ownParameters anySatisfy: [ :each |
+			   each name = pathParameter name and: [
+				   each location = pathParameter location ] ] ])
 ]
 
 { #category : 'accessing' }
@@ -269,7 +206,7 @@ OPOperation >> httpMethod [
 	<FMProperty: #httpMethod type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute httpMethod from Operation [1]: lowercase HTTP verb (get, put, post, delete, options, head, patch, trace).'>
+	<FMComment: 'Lowercase HTTP verb of the operation: get, put, post, delete, options, head, patch or trace.'>
 	^ httpMethod
 ]
 
@@ -286,7 +223,7 @@ OPOperation >> operationId [
 	<FMProperty: #operationId type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute operationId from Operation [1]'>
+	<FMComment: 'Unique identifier of the operation in the document.'>
 	^ operationId
 ]
 
@@ -303,7 +240,7 @@ OPOperation >> parameters [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference parameters from Operation to Parameter [0..*]. A parameter may be shared by several operations.'>
+	<FMComment: 'Parameters of the operation. A parameter may be shared by several operations.'>
 	^ parameters
 ]
 
@@ -321,7 +258,7 @@ OPOperation >> path [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference path from Operation to Path [0..1].'>
+	<FMComment: 'The path item declaring the operation.'>
 	<container>
 	^ path
 ]
@@ -335,29 +272,12 @@ OPOperation >> path: anObject [
 ]
 
 { #category : 'accessing' }
-OPOperation >> produces [
-
-	<FMProperty: #produces type: #Object>
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Attribute produces from Operation [*]'>
-	^ produces
-]
-
-{ #category : 'accessing' }
-OPOperation >> produces: anObject [
-	<ignoreForCoverage>
-	<generated>
-	produces := anObject
-]
-
-{ #category : 'accessing' }
 OPOperation >> requestBody [
 	"Relation named: #requestBody type: #OPRequestBody opposite: #usedByOperations"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference requestBody from Operation to RequestBody [0..1]. A request body may be shared by several operations.'>
+	<FMComment: 'Request body accepted by the operation. A request body may be shared by several operations.'>
 	^ requestBody
 ]
 
@@ -371,11 +291,11 @@ OPOperation >> requestBody: anObject [
 
 { #category : 'accessing' }
 OPOperation >> responses [
-	"Relation named: #responses type: #OPResponseEntry opposite: #operation"
+	"Relation named: #responses type: #OPResponse opposite: #operation"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference responses from Operation to ResponseEntry [1..*].'>
+	<FMComment: 'Responses of the operation, one per status code.'>
 	^ responses
 ]
 
@@ -388,20 +308,20 @@ OPOperation >> responses: anObject [
 ]
 
 { #category : 'accessing' }
-OPOperation >> schemes [
+OPOperation >> securityDisabled [
 
-	<FMProperty: #schemes type: #Object>
+	<FMProperty: #securityDisabled type: #Boolean defaultValue: false>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute schemes from Operation [*]'>
-	^ schemes
+	<FMComment: 'True when the operation explicitly disables the security of the document (security: [] in the source); false otherwise. See #effectiveSecurity.'>
+	^ securityDisabled ifNil: [ securityDisabled := false ]
 ]
 
 { #category : 'accessing' }
-OPOperation >> schemes: anObject [
+OPOperation >> securityDisabled: anObject [
 	<ignoreForCoverage>
 	<generated>
-	schemes := anObject
+	securityDisabled := anObject
 ]
 
 { #category : 'accessing' }
@@ -410,7 +330,7 @@ OPOperation >> securityRequirements [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference securityRequirements from Operation to SecurityRequirement [0..*]: security of the operation, overriding the document one.'>
+	<FMComment: 'Security requirements of the operation, as alternatives; they replace the ones of the document. See #effectiveSecurity.'>
 	^ securityRequirements
 ]
 
@@ -428,7 +348,7 @@ OPOperation >> servers [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference servers from Operation to Server [0..*]: servers overriding the ones of the path item for this operation.'>
+	<FMComment: 'Servers overriding the ones of the path item for this operation.'>
 	^ servers
 ]
 
@@ -446,7 +366,7 @@ OPOperation >> summary [
 	<FMProperty: #summary type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute summary from Operation [1]'>
+	<FMComment: 'Short summary of the operation.'>
 	^ summary
 ]
 
@@ -464,7 +384,7 @@ OPOperation >> tagNames [
 	<ignoreForCoverage>
 	<generated>
 	<multivalued>
-	<FMComment: 'Names of the tags of the operation as written in the source [*] (strings). Use #tags to get the Tag entities.'>
+	<FMComment: 'Names of the tags of the operation as written in the source. Use #tags to get the Tag entities.'>
 	^ tagNames ifNil: [ tagNames := #() ]
 ]
 
@@ -475,21 +395,17 @@ OPOperation >> tagNames: anObject [
 	tagNames := anObject
 ]
 
-{ #category : 'accessing' }
-OPOperation >> tagReferences [
+{ #category : 'as yet unclassified' }
+OPOperation >> tags [
+	"Answer the Tag entities named by #tagNames, in the order of #tagNames. A name that is not declared by the document is skipped; the answer is empty when the receiver is not attached to a document."
 
-	<FMProperty: #tagReferences type: #Object>
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Attribute tagReferences from Operation [*]'>
-	^ tagReferences
-]
-
-{ #category : 'accessing' }
-OPOperation >> tagReferences: anObject [
-	<ignoreForCoverage>
-	<generated>
-	tagReferences := anObject
+	| document |
+	document := self declaringOpenApi.
+	document ifNil: [ ^ #(  ) ].
+	^ self tagNames
+		  flatCollect: [ :tagName |
+		  document tags select: [ :tag | tag name = tagName ] ]
+		  as: OrderedCollection
 ]
 
 { #category : 'accessing' }
@@ -498,7 +414,7 @@ OPOperation >> usedByLinks [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Links targeting this Operation [0..*].'>
+	<FMComment: 'Links targeting this operation.'>
 	^ usedByLinks
 ]
 

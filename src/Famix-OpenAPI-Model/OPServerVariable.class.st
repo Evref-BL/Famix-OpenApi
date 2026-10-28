@@ -7,7 +7,7 @@ A variable substituted in the URL template of a Server (OpenAPI Server Variable 
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `server` | `OPServerVariable` | `variables` | `OPServer` | Opposite reference server from ServerVariable to Server [0..1].|
+| `server` | `OPServerVariable` | `variables` | `OPServer` | The server declaring the variable.|
 
 
 ## Properties
@@ -15,13 +15,13 @@ A variable substituted in the URL template of a Server (OpenAPI Server Variable 
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `defaultValue` | `String` | nil | Value used when the variable is not provided [1].|
-| `description` | `String` | nil | Description of the server variable [1].|
-| `enumValues` | `String` | #() | Allowed values of the server variable [*] (strings).|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `defaultValue` | `String` | nil | Value used when the variable is not provided.|
+| `description` | `String` | nil | Description of the server variable.|
+| `enumValues` | `String` | #() | Allowed values of the server variable.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
 
 "
 Class {
@@ -55,7 +55,7 @@ OPServerVariable >> defaultValue [
 	<FMProperty: #defaultValue type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Value used when the variable is not provided [1].'>
+	<FMComment: 'Value used when the variable is not provided.'>
 	^ defaultValue
 ]
 
@@ -72,7 +72,7 @@ OPServerVariable >> description [
 	<FMProperty: #description type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Description of the server variable [1].'>
+	<FMComment: 'Description of the server variable.'>
 	^ description
 ]
 
@@ -90,7 +90,7 @@ OPServerVariable >> enumValues [
 	<ignoreForCoverage>
 	<generated>
 	<multivalued>
-	<FMComment: 'Allowed values of the server variable [*] (strings).'>
+	<FMComment: 'Allowed values of the server variable.'>
 	^ enumValues ifNil: [ enumValues := #() ]
 ]
 
@@ -107,7 +107,7 @@ OPServerVariable >> server [
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Opposite reference server from ServerVariable to Server [0..1].'>
+	<FMComment: 'The server declaring the variable.'>
 	<container>
 	^ server
 ]

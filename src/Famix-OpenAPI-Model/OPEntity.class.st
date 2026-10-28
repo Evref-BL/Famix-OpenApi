@@ -1,3 +1,8 @@
+"
+Common superclass of the entities of the OpenAPI metamodel.
+
+
+"
 Class {
 	#name : 'OPEntity',
 	#superclass : 'MooseEntity',

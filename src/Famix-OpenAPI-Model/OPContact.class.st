@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+Contact information of the API (OpenAPI Contact Object).
 
 ## Relations
 ======================
@@ -7,7 +7,7 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `info` | `OPContact` | `contact` | `OPInfo` | |
+| `info` | `OPContact` | `contact` | `OPInfo` | The Info declaring the contact.|
 
 
 ## Properties
@@ -15,12 +15,12 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
-| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
-| `email` | `String` | nil | Attribute email from Contact [1]|
-| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet.|
+| `email` | `String` | nil | Email address of the contact.|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text.|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
-| `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
-| `url` | `String` | nil | Attribute url from Contact [1]|
+| `sourceText` | `String` | nil | Text of the JSON node the entity was built from.|
+| `url` | `String` | nil | URL of the contact page.|
 
 "
 Class {
@@ -53,7 +53,7 @@ OPContact >> email [
 	<FMProperty: #email type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute email from Contact [1]'>
+	<FMComment: 'Email address of the contact.'>
 	^ email
 ]
 
@@ -70,6 +70,7 @@ OPContact >> info [
 
 	<ignoreForCoverage>
 	<generated>
+	<FMComment: 'The Info declaring the contact.'>
 	<container>
 	^ info
 ]
@@ -88,7 +89,7 @@ OPContact >> url [
 	<FMProperty: #url type: #String>
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Attribute url from Contact [1]'>
+	<FMComment: 'URL of the contact page.'>
 	^ url
 ]
 

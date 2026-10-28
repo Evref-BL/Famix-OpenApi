@@ -1,5 +1,5 @@
 "
-Generated from openapi2.ecore
+Entities that may point to external documentation: Operation, Schema and Tag.
 
 ## Relations
 ======================
@@ -7,8 +7,7 @@ Generated from openapi2.ecore
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
-| `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocs` | Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].|
-| `externalDocumentation` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocumentation` | Reference externalDocumentation from ExternalDocsContainer to ExternalDocumentation [0..1]: provisional name of externalDocs.|
+| `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocumentation` | External documentation of the entity.|
 
 
 
@@ -16,8 +15,7 @@ Generated from openapi2.ecore
 Trait {
 	#name : 'OPExternalDocsContainer',
 	#instVars : [
-		'#externalDocs => FMOne type: #OPExternalDocs opposite: #externalDocsContainer',
-		'#externalDocumentation => FMOne type: #OPExternalDocumentation opposite: #externalDocsContainer'
+		'#externalDocs => FMOne type: #OPExternalDocumentation opposite: #externalDocsContainer'
 	],
 	#category : 'Famix-OpenAPI-Model-Traits',
 	#package : 'Famix-OpenAPI-Model',
@@ -35,11 +33,11 @@ OPExternalDocsContainer classSide >> annotation [
 
 { #category : 'accessing' }
 OPExternalDocsContainer >> externalDocs [
-	"Relation named: #externalDocs type: #OPExternalDocs opposite: #externalDocsContainer"
+	"Relation named: #externalDocs type: #OPExternalDocumentation opposite: #externalDocsContainer"
 
 	<ignoreForCoverage>
 	<generated>
-	<FMComment: 'Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].'>
+	<FMComment: 'External documentation of the entity.'>
 	^ externalDocs
 ]
 
@@ -49,22 +47,4 @@ OPExternalDocsContainer >> externalDocs: anObject [
 	<ignoreForCoverage>
 	<generated>
 	externalDocs := anObject
-]
-
-{ #category : 'accessing' }
-OPExternalDocsContainer >> externalDocumentation [
-	"Relation named: #externalDocumentation type: #OPExternalDocumentation opposite: #externalDocsContainer"
-
-	<ignoreForCoverage>
-	<generated>
-	<FMComment: 'Reference externalDocumentation from ExternalDocsContainer to ExternalDocumentation [0..1]: provisional name of externalDocs.'>
-	^ externalDocumentation
-]
-
-{ #category : 'accessing' }
-OPExternalDocsContainer >> externalDocumentation: anObject [
-
-	<ignoreForCoverage>
-	<generated>
-	externalDocumentation := anObject
 ]
