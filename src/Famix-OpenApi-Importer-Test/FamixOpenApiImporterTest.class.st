@@ -70,7 +70,7 @@ FamixOpenApiImporterTest >> testGeneratedClassLookupUsesCurrentPrefix [
 	self assert: generatedOpenApiClass name equals: expectedClassName
 ]
 
-{ #category : 'tests (step B)' }
+{ #category : 'tests (step C)' }
 FamixOpenApiImporterTest >> testImportCopiesRefOnResponseClones [
 	"Changed from testImportCopiesRefOnReferenceableEntities: a shared Path or Parameter is the component itself (no ref), only a Response is cloned per operation and keeps the $ref it comes from."
 
@@ -80,7 +80,7 @@ FamixOpenApiImporterTest >> testImportCopiesRefOnResponseClones [
 	response := self responseOf: operation code: 'default'.
 	component := self
 		             componentIn: (self componentsIn: model) responses
-		             pointer: '#/components/responses/GenericError'.
+		             pointer: '#/responses/GenericError'.
 	self assert: response ref equals: '#/responses/GenericError'.
 	self assert: response ~~ component.
 	self assert: response description equals: 'generic error'
@@ -468,15 +468,34 @@ FamixOpenApiImporterTest >> testModelFromJsonStringAliasAnswersTheSameModelAsImp
 ]
 
 { #category : 'tests (step B)' }
-FamixOpenApiImporterTest >> testSourceTextPolicyComponentsKeepsNoSourceTextOnPathAndOperation [
+FamixOpenApiImporterTest >> testSourceTextPolicyComponentsKeepsSourceTextOnComponentsPathItemsAndOperations [
 
-	| model |
+	| model schemas component inline |
 	model := self importJson: self minimalOpenApi3Json.
+	schemas := self entitiesNamed: #Schema in: model.
+	component := schemas detect: [ :each | each name = 'Pet' ].
+	self deny: component sourceText isEmptyOrNil.
 	self assert:
+		(NeoJSONReader fromString: component sourceText) isDictionary.
+	self
+		assert:
+		((NeoJSONReader fromString: component sourceText) at: 'description')
+		equals: 'A pet schema'.
+	(self entitiesNamed: #Path in: model) anyOne sourceText ifNotNil: [
+		:text | self assert: (NeoJSONReader fromString: text) isDictionary ].
+	self deny:
 		(self entitiesNamed: #Path in: model) anyOne sourceText isEmptyOrNil.
-	self assert:
+	self deny:
 		(self entitiesNamed: #Operation in: model) anyOne sourceText
-			isEmptyOrNil
+			isEmptyOrNil.
+	self
+		assert: ((NeoJSONReader fromString:
+				  (self entitiesNamed: #Operation in: model) anyOne sourceText)
+				 at: 'operationId')
+		equals: 'createPet'.
+	inline := schemas select: [ :each | each name isNil ].
+	self deny: inline isEmpty.
+	inline do: [ :each | self assert: each sourceText isNil ]
 ]
 
 { #category : 'tests' }

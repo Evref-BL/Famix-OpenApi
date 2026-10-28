@@ -205,6 +205,125 @@ FamixOpenApiPointerIndexTest >> testEntityPointerIsNotAnAlias [
 	self deny: (index isAlias: '#/absent')
 ]
 
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testForgetEntitiesKeepsTheOthersConsistent [
+	"After forgetting, size, pointers, entities and lookup agree and keep the insertion order of the remaining ones."
+
+	| a b c |
+	a := Object new.
+	b := Object new.
+	c := Object new.
+	index register: a at: '#/a'.
+	index register: b at: '#/b'.
+	index register: c at: '#/c'.
+	index forgetEntities: (IdentitySet with: b).
+	self assert: index size equals: 2 description: 'size'.
+	self
+		assert: index pointers
+		equals: #( '#/a' '#/c' )
+		description: 'pointers'.
+	self
+		assert: index entities size
+		equals: 2
+		description: 'entities size'.
+	self assert: index entities first == a description: 'first entity'.
+	self assert: index entities last == c description: 'last entity'.
+	self assert: (index lookup: '#/a') == a description: 'lookup a'.
+	self assert: (index lookup: '#/c') == c description: 'lookup c'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testForgetEntitiesLeavesAliasesUntouched [
+	"An alias is not an entity: it stays registered even when its target is forgotten (it then no longer resolves)."
+
+	| gone |
+	gone := Object new.
+	index register: gone at: '#/a'.
+	index registerAlias: '#/alias' to: '#/a'.
+	index forgetEntities: (IdentitySet with: gone).
+	self assert: (index isAlias: '#/alias') description: 'alias kept'.
+	self
+		assert: index pointers
+		equals: #( '#/alias' )
+		description: 'pointers'.
+	self assert: index size equals: 1 description: 'size'.
+	self
+		assert:
+			(index resolveReference: '#/alias' from: '#/site' expecting: nil)
+				isNil
+		description: 'alias to a forgotten entity is unresolved'.
+	self
+		assert: (diagnostics withCode: #unresolvedReference) size
+		equals: 1
+		description: 'warning'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testForgetEntitiesRemovesEveryPointerOfTheEntity [
+
+	| gone |
+	gone := Object new.
+	index register: gone at: '#/a'.
+	index register: gone at: '#/b'.
+	index forgetEntities: (IdentitySet with: gone).
+	self assert: index size equals: 0 description: 'size'.
+	self assert: index pointers equals: #(  ) description: 'pointers'.
+	self assert: index entities isEmpty description: 'entities'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testForgetEntitiesRemovesThePointerOfTheEntity [
+
+	| gone |
+	gone := Object new.
+	index register: gone at: '#/a'.
+	index forgetEntities: (IdentitySet with: gone).
+	self assert: (index lookup: '#/a') isNil description: 'lookup'.
+	self deny: (index includesPointer: '#/a')
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testForgetEntitiesWithAnAbsentEntityHasNoEffect [
+
+	| kept |
+	kept := Object new.
+	index register: kept at: '#/a'.
+	index forgetEntities: (IdentitySet with: Object new).
+	self assert: index size equals: 1 description: 'size'.
+	self
+		assert: index pointers
+		equals: #( '#/a' )
+		description: 'pointers'.
+	self assert: (index lookup: '#/a') == kept description: 'lookup'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testForgetEntitiesWithAnEmptySetHasNoEffect [
+
+	index register: Object new at: '#/a'.
+	index forgetEntities: IdentitySet new.
+	self assert: index size equals: 1 description: 'size'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testForgottenPointerCanBeRegisteredAgain [
+	"Once forgotten, a pointer is free: a new entity can take it without a duplicatePointer warning."
+
+	| gone fresh |
+	gone := Object new.
+	fresh := Object new.
+	index register: gone at: '#/a'.
+	index forgetEntities: (IdentitySet with: gone).
+	index register: fresh at: '#/a'.
+	self
+		assert: (index lookup: '#/a') == fresh
+		description: 'fresh registered'.
+	self assert: index size equals: 1 description: 'size'.
+	self
+		assert: (diagnostics withCode: #duplicatePointer) isEmpty
+		description: 'no warning'
+]
+
 { #category : 'tests' }
 FamixOpenApiPointerIndexTest >> testHttpReferenceIsUnresolved [
 
@@ -390,6 +509,146 @@ FamixOpenApiPointerIndexTest >> testRegisteringSameEntityTwiceIsANoOp [
 	index register: entity at: '#/a'.
 	self assert: index size equals: 1 description: 'size'.
 	self assert: diagnostics isEmpty description: 'no diagnostic'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testReplaceEntitiesIgnoresUnknownKeys [
+	"A key of the dictionary that is not registered is ignored (no error, no new pointer)."
+
+	| known |
+	known := Object new.
+	index register: known at: '#/a'.
+	index replaceEntities: (IdentityDictionary new
+			 at: Object new put: Object new;
+			 yourself).
+	self assert: (index lookup: '#/a') == known description: 'known kept'.
+	self assert: index size equals: 1 description: 'size'.
+	self assert: diagnostics isEmpty description: 'no diagnostic'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testReplaceEntitiesKeepsOtherEntities [
+	"An entity that is not a key of the dictionary stays where it is."
+
+	| old new other |
+	old := Object new.
+	new := Object new.
+	other := Object new.
+	index register: old at: '#/a'.
+	index register: other at: '#/b'.
+	index replaceEntities: (IdentityDictionary new
+			 at: old put: new;
+			 yourself).
+	self assert: (index lookup: '#/b') == other description: 'other kept'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testReplaceEntitiesKeepsSizeAndPointersOrder [
+	"Replacing entities changes neither the number nor the order of the pointers."
+
+	| old new |
+	old := Object new.
+	new := Object new.
+	index register: old at: '#/a'.
+	index register: Object new at: '#/b'.
+	index replaceEntities: (IdentityDictionary new
+			 at: old put: new;
+			 yourself).
+	self assert: index size equals: 2 description: 'size'.
+	self
+		assert: index pointers
+		equals: #( '#/a' '#/b' )
+		description: 'pointers'.
+	self
+		assert: index entities first == new
+		description: 'entities order'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testReplaceEntitiesLeavesAliasesUntouched [
+	"An alias is a raw reference String, not an entity: replacing entities does not change it and it still resolves through the redirected pointer."
+
+	| old new |
+	old := Object new.
+	new := Object new.
+	index register: old at: '#/a'.
+	index registerAlias: '#/alias' to: '#/a'.
+	index replaceEntities: (IdentityDictionary new
+			 at: old put: new;
+			 yourself).
+	self assert: (index isAlias: '#/alias') description: 'still alias'.
+	self assert: index size equals: 2 description: 'size'.
+	self
+		assert:
+			(index resolveReference: '#/alias' from: '#/site' expecting: nil)
+			== new
+		description: 'alias resolves to the new entity'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testReplaceEntitiesRedirectsEveryPointerOfTheOldEntity [
+	"A merged entity may be registered at several pointers: all of them are redirected."
+
+	| old new |
+	old := Object new.
+	new := Object new.
+	index register: old at: '#/a'.
+	index register: old at: '#/b'.
+	index replaceEntities: (IdentityDictionary new
+			 at: old put: new;
+			 yourself).
+	self
+		assert: (index lookup: '#/a') == new
+		description: 'first pointer'.
+	self
+		assert: (index lookup: '#/b') == new
+		description: 'second pointer'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testReplaceEntitiesRedirectsThePointerOfTheOldEntity [
+	"replaceEntities: makes the pointers that held an old entity hold the new one."
+
+	| old new |
+	old := Object new.
+	new := Object new.
+	index register: old at: '#/a'.
+	index replaceEntities: (IdentityDictionary new
+			 at: old put: new;
+			 yourself).
+	self assert: (index lookup: '#/a') == new description: 'redirected'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testReplaceEntitiesUsesIdentityNotEquality [
+	"Two equal but distinct entities are different keys: only the identical one is replaced."
+
+	| old twin new |
+	old := OrderedCollection new.
+	twin := OrderedCollection new.
+	new := Object new.
+	index register: old at: '#/a'.
+	index register: twin at: '#/b'.
+	index replaceEntities: (IdentityDictionary new
+			 at: old put: new;
+			 yourself).
+	self
+		assert: (index lookup: '#/a') == new
+		description: 'identical replaced'.
+	self
+		assert: (index lookup: '#/b') == twin
+		description: 'equal twin kept'
+]
+
+{ #category : 'tests - replace and forget' }
+FamixOpenApiPointerIndexTest >> testReplaceEntitiesWithAnEmptyDictionaryChangesNothing [
+
+	| entity |
+	entity := Object new.
+	index register: entity at: '#/a'.
+	index replaceEntities: IdentityDictionary new.
+	self assert: (index lookup: '#/a') == entity description: 'kept'.
+	self assert: index size equals: 1 description: 'size'
 ]
 
 { #category : 'tests' }

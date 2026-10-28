@@ -219,16 +219,72 @@ FamixOpenApiImporterFidelityTest >> swagger2SecurityJson [
 		  '`paths`:{},`securityDefinitions`:{`key`:{`type`:`apiKey`,`name`:`X-Key`,`in`:`query`},`oauth`:{`type`:`oauth2`,`flow`:`accessCode`,`authorizationUrl`:`https://auth.example.com`,`tokenUrl`:`https://token.example.com`,`scopes`:{`read`:`Read`}}}'
 ]
 
-{ #category : 'tests - D3 reference resolution order' }
-FamixOpenApiImporterFidelityTest >> testAliasOfAComponentSchemaResolvesToTheTargetEntity [
-	"D3: a component that is only a $ref to another one designates the same entity: a reference to the alias reaches the target."
+{ #category : 'tests - alias components' }
+FamixOpenApiImporterFidelityTest >> testAliasOfAnAliasChainsThroughAllOf [
+	"A -> B -> C: each alias is a real schema whose allOf is the next one and whose ref is its own raw ref."
 
-	| model |
+	| model a b c |
 	model := self importOpenApi3: (self schemasJson:
-			          '`Target`:{`type`:`object`},`Alias`:{`$ref`:`#/components/schemas/Target`},`User`:{`type`:`array`,`items`:{`$ref`:`#/components/schemas/Alias`}}').
-	self assert: (self componentSchemaNamed: 'User' in: model) items
-		== (self componentSchemaNamed: 'Target' in: model).
-	self assertNoStubSchemasIn: model
+			          '`A`:{`$ref`:`#/components/schemas/B`},`B`:{`$ref`:`#/components/schemas/C`},`C`:{`type`:`object`}').
+	a := self componentSchemaNamed: 'A' in: model.
+	b := self componentSchemaNamed: 'B' in: model.
+	c := self componentSchemaNamed: 'C' in: model.
+	self assert: (self componentsIn: model) schemas size equals: 3.
+	self assert: a allOf asArray equals: { b }.
+	self assert: b allOf asArray equals: { c }.
+	self assert: a ref equals: '#/components/schemas/B'.
+	self assert: b ref equals: '#/components/schemas/C'.
+	self assert: c allOf isEmpty
+]
+
+{ #category : 'tests - alias components' }
+FamixOpenApiImporterFidelityTest >> testAliasWithDescriptionKeepsTheDescription [
+	"{$ref, description} is still an alias: the description is kept, no sibling is ignored."
+
+	| model alias |
+	model := self importOpenApi3: (self schemasJson:
+			          '`Target`:{`type`:`object`},`Alias`:{`$ref`:`#/components/schemas/Target`,`description`:`d`}').
+	alias := self componentSchemaNamed: 'Alias' in: model.
+	self assert: alias description equals: 'd'.
+	self assert: alias allOf size equals: 1.
+	self assert:
+		(importer diagnostics withCode: #refSiblingsIgnored) isEmpty
+]
+
+{ #category : 'tests - alias components' }
+FamixOpenApiImporterFidelityTest >> testAliasWithSiblingsInOpenApi30IgnoresTheSiblings [
+	"OpenAPI 3.0: the siblings of a $ref (other than description) are ignored and reported as the info #refSiblingsIgnored; the schema is still the alias."
+
+	| model alias |
+	model := self importOpenApi3: (self schemasJson:
+			          '`Target`:{`type`:`object`},`Sib`:{`$ref`:`#/components/schemas/Target`,`type`:`string`,`title`:`x`}').
+	alias := self componentSchemaNamed: 'Sib' in: model.
+	self assert: alias types isEmpty.
+	self assert: alias title isNil.
+	self assert: alias allOf size equals: 1.
+	self assert: alias ref equals: '#/components/schemas/Target'.
+	self assert:
+		(importer diagnostics withCode: #refSiblingsIgnored) notEmpty.
+	self assert:
+		(importer diagnostics withCode: #refSiblingsIgnored) first isInfo
+]
+
+{ #category : 'tests - alias components' }
+FamixOpenApiImporterFidelityTest >> testAliasWithSiblingsInOpenApi31IsASiblingWrapper [
+	"OpenAPI 3.1: the siblings of a $ref are kept: the schema keeps its own keywords and its allOf holds the target; nothing is ignored."
+
+	| model wrapper |
+	model := self importOpenApi31: (self schemasJson:
+			          '`Target`:{`type`:`object`},`Sib`:{`$ref`:`#/components/schemas/Target`,`type`:`string`,`title`:`x`}').
+	wrapper := self componentSchemaNamed: 'Sib' in: model.
+	self assert: wrapper types asArray equals: #( 'string' ).
+	self assert: wrapper title equals: 'x'.
+	self
+		assert: wrapper allOf asArray
+		equals: { (self componentSchemaNamed: 'Target' in: model) }.
+	self assert: wrapper ref equals: '#/components/schemas/Target'.
+	self assert:
+		(importer diagnostics withCode: #refSiblingsIgnored) isEmpty
 ]
 
 { #category : 'tests - D5 operations (step B)' }
@@ -258,7 +314,7 @@ FamixOpenApiImporterFidelityTest >> testApiExternalDocsAreImported [
 	self assert: docs url equals: 'https://docs.example.com'
 ]
 
-{ #category : 'tests - D9 D10 naming and ref semantics (step C)' }
+{ #category : 'tests - D9 D10 naming and ref semantics (step B)' }
 FamixOpenApiImporterFidelityTest >> testApiKeySchemeKeepsComponentKeyAsName [
 	"D9: the security scheme is named after its component key ApiKeyAuth (was: entry key)."
 
@@ -275,7 +331,7 @@ FamixOpenApiImporterFidelityTest >> testApiKeySchemeKeepsComponentKeyAsName [
 		equals: '#/components/securitySchemes/ApiKeyAuth'
 ]
 
-{ #category : 'tests - D9 D10 naming and ref semantics (step C)' }
+{ #category : 'tests - D9 D10 naming and ref semantics (step B)' }
 FamixOpenApiImporterFidelityTest >> testApiKeySchemeKeepsHeaderNameDistinctFromKey [
 	"D9: the apiKey scheme keeps the header name X-API-Key in parameterName and is named after the component key (the name is not overwritten)."
 
@@ -286,7 +342,7 @@ FamixOpenApiImporterFidelityTest >> testApiKeySchemeKeepsHeaderNameDistinctFromK
 	self assert: scheme name equals: 'ApiKeyAuth'
 ]
 
-{ #category : 'tests - D9 D10 naming and ref semantics (step C)' }
+{ #category : 'tests - D9 D10 naming and ref semantics (step B)' }
 FamixOpenApiImporterFidelityTest >> testApiKeySchemeKeepsLocation [
 	"D9: the apiKey scheme keeps its location (in: header) as inLocation."
 
@@ -526,7 +582,7 @@ FamixOpenApiImporterFidelityTest >> testDuplicateOperationIdIsReported [
 		(importer diagnostics withCode: #operationIdDuplicate) notEmpty
 ]
 
-{ #category : 'tests - D7 D8 missing sections (step C)' }
+{ #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testEmptyOperationSecurityDisablesTheSecurityOfTheDocument [
 	"security: [] on an operation sets securityDisabled and creates no requirement."
 
@@ -725,7 +781,7 @@ FamixOpenApiImporterFidelityTest >> testNumericExclusiveBoundsOfOpenApi31AreKept
 	self assert: schema exclusiveMaximum equals: 9
 ]
 
-{ #category : 'tests - D7 D8 missing sections (step C)' }
+{ #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testOAuth2SchemeKeepsAuthorizationUrl [
 	"D8: the OAuth2 flow authorizationUrl is kept on the authorizationCode flow of the scheme."
 
@@ -737,7 +793,7 @@ FamixOpenApiImporterFidelityTest >> testOAuth2SchemeKeepsAuthorizationUrl [
 	self assert: flow tokenUrl equals: 'https://token.example.com'
 ]
 
-{ #category : 'tests - D7 D8 missing sections (step C)' }
+{ #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testOAuth2SchemeKeepsScopes [
 	"D8: the OAuth2 flow scopes are kept as SecurityScope entities of the flow."
 
@@ -811,7 +867,7 @@ FamixOpenApiImporterFidelityTest >> testOperationKeepsBothItsParameters [
 		equals: #( 'limit' 'q' ) asSet
 ]
 
-{ #category : 'tests - D7 D8 missing sections (step C)' }
+{ #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testOperationSecurityRequirementKeepsScopes [
 	"D8: an operation security requirement keeps the scheme and the scopes of each of its items."
 
@@ -960,17 +1016,41 @@ FamixOpenApiImporterFidelityTest >> testPropertyReferencingComponentExposesResol
 		'The owner property should reference the Owner component schema entity'
 ]
 
-{ #category : 'tests - D3 reference resolution order' }
-FamixOpenApiImporterFidelityTest >> testPureAliasCycleIsReportedAsRefCycleAndDoesNotRaise [
-	"D3: A is only a $ref to B and B only a $ref to A: the chain never reaches a schema when C refers to A."
+{ #category : 'tests - alias components' }
+FamixOpenApiImporterFidelityTest >> testPureAliasComponentSchemaIsARealSchemaWhoseAllOfIsTheTarget [
+	"A component schema that is only a $ref becomes a real Schema: name = key, ref = the raw ref, allOf = [target], its own pointer. It counts in the component schemas."
 
+	| model alias target |
+	model := self importOpenApi3: (self schemasJson:
+			          '`Target`:{`type`:`object`},`Alias`:{`$ref`:`#/components/schemas/Target`}').
+	alias := self componentSchemaNamed: 'Alias' in: model.
+	target := self componentSchemaNamed: 'Target' in: model.
+	self assert: (self componentsIn: model) schemas size equals: 2.
+	self assert: alias name equals: 'Alias'.
+	self assert: alias ref equals: '#/components/schemas/Target'.
+	self
+		assert: alias canonicalPointer
+		equals: '#/components/schemas/Alias'.
+	self assert: alias allOf asArray equals: { target }.
+	self assert: alias types isEmpty.
+	self assert: target ref isNil
+]
+
+{ #category : 'tests - alias components' }
+FamixOpenApiImporterFidelityTest >> testPureAliasCycleDoesNotRaiseAndLeavesTwoSchemas [
+	"A is only a $ref to B and B only a $ref to A: both are real schemas whose allOf point to each other; the import never raises and creates no stub. NOTE: since the alias became a real schema, no #refCycle is reported any more (the old test expected it): flagged as a doubt in the report."
+
+	| model a b |
 	self
 		shouldnt: [
-			self importOpenApi3: (self schemasJson:
-					 '`A`:{`$ref`:`#/components/schemas/B`},`B`:{`$ref`:`#/components/schemas/A`},`C`:{`type`:`array`,`items`:{`$ref`:`#/components/schemas/A`}}') ]
+			model := self importOpenApi3: (self schemasJson:
+					          '`A`:{`$ref`:`#/components/schemas/B`},`B`:{`$ref`:`#/components/schemas/A`},`C`:{`type`:`array`,`items`:{`$ref`:`#/components/schemas/A`}}') ]
 		raise: Error.
-	self assert: (importer diagnostics withCode: #refCycle) notEmpty.
-	self assert: importer diagnostics hasErrors
+	a := self componentSchemaNamed: 'A' in: model.
+	b := self componentSchemaNamed: 'B' in: model.
+	self assert: a allOf asArray equals: { b }.
+	self assert: b allOf asArray equals: { a }.
+	self assertNoStubSchemasIn: model
 ]
 
 { #category : 'tests - D5 operations (step B)' }
@@ -995,6 +1075,21 @@ FamixOpenApiImporterFidelityTest >> testReferenceSiteDoesNotCreateAnEntityAtItsO
 	model := self importOpenApi3: self forwardReferenceJson.
 	self deny: ((self schemasIn: model) anySatisfy: [ :each |
 			 each canonicalPointer = '#/components/schemas/A/items' ])
+]
+
+{ #category : 'tests - alias components' }
+FamixOpenApiImporterFidelityTest >> testReferenceToAnAliasComponentSchemaReachesTheAliasEntity [
+	"The alias is a real entity registered at its own pointer: a $ref to it designates it (its allOf leads to the final target); no stub is created."
+
+	| model |
+	model := self importOpenApi3: (self schemasJson:
+			          '`Target`:{`type`:`object`},`Alias`:{`$ref`:`#/components/schemas/Target`},`User`:{`type`:`array`,`items`:{`$ref`:`#/components/schemas/Alias`}}').
+	self assert: (self componentSchemaNamed: 'User' in: model) items
+		== (self componentSchemaNamed: 'Alias' in: model).
+	self assert:
+		(self componentSchemaNamed: 'Alias' in: model) allOf anyOne
+		== (self componentSchemaNamed: 'Target' in: model).
+	self assertNoStubSchemasIn: model
 ]
 
 { #category : 'tests - D11 robustness (step B)' }
@@ -1453,7 +1548,7 @@ FamixOpenApiImporterFidelityTest >> testSchemaNameIsComponentKeyNotTitle [
 		equals: 'Pet'
 ]
 
-{ #category : 'tests - D7 D8 missing sections (step C)' }
+{ #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testSecurityRequirementWithTwoSchemesHasTwoItems [
 	"{a: [], b: []} is ONE requirement whose two items must both be satisfied."
 
@@ -1472,7 +1567,7 @@ FamixOpenApiImporterFidelityTest >> testSecurityRequirementWithTwoSchemesHasTwoI
 	self assert: requirement schemes size equals: 2
 ]
 
-{ #category : 'tests - D7 D8 missing sections (step C)' }
+{ #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testSecurityRequirementsAreAlternatives [
 	"[{a: []}, {b: []}] are two requirements of one item each."
 
@@ -1803,6 +1898,20 @@ FamixOpenApiImporterFidelityTest >> testSwagger2BodyParameterRefResolvesToDefini
 ]
 
 { #category : 'tests - D4 swagger 2.0 (step C)' }
+FamixOpenApiImporterFidelityTest >> testSwagger2BodyParameterRequestBodyTakesThePointerOfTheParameter [
+	"Convention: canonicalPointer = the position of the SOURCE node. The request body synthesized from the `in: body` parameter has the pointer of that parameter."
+
+	| operation |
+	operation := self
+		             operationWithId: 'addPet'
+		             in: (self importSwagger2: self swagger2PetJson).
+	self assert: operation requestBody notNil.
+	self
+		assert: operation requestBody canonicalPointer
+		equals: '#/paths/~1pets/post/parameters/0'
+]
+
+{ #category : 'tests - D4 swagger 2.0 (step C)' }
 FamixOpenApiImporterFidelityTest >> testSwagger2ConsumesBecomesTheMediaTypesOfTheRequestBody [
 
 	| model body |
@@ -1832,6 +1941,18 @@ FamixOpenApiImporterFidelityTest >> testSwagger2DefaultMediaTypeIsWildcardWhenPr
 ]
 
 { #category : 'tests - D4 swagger 2.0' }
+FamixOpenApiImporterFidelityTest >> testSwagger2DefinitionIsAlsoReachedThroughTheComponentsPointer [
+	"D4: a ref written #/components/schemas/B for a Swagger 2 definition B resolves to the same entity as #/definitions/B (the index accepts both spellings)."
+
+	| model |
+	model := self importSwagger2:
+		         '`paths`:{},`definitions`:{`A`:{`type`:`array`,`items`:{`$ref`:`#/components/schemas/B`}},`B`:{`type`:`object`}}'.
+	self assert: (self componentSchemaNamed: 'A' in: model) items
+		== (self componentSchemaNamed: 'B' in: model).
+	self assert: (self stubSchemasIn: model) isEmpty
+]
+
+{ #category : 'tests - D4 swagger 2.0' }
 FamixOpenApiImporterFidelityTest >> testSwagger2DefinitionLeavesNoStubSchema [
 	"D4: resolving #/definitions/Pet must not leave a ref-only stub schema."
 
@@ -1841,7 +1962,7 @@ FamixOpenApiImporterFidelityTest >> testSwagger2DefinitionLeavesNoStubSchema [
 
 { #category : 'tests - D4 swagger 2.0' }
 FamixOpenApiImporterFidelityTest >> testSwagger2DefinitionReferenceResolvesToSchema [
-	"D4: a #/definitions/B reference resolves to the schema imported from the definition B."
+	"D4: a #/definitions/B reference resolves to the schema imported from the definition B, whose canonicalPointer is its document position #/definitions/B."
 
 	| model |
 	model := self importSwagger2:
@@ -1850,22 +1971,24 @@ FamixOpenApiImporterFidelityTest >> testSwagger2DefinitionReferenceResolvesToSch
 		== (self componentSchemaNamed: 'B' in: model).
 	self
 		assert: (self componentSchemaNamed: 'B' in: model) canonicalPointer
-		equals: '#/components/schemas/B'
+		equals: '#/definitions/B'
 ]
 
 { #category : 'tests - D4 swagger 2.0' }
 FamixOpenApiImporterFidelityTest >> testSwagger2DefinitionsAreImported [
-	"D4: definitions are imported as component schemas (name Pet, canonical pointer under #/components/schemas)."
+	"D4: definitions are imported as component schemas (name Pet). Convention: canonicalPointer is the position of the SOURCE node the entity comes from, so a Swagger 2 definition keeps its document position #/definitions/Pet (not #/components/schemas/Pet) and its properties live under #/definitions/Pet/properties/..."
 
-	| model schemas |
+	| model schemas pet |
 	model := self importSwagger2: self swagger2PetJson.
 	schemas := (self componentsIn: model) schemas.
 	self assert: schemas size equals: 1.
-	self assert: schemas anyOne name equals: 'Pet'.
+	pet := schemas anyOne.
+	self assert: pet name equals: 'Pet'.
+	self assert: pet canonicalPointer equals: '#/definitions/Pet'.
+	self assert: pet properties size equals: 2.
 	self
-		assert: schemas anyOne canonicalPointer
-		equals: '#/components/schemas/Pet'.
-	self assert: schemas anyOne properties size equals: 2
+		assert: (self propertyNamed: 'name' ofSchema: pet) canonicalPointer
+		equals: '#/definitions/Pet/properties/name'
 ]
 
 { #category : 'tests - D4 swagger 2.0 (step C)' }
@@ -1915,7 +2038,7 @@ FamixOpenApiImporterFidelityTest >> testSwagger2FormDataParametersBecomeAFormReq
 
 { #category : 'tests - D4 swagger 2.0 (step C)' }
 FamixOpenApiImporterFidelityTest >> testSwagger2GlobalParametersAreImported [
-	"D4: top level parameters are imported as component parameters."
+	"D4: top level parameters are imported as component parameters; convention: canonicalPointer = position of the source node, here #/parameters/Trace."
 
 	| parameters |
 	parameters := (self componentsIn:
@@ -1924,7 +2047,7 @@ FamixOpenApiImporterFidelityTest >> testSwagger2GlobalParametersAreImported [
 	self assert: parameters size equals: 1.
 	self
 		assert: parameters anyOne canonicalPointer
-		equals: '#/components/parameters/Trace'.
+		equals: '#/parameters/Trace'.
 	self assert: parameters anyOne name equals: 'trace'.
 	self assert: parameters anyOne location equals: 'header'
 ]
@@ -1937,7 +2060,7 @@ FamixOpenApiImporterFidelityTest >> testSwagger2GlobalResponsesAreImportedAndRef
 	model := self importSwagger2: self swagger2PetJson.
 	component := self
 		             componentIn: (self componentsIn: model) responses
-		             pointer: '#/components/responses/GenericError'.
+		             pointer: '#/responses/GenericError'.
 	response := self
 		            responseOf: (self operationWithId: 'addPet' in: model)
 		            code: 'default'.
@@ -1990,6 +2113,20 @@ FamixOpenApiImporterFidelityTest >> testSwagger2InlineParameterKeepsTypeAndForma
 	self assert: ids schema items format equals: 'int64'
 ]
 
+{ #category : 'tests - D4 swagger 2.0 (step C)' }
+FamixOpenApiImporterFidelityTest >> testSwagger2InlineQueryParameterKeepsItsPositionInTheDocument [
+	"The second parameter of the post operation is a regular parameter: its pointer is its position (index 1)."
+
+	| operation |
+	operation := self
+		             operationWithId: 'addPet'
+		             in: (self importSwagger2: self swagger2PetJson).
+	self assert: operation parameters size equals: 1.
+	self
+		assert: operation parameters anyOne canonicalPointer
+		equals: '#/paths/~1pets/post/parameters/1'
+]
+
 { #category : 'tests - D4 swagger 2.0' }
 FamixOpenApiImporterFidelityTest >> testSwagger2NullableExtensionBecomesIsNullable [
 	"D4: the Swagger 2 vendor extension x-nullable: true is the nullable flag of the schema."
@@ -2039,6 +2176,26 @@ FamixOpenApiImporterFidelityTest >> testSwagger2ProducesBecomesTheMediaTypesOfTh
 ]
 
 { #category : 'tests - D4 swagger 2.0 (step C)' }
+FamixOpenApiImporterFidelityTest >> testSwagger2ReferencedDefinitionAndComponentSpellingResolveToTheSameEntityFromAnOperation [
+	"A response schema written #/components/schemas/Pet or #/definitions/Pet reaches the same definition."
+
+	| model |
+	model := self importSwagger2:
+		         '`paths`:{`/a`:{`get`:{`operationId`:`a`,`responses`:{`200`:{`description`:`ok`,`schema`:{`$ref`:`#/definitions/Pet`}}}},`post`:{`operationId`:`b`,`responses`:{`200`:{`description`:`ok`,`schema`:{`$ref`:`#/components/schemas/Pet`}}}}}},`definitions`:{`Pet`:{`type`:`object`}}'.
+	self assert: (self
+			 mediaTypeNamed: '*/*'
+			 of:
+			 (self
+				  responseOf: (self operationWithId: 'a' in: model)
+				  code: '200')) schema == (self
+			 mediaTypeNamed: '*/*'
+			 of:
+			 (self
+				  responseOf: (self operationWithId: 'b' in: model)
+				  code: '200')) schema
+]
+
+{ #category : 'tests - D4 swagger 2.0 (step C)' }
 FamixOpenApiImporterFidelityTest >> testSwagger2ResponseSchemaRefResolvesToDefinition [
 	"D4: the response schema $ref #/definitions/Pet becomes the schema of the media type of the response and is the definition entity."
 
@@ -2069,7 +2226,7 @@ FamixOpenApiImporterFidelityTest >> testSwagger2SecurityDefinitionsAreImported [
 	self assert: schemes anyOne name equals: 'basic'.
 	self
 		assert: schemes anyOne canonicalPointer
-		equals: '#/components/securitySchemes/basic'.
+		equals: '#/securityDefinitions/basic'.
 	self assert: schemes anyOne type equals: 'http'.
 	self assert: schemes anyOne scheme equals: 'basic'
 ]
@@ -2113,7 +2270,7 @@ FamixOpenApiImporterFidelityTest >> testTildeEscapedPointerResolvesToComponentKe
 		equals: '#/components/schemas/a~0b'
 ]
 
-{ #category : 'tests - D7 D8 missing sections (step C)' }
+{ #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testTopLevelSecurityRequirementIsImported [
 	"D8: the top-level security requirement is kept on the document."
 
