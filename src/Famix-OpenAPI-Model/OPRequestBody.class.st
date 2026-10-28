@@ -4,10 +4,16 @@ Generated from openapi2.ecore
 ## Relations
 ======================
 
+### Parents
+| Relation | Origin | Opposite | Type | Comment |
+|---|
+| `components` | `OPRequestBody` | `directRequestBodies` | `OPComponents` | Opposite reference components from RequestBody to Components [0..1], when the object is a reusable one.|
+
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `content` | `OPContentContainer` | `contentContainer` | `OPMediaTypeEntry` | Reference content from ContentContainer to MediaTypeEntry [0..*].|
+| `directContent` | `OPContentContainer` | `contentOwner` | `OPMediaType` | Reference directContent from ContentContainer to MediaType [0..*]: payload descriptions by media type (provisional name of content).|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
@@ -21,7 +27,9 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
 | `description` | `String` | nil | Attribute description from RequestBody [1]|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
 | `ref` | `String` | nil | Attribute ref from Reference Object [1]|
 | `required` | `Boolean` | nil | Attribute required from RequestBody [1]|
@@ -31,9 +39,10 @@ Generated from openapi2.ecore
 Class {
 	#name : 'OPRequestBody',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPContentContainer + OPReferenceable + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPContentContainer classTrait + OPReferenceable classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPContentContainer + OPReferenceable + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPContentContainer classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
+		'#components => FMOne type: #OPComponents opposite: #directRequestBodies',
 		'#description => FMProperty',
 		'#required => FMProperty',
 		'#usedByOperations => FMMany type: #OPOperation opposite: #requestBody',
@@ -67,6 +76,25 @@ OPRequestBody >> addUsedByRequestBodyEntry: anObject [
 	<ignoreForCoverage>
 	<generated>
 	^ self usedByRequestBodyEntries add: anObject
+]
+
+{ #category : 'accessing' }
+OPRequestBody >> components [
+	"Relation named: #components type: #OPComponents opposite: #directRequestBodies"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference components from RequestBody to Components [0..1], when the object is a reusable one.'>
+	<container>
+	^ components
+]
+
+{ #category : 'accessing' }
+OPRequestBody >> components: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	components := anObject
 ]
 
 { #category : 'accessing' }

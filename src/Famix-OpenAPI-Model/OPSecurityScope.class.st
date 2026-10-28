@@ -7,6 +7,7 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `oauthFlow` | `OPSecurityScope` | `scopes` | `OPOAuthFlow` | Opposite reference oauthFlow from SecurityScope to OAuthFlow [0..1].|
 | `securityScheme` | `OPSecurityScope` | `scopes` | `OPSecurityScheme` | |
 
 ### Other
@@ -20,7 +21,9 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
 | `description` | `String` | nil | Attribute description from SecurityScope [1]|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
 | `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
 
@@ -28,10 +31,11 @@ Generated from openapi2.ecore
 Class {
 	#name : 'OPSecurityScope',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#description => FMProperty',
+		'#oauthFlow => FMOne type: #OPOAuthFlow opposite: #scopes',
 		'#securityScheme => FMOne type: #OPSecurityScheme opposite: #scopes',
 		'#usedByRequiredSecuritySchemes => FMMany type: #OPRequiredSecurityScheme opposite: #securityScopes'
 	],
@@ -72,6 +76,25 @@ OPSecurityScope >> description: anObject [
 	<ignoreForCoverage>
 	<generated>
 	description := anObject
+]
+
+{ #category : 'accessing' }
+OPSecurityScope >> oauthFlow [
+	"Relation named: #oauthFlow type: #OPOAuthFlow opposite: #scopes"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference oauthFlow from SecurityScope to OAuthFlow [0..1].'>
+	<container>
+	^ oauthFlow
+]
+
+{ #category : 'accessing' }
+OPSecurityScope >> oauthFlow: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	oauthFlow := anObject
 ]
 
 { #category : 'accessing' }

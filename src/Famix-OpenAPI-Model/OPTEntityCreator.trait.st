@@ -117,6 +117,54 @@ OPTEntityCreator >> newContainedCollectionsNamed: aName [
 ]
 
 { #category : 'entity creation' }
+OPTEntityCreator >> newDiscriminator [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPDiscriminator new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newDiscriminatorMapping [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPDiscriminatorMapping new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newDiscriminatorMappingNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPDiscriminatorMapping named: aName)
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newDiscriminatorNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPDiscriminator named: aName)
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newEncoding [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPEncoding new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newEncodingNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPEncoding named: aName)
+]
+
+{ #category : 'entity creation' }
 OPTEntityCreator >> newExample [
 
 	<ignoreForCoverage>
@@ -162,6 +210,22 @@ OPTEntityCreator >> newExternalDocsNamed: aName [
 	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPExternalDocs named: aName)
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newExternalDocumentation [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPExternalDocumentation new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newExternalDocumentationNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPExternalDocumentation named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -309,6 +373,38 @@ OPTEntityCreator >> newMediaTypeNamed: aName [
 ]
 
 { #category : 'entity creation' }
+OPTEntityCreator >> newOAuthFlow [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPOAuthFlow new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newOAuthFlowNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPOAuthFlow named: aName)
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newOpenApi [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPOpenApi new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newOpenApiNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPOpenApi named: aName)
+]
+
+{ #category : 'entity creation' }
 OPTEntityCreator >> newOperation [
 
 	<ignoreForCoverage>
@@ -386,6 +482,22 @@ OPTEntityCreator >> newPropertyNamed: aName [
 	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPProperty named: aName)
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newReference [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPReference new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newReferenceNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPReference named: aName)
 ]
 
 { #category : 'entity creation' }
@@ -578,6 +690,38 @@ OPTEntityCreator >> newSecurityScopeNamed: aName [
 	<ignoreForCoverage>
 	<generated>
 	^ self add: (OPSecurityScope named: aName)
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newServer [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPServer new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newServerNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPServer named: aName)
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newServerVariable [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: OPServerVariable new
+]
+
+{ #category : 'entity creation' }
+OPTEntityCreator >> newServerVariableNamed: aName [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self add: (OPServerVariable named: aName)
 ]
 
 { #category : 'entity creation' }

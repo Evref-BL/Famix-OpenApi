@@ -7,14 +7,18 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `components` | `OPResponse` | `directResponses` | `OPComponents` | Opposite reference components from Response to Components [0..1], when the object is a reusable one.|
 | `containedCollections` | `OPResponse` | `responses` | `OPContainedCollections` | |
+| `operation` | `OPResponse` | `directResponses` | `OPOperation` | Opposite reference operation from Response to Operation [0..1], when the response is declared inline by an operation.|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `content` | `OPContentContainer` | `contentContainer` | `OPMediaTypeEntry` | Reference content from ContentContainer to MediaTypeEntry [0..*].|
+| `directContent` | `OPContentContainer` | `contentOwner` | `OPMediaType` | Reference directContent from ContentContainer to MediaType [0..*]: payload descriptions by media type (provisional name of content).|
 | `examples` | `OPResponse` | `response` | `OPExample` | Reference examples from Response to Example [0..*].|
 | `headers` | `OPResponse` | `response` | `OPHeader` | Reference headers from Response to Header [0..*].|
+| `links` | `OPResponse` | `response` | `OPLink` | Reference links from Response to Link [0..*]: operations that can be followed from the response.|
 
 ### Other
 | Relation | Origin | Opposite | Type | Comment |
@@ -31,24 +35,31 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
 | `description` | `String` | nil | Attribute description from Response [1]|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
 | `ref` | `String` | nil | Attribute ref from Reference Object [1]|
 | `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `statusCode` | `String` | nil | HTTP status code of the response, a range or default: 200, 2XX or default [1].|
 
 "
 Class {
 	#name : 'OPResponse',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPContentContainer + OPReferenceable + OPSchemaContainer + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPContentContainer classTrait + OPReferenceable classTrait + OPSchemaContainer classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPContentContainer + OPReferenceable + OPSchemaContainer + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPContentContainer classTrait + OPReferenceable classTrait + OPSchemaContainer classTrait + OPSourceText classTrait',
 	#instVars : [
+		'#components => FMOne type: #OPComponents opposite: #directResponses',
 		'#containedCollections => FMOne type: #OPContainedCollections opposite: #responses',
 		'#declaringContext => FMOne type: #OPResponseContainer opposite: #response',
 		'#description => FMProperty',
 		'#examples => FMMany type: #OPExample opposite: #response',
 		'#headers => FMMany type: #OPHeader opposite: #response',
+		'#links => FMMany type: #OPLink opposite: #response',
+		'#operation => FMOne type: #OPOperation opposite: #directResponses',
 		'#schema => FMOne type: #OPSchema opposite: #usedByResponses',
+		'#statusCode => FMProperty',
 		'#usedByResponseDefinitionEntries => FMMany type: #OPResponseDefinitionEntry opposite: #value',
 		'#usedByResponseEntries => FMMany type: #OPResponseEntry opposite: #value'
 	],
@@ -83,6 +94,14 @@ OPResponse >> addHeader: anObject [
 ]
 
 { #category : 'adding' }
+OPResponse >> addLink: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self links add: anObject
+]
+
+{ #category : 'adding' }
 OPResponse >> addUsedByResponseDefinitionEntry: anObject [
 
 	<ignoreForCoverage>
@@ -96,6 +115,25 @@ OPResponse >> addUsedByResponseEntry: anObject [
 	<ignoreForCoverage>
 	<generated>
 	^ self usedByResponseEntries add: anObject
+]
+
+{ #category : 'accessing' }
+OPResponse >> components [
+	"Relation named: #components type: #OPComponents opposite: #directResponses"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference components from Response to Components [0..1], when the object is a reusable one.'>
+	<container>
+	^ components
+]
+
+{ #category : 'accessing' }
+OPResponse >> components: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	components := anObject
 ]
 
 { #category : 'accessing' }
@@ -188,6 +226,43 @@ OPResponse >> headers: anObject [
 ]
 
 { #category : 'accessing' }
+OPResponse >> links [
+	"Relation named: #links type: #OPLink opposite: #response"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Reference links from Response to Link [0..*]: operations that can be followed from the response.'>
+	^ links
+]
+
+{ #category : 'accessing' }
+OPResponse >> links: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	links value: anObject
+]
+
+{ #category : 'accessing' }
+OPResponse >> operation [
+	"Relation named: #operation type: #OPOperation opposite: #directResponses"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference operation from Response to Operation [0..1], when the response is declared inline by an operation.'>
+	<container>
+	^ operation
+]
+
+{ #category : 'accessing' }
+OPResponse >> operation: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	operation := anObject
+]
+
+{ #category : 'accessing' }
 OPResponse >> schema [
 	"Relation named: #schema type: #OPSchema opposite: #usedByResponses"
 
@@ -203,6 +278,23 @@ OPResponse >> schema: anObject [
 	<ignoreForCoverage>
 	<generated>
 	schema := anObject
+]
+
+{ #category : 'accessing' }
+OPResponse >> statusCode [
+
+	<FMProperty: #statusCode type: #String>
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'HTTP status code of the response, a range or default: 200, 2XX or default [1].'>
+	^ statusCode
+]
+
+{ #category : 'accessing' }
+OPResponse >> statusCode: anObject [
+	<ignoreForCoverage>
+	<generated>
+	statusCode := anObject
 ]
 
 { #category : 'accessing' }

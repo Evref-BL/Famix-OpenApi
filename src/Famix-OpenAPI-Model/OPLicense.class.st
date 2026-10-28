@@ -15,6 +15,8 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
 | `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
 | `url` | `String` | nil | Attribute url from License [1]|
@@ -23,11 +25,11 @@ Generated from openapi2.ecore
 Class {
 	#name : 'OPLicense',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#url => FMProperty',
-		'#info => FMOne type: #OPInfo opposite: #license'
+		'#info => FMOne type: #OPInfo opposite: #license',
+		'#url => FMProperty'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',

@@ -11,6 +11,7 @@ Generated from openapi2.ecore
 | `containedCollections` | `OPApi` | `api` | `OPContainedCollections` | Reference containedCollections from API to ContainedCollections [0..1].|
 | `definitions` | `OPApi` | `api` | `OPSchemaEntry` | Reference definitions from API to SchemaEntry [0..*].|
 | `externalDocs` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocs` | Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].|
+| `externalDocumentation` | `OPExternalDocsContainer` | `externalDocsContainer` | `OPExternalDocumentation` | Reference externalDocumentation from ExternalDocsContainer to ExternalDocumentation [0..1]: provisional name of externalDocs.|
 | `info` | `OPApi` | `api` | `OPInfo` | Reference info from API to Info [0..1].|
 | `parameters` | `OPApi` | `api` | `OPParameterEntry` | Reference parameters from API to ParameterEntry [0..*].|
 | `paths` | `OPApi` | `api` | `OPPath` | Reference paths from API to Path [0..*].|

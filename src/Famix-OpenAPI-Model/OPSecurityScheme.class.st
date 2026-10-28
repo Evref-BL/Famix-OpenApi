@@ -4,9 +4,15 @@ Generated from openapi2.ecore
 ## Relations
 ======================
 
+### Parents
+| Relation | Origin | Opposite | Type | Comment |
+|---|
+| `components` | `OPSecurityScheme` | `directSecuritySchemes` | `OPComponents` | Opposite reference components from SecurityScheme to Components [0..1], when the object is a reusable one.|
+
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `flows` | `OPSecurityScheme` | `securityScheme` | `OPOAuthFlow` | Reference flows from SecurityScheme to OAuthFlow [0..*]: OAuth2 flows supported by the scheme.|
 | `scopes` | `OPSecurityScheme` | `securityScheme` | `OPSecurityScope` | Reference scopes from SecurityScheme to SecurityScope [0..*].|
 
 ### Other
@@ -23,11 +29,15 @@ Generated from openapi2.ecore
 |---|
 | `authorizationUrl` | `String` | nil | Attribute authorizationUrl from SecurityScheme [1]|
 | `bearerFormat` | `String` | nil | Attribute bearerFormat from SecurityScheme [1]|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
 | `description` | `String` | nil | Attribute description from SecurityScheme [1]|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
 | `flow` | `String` | nil | Attribute flow from SecurityScheme [1]|
+| `inLocation` | `String` | nil | Location of an apiKey credential: query, header or cookie (the in field) [1].|
 | `location` | `String` | nil | Attribute location from SecurityScheme [1]|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
 | `openIdConnectUrl` | `String` | nil | Attribute openIdConnectUrl from SecurityScheme [1]|
+| `parameterName` | `String` | nil | Name of the header, query or cookie parameter carrying an apiKey credential (the name field) [1].|
 | `ref` | `String` | nil | Attribute ref from Reference Object [1]|
 | `scheme` | `String` | nil | Attribute scheme from SecurityScheme [1]|
 | `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
@@ -38,15 +48,19 @@ Generated from openapi2.ecore
 Class {
 	#name : 'OPSecurityScheme',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPReferenceable + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPReferenceable classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPReferenceable + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPReferenceable classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#authorizationUrl => FMProperty',
 		'#bearerFormat => FMProperty',
+		'#components => FMOne type: #OPComponents opposite: #directSecuritySchemes',
 		'#description => FMProperty',
 		'#flow => FMProperty',
+		'#flows => FMMany type: #OPOAuthFlow opposite: #securityScheme',
+		'#inLocation => FMProperty',
 		'#location => FMProperty',
 		'#openIdConnectUrl => FMProperty',
+		'#parameterName => FMProperty',
 		'#scheme => FMProperty',
 		'#scopes => FMMany type: #OPSecurityScope opposite: #securityScheme',
 		'#tokenUrl => FMProperty',
@@ -66,6 +80,14 @@ OPSecurityScheme class >> annotation [
 	<FMClass: #SecurityScheme super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
+]
+
+{ #category : 'adding' }
+OPSecurityScheme >> addFlow: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self flows add: anObject
 ]
 
 { #category : 'adding' }
@@ -127,6 +149,25 @@ OPSecurityScheme >> bearerFormat: anObject [
 ]
 
 { #category : 'accessing' }
+OPSecurityScheme >> components [
+	"Relation named: #components type: #OPComponents opposite: #directSecuritySchemes"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference components from SecurityScheme to Components [0..1], when the object is a reusable one.'>
+	<container>
+	^ components
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> components: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	components := anObject
+]
+
+{ #category : 'accessing' }
 OPSecurityScheme >> description [
 
 	<FMProperty: #description type: #String>
@@ -161,6 +202,41 @@ OPSecurityScheme >> flow: anObject [
 ]
 
 { #category : 'accessing' }
+OPSecurityScheme >> flows [
+	"Relation named: #flows type: #OPOAuthFlow opposite: #securityScheme"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Reference flows from SecurityScheme to OAuthFlow [0..*]: OAuth2 flows supported by the scheme.'>
+	^ flows
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> flows: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	flows value: anObject
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> inLocation [
+
+	<FMProperty: #inLocation type: #String>
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Location of an apiKey credential: query, header or cookie (the in field) [1].'>
+	^ inLocation
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> inLocation: anObject [
+	<ignoreForCoverage>
+	<generated>
+	inLocation := anObject
+]
+
+{ #category : 'accessing' }
 OPSecurityScheme >> location [
 
 	<FMProperty: #location type: #String>
@@ -192,6 +268,23 @@ OPSecurityScheme >> openIdConnectUrl: anObject [
 	<ignoreForCoverage>
 	<generated>
 	openIdConnectUrl := anObject
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> parameterName [
+
+	<FMProperty: #parameterName type: #String>
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Name of the header, query or cookie parameter carrying an apiKey credential (the name field) [1].'>
+	^ parameterName
+]
+
+{ #category : 'accessing' }
+OPSecurityScheme >> parameterName: anObject [
+	<ignoreForCoverage>
+	<generated>
+	parameterName := anObject
 ]
 
 { #category : 'accessing' }

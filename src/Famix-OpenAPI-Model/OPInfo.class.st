@@ -8,6 +8,7 @@ Generated from openapi2.ecore
 | Relation | Origin | Opposite | Type | Comment |
 |---|
 | `api` | `OPInfo` | `info` | `OPApi` | |
+| `openApi` | `OPInfo` | `info` | `OPOpenApi` | Opposite reference openApi from Info to OpenApi [0..1].|
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
@@ -21,7 +22,9 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
 | `description` | `String` | nil | Attribute description from Info [1]|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
 | `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
 | `termsOfService` | `String` | nil | Attribute termsOfService from Info [1]|
@@ -32,16 +35,17 @@ Generated from openapi2.ecore
 Class {
 	#name : 'OPInfo',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#title => FMProperty',
-		'#description => FMProperty',
-		'#termsOfService => FMProperty',
-		'#version => FMProperty',
 		'#api => FMOne type: #OPApi opposite: #info',
 		'#contact => FMOne type: #OPContact opposite: #info',
-		'#license => FMOne type: #OPLicense opposite: #info'
+		'#description => FMProperty',
+		'#license => FMOne type: #OPLicense opposite: #info',
+		'#openApi => FMOne type: #OPOpenApi opposite: #info',
+		'#termsOfService => FMProperty',
+		'#title => FMProperty',
+		'#version => FMProperty'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -126,6 +130,25 @@ OPInfo >> license: anObject [
 	<ignoreForCoverage>
 	<generated>
 	license := anObject
+]
+
+{ #category : 'accessing' }
+OPInfo >> openApi [
+	"Relation named: #openApi type: #OPOpenApi opposite: #info"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference openApi from Info to OpenApi [0..1].'>
+	<container>
+	^ openApi
+]
+
+{ #category : 'accessing' }
+OPInfo >> openApi: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	openApi := anObject
 ]
 
 { #category : 'accessing' }

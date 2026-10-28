@@ -7,6 +7,8 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `openApi` | `OPSecurityRequirement` | `securityRequirements` | `OPOpenApi` | Opposite reference openApi from SecurityRequirement to OpenApi [0..1].|
+| `operation` | `OPSecurityRequirement` | `securityRequirements` | `OPOperation` | Opposite reference operation from SecurityRequirement to Operation [0..1].|
 | `securityContainer` | `OPSecurityRequirement` | `security` | `OPSecurityContainer` | |
 
 ### Children
@@ -20,6 +22,8 @@ Generated from openapi2.ecore
 
 | Name | Type | Default value | Comment |
 |---|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
 | `name` | `String` | nil | Basic name of the entity, not full reference.|
 | `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
 
@@ -27,11 +31,13 @@ Generated from openapi2.ecore
 Class {
 	#name : 'OPSecurityRequirement',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPCanonicalNode + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPCanonicalNode classTrait + OPSourceText classTrait',
 	#instVars : [
-		'#securitySchemes => FMMany type: #OPRequiredSecurityScheme opposite: #securityRequirement',
-		'#securityContainer => FMOne type: #OPSecurityContainer opposite: #security'
+		'#openApi => FMOne type: #OPOpenApi opposite: #securityRequirements',
+		'#operation => FMOne type: #OPOperation opposite: #securityRequirements',
+		'#securityContainer => FMOne type: #OPSecurityContainer opposite: #security',
+		'#securitySchemes => FMMany type: #OPRequiredSecurityScheme opposite: #securityRequirement'
 	],
 	#category : 'Famix-OpenAPI-Model-Entities',
 	#package : 'Famix-OpenAPI-Model',
@@ -53,6 +59,44 @@ OPSecurityRequirement >> addSecurityScheme: anObject [
 	<ignoreForCoverage>
 	<generated>
 	^ self securitySchemes add: anObject
+]
+
+{ #category : 'accessing' }
+OPSecurityRequirement >> openApi [
+	"Relation named: #openApi type: #OPOpenApi opposite: #securityRequirements"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference openApi from SecurityRequirement to OpenApi [0..1].'>
+	<container>
+	^ openApi
+]
+
+{ #category : 'accessing' }
+OPSecurityRequirement >> openApi: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	openApi := anObject
+]
+
+{ #category : 'accessing' }
+OPSecurityRequirement >> operation [
+	"Relation named: #operation type: #OPOperation opposite: #securityRequirements"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference operation from SecurityRequirement to Operation [0..1].'>
+	<container>
+	^ operation
+]
+
+{ #category : 'accessing' }
+OPSecurityRequirement >> operation: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	operation := anObject
 ]
 
 { #category : 'accessing' }

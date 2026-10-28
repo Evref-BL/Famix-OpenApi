@@ -7,11 +7,15 @@ Generated from openapi2.ecore
 ### Parents
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `components` | `OPParameter` | `directParameters` | `OPComponents` | Opposite reference components from Parameter to Components [0..1], when the object is a reusable one.|
 | `containedCollections` | `OPParameter` | `parameters` | `OPContainedCollections` | |
 
 ### Children
 | Relation | Origin | Opposite | Type | Comment |
 |---|
+| `content` | `OPContentContainer` | `contentContainer` | `OPMediaTypeEntry` | Reference content from ContentContainer to MediaTypeEntry [0..*].|
+| `directContent` | `OPContentContainer` | `contentOwner` | `OPMediaType` | Reference directContent from ContentContainer to MediaType [0..*]: payload descriptions by media type (provisional name of content).|
+| `examples` | `OPParameter` | `parameter` | `OPExample` | Reference examples from Parameter to Example [0..*].|
 | `items` | `OPArrayContainer` | `arrayContainer` | `OPItemsDefinition` | Reference items from ArrayContainer to ItemsDefinition [0..1].|
 
 ### Other
@@ -31,13 +35,18 @@ Generated from openapi2.ecore
 | Name | Type | Default value | Comment |
 |---|
 | `allowEmptyValue` | `Boolean` | nil | Attribute allowEmptyValue from Parameter [1]|
+| `allowReserved` | `Boolean` | nil | Whether reserved characters are left unescaped in the value [1].|
+| `canonicalPointer` | `String` | nil | JSON pointer of the entity in the canonical OpenAPI 3.1 document, for example #/components/schemas/Pet [1].|
 | `collectionFormat` | `String` | nil | Attribute collectionFormat from ArrayContainer [1]|
 | `default` | `String` | nil | Attribute default from JSONSchemaSubset [1]|
+| `deprecated` | `Boolean` | nil | Whether the parameter is deprecated [1].|
 | `description` | `String` | nil | Attribute description from JSONSchemaSubset [1]|
 | `enum` | `Object` | nil | Attribute enum from JSONSchemaSubset [*]|
 | `example` | `String` | nil | Attribute example from Parameter [1]|
 | `exclusiveMaximum` | `Boolean` | nil | Attribute exclusiveMaximum from JSONSchemaSubset [1]|
 | `exclusiveMinimum` | `Boolean` | nil | Attribute exclusiveMinimum from JSONSchemaSubset [1]|
+| `explode` | `Boolean` | nil | Whether array and object values generate separate parameters [1].|
+| `extensions` | `String` | nil | Specification extensions (x-* keys) of the source node, as a JSON object text [1].|
 | `format` | `String` | nil | Attribute format from JSONSchemaSubset [1]|
 | `location` | `String` | nil | Attribute location from Parameter [1]|
 | `maxItems` | `Number` | nil | Attribute maxItems from JSONSchemaSubset [1]|
@@ -52,6 +61,7 @@ Generated from openapi2.ecore
 | `ref` | `String` | nil | Attribute ref from Reference Object [1]|
 | `required` | `Boolean` | nil | Attribute required from Parameter [1]|
 | `sourceText` | `String` | nil | Attribute sourceText from original JSON node [1]|
+| `style` | `String` | nil | Serialization style of the parameter value [1].|
 | `type` | `String` | nil | Attribute type from JSONSchemaSubset [1]|
 | `uniqueItems` | `Boolean` | nil | Attribute uniqueItems from JSONSchemaSubset [1]|
 
@@ -59,16 +69,22 @@ Generated from openapi2.ecore
 Class {
 	#name : 'OPParameter',
 	#superclass : 'OPEntity',
-	#traits : 'FamixTNamedEntity + OPArrayContainer + OPJSONSchemaSubset + OPReferenceable + OPSchemaContainer + OPSourceText',
-	#classTraits : 'FamixTNamedEntity classTrait + OPArrayContainer classTrait + OPJSONSchemaSubset classTrait + OPReferenceable classTrait + OPSchemaContainer classTrait + OPSourceText classTrait',
+	#traits : 'FamixTNamedEntity + OPArrayContainer + OPCanonicalNode + OPContentContainer + OPJSONSchemaSubset + OPReferenceable + OPSchemaContainer + OPSourceText',
+	#classTraits : 'FamixTNamedEntity classTrait + OPArrayContainer classTrait + OPCanonicalNode classTrait + OPContentContainer classTrait + OPJSONSchemaSubset classTrait + OPReferenceable classTrait + OPSchemaContainer classTrait + OPSourceText classTrait',
 	#instVars : [
 		'#allowEmptyValue => FMProperty',
+		'#allowReserved => FMProperty',
+		'#components => FMOne type: #OPComponents opposite: #directParameters',
 		'#containedCollections => FMOne type: #OPContainedCollections opposite: #parameters',
 		'#declaringContext => FMOne type: #OPParameterContainer opposite: #parameter',
+		'#deprecated => FMProperty',
 		'#example => FMProperty',
+		'#examples => FMMany type: #OPExample opposite: #parameter',
+		'#explode => FMProperty',
 		'#location => FMProperty',
 		'#required => FMProperty',
 		'#schema => FMOne type: #OPSchema opposite: #usedByParameters',
+		'#style => FMProperty',
 		'#usedByOperations => FMMany type: #OPOperation opposite: #parameters',
 		'#usedByParameterEntries => FMMany type: #OPParameterEntry opposite: #value',
 		'#usedByPaths => FMMany type: #OPPath opposite: #parameters'
@@ -85,6 +101,14 @@ OPParameter class >> annotation [
 	<FMClass: #Parameter super: #OPEntity>
 	<package: #'Famix-OpenAPI-Model'>
 	<generated>
+]
+
+{ #category : 'adding' }
+OPParameter >> addExample: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	^ self examples add: anObject
 ]
 
 { #category : 'adding' }
@@ -129,6 +153,42 @@ OPParameter >> allowEmptyValue: anObject [
 ]
 
 { #category : 'accessing' }
+OPParameter >> allowReserved [
+
+	<FMProperty: #allowReserved type: #Boolean>
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Whether reserved characters are left unescaped in the value [1].'>
+	^ allowReserved
+]
+
+{ #category : 'accessing' }
+OPParameter >> allowReserved: anObject [
+	<ignoreForCoverage>
+	<generated>
+	allowReserved := anObject
+]
+
+{ #category : 'accessing' }
+OPParameter >> components [
+	"Relation named: #components type: #OPComponents opposite: #directParameters"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Opposite reference components from Parameter to Components [0..1], when the object is a reusable one.'>
+	<container>
+	^ components
+]
+
+{ #category : 'accessing' }
+OPParameter >> components: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	components := anObject
+]
+
+{ #category : 'accessing' }
 OPParameter >> containedCollections [
 	"Relation named: #containedCollections type: #OPContainedCollections opposite: #parameters"
 
@@ -165,6 +225,23 @@ OPParameter >> declaringContext: anObject [
 ]
 
 { #category : 'accessing' }
+OPParameter >> deprecated [
+
+	<FMProperty: #deprecated type: #Boolean>
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Whether the parameter is deprecated [1].'>
+	^ deprecated
+]
+
+{ #category : 'accessing' }
+OPParameter >> deprecated: anObject [
+	<ignoreForCoverage>
+	<generated>
+	deprecated := anObject
+]
+
+{ #category : 'accessing' }
 OPParameter >> example [
 
 	<FMProperty: #example type: #String>
@@ -179,6 +256,41 @@ OPParameter >> example: anObject [
 	<ignoreForCoverage>
 	<generated>
 	example := anObject
+]
+
+{ #category : 'accessing' }
+OPParameter >> examples [
+	"Relation named: #examples type: #OPExample opposite: #parameter"
+
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Reference examples from Parameter to Example [0..*].'>
+	^ examples
+]
+
+{ #category : 'accessing' }
+OPParameter >> examples: anObject [
+
+	<ignoreForCoverage>
+	<generated>
+	examples value: anObject
+]
+
+{ #category : 'accessing' }
+OPParameter >> explode [
+
+	<FMProperty: #explode type: #Boolean>
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Whether array and object values generate separate parameters [1].'>
+	^ explode
+]
+
+{ #category : 'accessing' }
+OPParameter >> explode: anObject [
+	<ignoreForCoverage>
+	<generated>
+	explode := anObject
 ]
 
 { #category : 'accessing' }
@@ -231,6 +343,23 @@ OPParameter >> schema: anObject [
 	<ignoreForCoverage>
 	<generated>
 	schema := anObject
+]
+
+{ #category : 'accessing' }
+OPParameter >> style [
+
+	<FMProperty: #style type: #String>
+	<ignoreForCoverage>
+	<generated>
+	<FMComment: 'Serialization style of the parameter value [1].'>
+	^ style
+]
+
+{ #category : 'accessing' }
+OPParameter >> style: anObject [
+	<ignoreForCoverage>
+	<generated>
+	style := anObject
 ]
 
 { #category : 'accessing' }
