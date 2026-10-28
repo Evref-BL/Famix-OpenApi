@@ -16,7 +16,8 @@ Class {
 		'required',
 		'mergedCount',
 		'subSchemaCount',
-		'removed'
+		'removed',
+		'toRemove'
 	],
 	#category : 'Famix-OpenApi-Importer',
 	#package : 'Famix-OpenApi-Importer'
@@ -269,7 +270,7 @@ FamixOpenApiSchemaMerger >> merge: aLoser into: aSurvivor [
 	visited at: aLoser put: aSurvivor
 ]
 
-{ #category : 'public' }
+{ #category : 'merging' }
 FamixOpenApiSchemaMerger >> mergeIn: anImportContext [
 	"Merge the identical inline schemas of the model of anImportContext then replace the strict subsets by SubSchemas. Answer the report: a Dictionary with #merged, #subSchemas and #inlineSchemas (the number of inline schemas before merging)."
 
@@ -278,11 +279,13 @@ FamixOpenApiSchemaMerger >> mergeIn: anImportContext [
 	model := context model.
 	ids := IdentityDictionary new.
 	removed := IdentitySet new.
+	toRemove := IdentitySet new.
 	mergedCount := 0.
 	subSchemaCount := 0.
 	inlineCount := context inlineSchemaCount.
 	[ self mergeRound > 0 ] whileTrue.
 	self detectSubSchemas.
+	self removePendingFromModel.
 	context index forgetEntities: removed.
 	^ Dictionary new
 		  at: #merged put: mergedCount;
@@ -295,11 +298,14 @@ FamixOpenApiSchemaMerger >> mergeIn: anImportContext [
 FamixOpenApiSchemaMerger >> mergeRound [
 	"Compute the survivor of every schema (components first, then the inline ones in document order), merge the losers and answer how many were merged. The inline schemas that only become identical after this round are merged by the next one."
 
+	| count |
 	table := Dictionary new.
 	visited := IdentityDictionary new.
 	merges := IdentityDictionary new.
 	self schemasComponentsFirst do: [ :each | self survivorOf: each ].
-	^ self applyMerges
+	count := self applyMerges.
+	self removePendingFromModel.
+	^ count
 ]
 
 { #category : 'public' }
@@ -347,12 +353,29 @@ FamixOpenApiSchemaMerger >> register: aSchema signature: aString [
 	^ known
 ]
 
-{ #category : 're-pointing' }
+{ #category : 'merging' }
 FamixOpenApiSchemaMerger >> remove: anEntity [
-	"Remove anEntity from the model and remember it, to forget its pointers in the index."
+	"Remember anEntity as removed, to forget its pointers in the index, and queue its removal from the model (see #removePendingFromModel)."
 
 	removed add: anEntity.
-	model remove: anEntity
+	toRemove add: anEntity
+]
+
+{ #category : 'merging' }
+FamixOpenApiSchemaMerger >> removePendingFromModel [
+	"Remove from the model in one pass the entities queued by #remove: (MooseModel>>remove: is linear for each entity, which makes the removal of tens of thousands of schemas quadratic). The entity storage and its per class index are filtered once."
+
+	| storage |
+	toRemove ifEmpty: [ ^ self ].
+	storage := model entityStorage.
+	storage elements removeAllSuchThat: [ :each |
+		toRemove includes: each ].
+	(toRemove collect: #class as: IdentitySet) do: [ :class |
+		(storage selectAllWithType: class) removeAllSuchThat: [ :each |
+			toRemove includes: each ] ].
+	toRemove do: [ :each | each privateSetMooseModel: nil ].
+	model flush.
+	toRemove := IdentitySet new
 ]
 
 { #category : 're-pointing' }

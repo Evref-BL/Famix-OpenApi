@@ -9,6 +9,13 @@ Class {
 }
 
 { #category : 'visiting' }
+FamixOpenApiJsonVisitor >> checkOperations [
+	"Report the operationIds used by several operations."
+
+	self pathVisitor reportDuplicateOperationIds
+]
+
+{ #category : 'visiting' }
 FamixOpenApiJsonVisitor >> mergeSchemas [
 	"Pass 3: merge the identical inline schemas and detect the sub-schemas, when the option asks for it; record the report."
 
@@ -25,10 +32,17 @@ FamixOpenApiJsonVisitor >> mergeSchemas [
 ]
 
 { #category : 'visiting' }
-FamixOpenApiJsonVisitor >> visit [
-	"Import the document of my context: detect its version, then read the root, the schemas and merge the identical inline schemas. Nothing is raised: the problems are diagnostics."
+FamixOpenApiJsonVisitor >> resolveLinks [
+	"Final pass before the merge: set the operation of the links."
 
-	| version |
+	(FamixOpenApiLinkResolver on: context) resolve
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visit [
+	"Import the document of my context: detect its version, then read the root, create the components, read the schemas, fill the components, read the paths, the webhooks and the security, resolve the links and merge the identical inline schemas. Nothing is raised: the problems are diagnostics."
+
+	| version components |
 	version := FamixOpenApiSpecVersion
 		           detectIn: self json
 		           diagnostics: self diagnostics.
@@ -36,8 +50,23 @@ FamixOpenApiJsonVisitor >> visit [
 	context specVersion: version.
 	self guard: [ self visitDocument ] at: '#'.
 	self openApi ifNil: [ ^ self ].
+	components := FamixOpenApiComponentsVisitor on: context.
+	self guard: [ components createComponents ] at: '#/components'.
 	self guard: [ self visitSchemas ] at: '#'.
+	self guard: [ components fillComponents ] at: '#/components'.
+	self guard: [ self visitPaths ] at: '#/paths'.
+	self guard: [ self visitWebhooks ] at: '#/webhooks'.
+	self guard: [ self visitSecurity ] at: '#/security'.
+	self guard: [ self checkOperations ] at: '#'.
+	self guard: [ self resolveLinks ] at: '#'.
 	self guard: [ self mergeSchemas ] at: '#'
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitComponents [
+	"Passes 1 and 2: create then fill the components other than the schemas."
+
+	(FamixOpenApiComponentsVisitor on: context) visit
 ]
 
 { #category : 'visiting' }
@@ -48,8 +77,31 @@ FamixOpenApiJsonVisitor >> visitDocument [
 ]
 
 { #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitPaths [
+	"Read the paths and their operations, which can refer to every component."
+
+	self pathVisitor visitPaths
+]
+
+{ #category : 'visiting' }
 FamixOpenApiJsonVisitor >> visitSchemas [
 	"Passes 1 and 2: create then fill the component schemas."
 
 	(FamixOpenApiSchemaVisitor on: context) visit
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitSecurity [
+	"Read the security requirements of the root."
+
+	self securityVisitor
+		fillSecurityOfOpenApi: self openApi
+		from: self json
+		at: '#'
+]
+
+{ #category : 'visiting' }
+FamixOpenApiJsonVisitor >> visitWebhooks [
+
+	self pathVisitor visitWebhooks
 ]

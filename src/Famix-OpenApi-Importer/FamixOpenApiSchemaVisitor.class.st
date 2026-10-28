@@ -22,6 +22,24 @@ FamixOpenApiSchemaVisitor >> addPrefixItemsTo: aSchema from: aList at: aPointer 
 			:member | aSchema addPrefixItem: member ] ]
 ]
 
+{ #category : 'visiting' }
+FamixOpenApiSchemaVisitor >> aliasNodeFrom: aReferenceNode at: aPointer [
+	"Answer aReferenceNode without the siblings of its $ref that are ignored (all but the description), reporting them."
+
+	| ignored node |
+	ignored := aReferenceNode keys reject: [ :each |
+		           each = '$ref' or: [ each = 'description' ] ].
+	ignored ifEmpty: [ ^ aReferenceNode ].
+	self diagnostics
+		info: #refSiblingsIgnored
+		pointer: aPointer
+		message:
+		'Keys next to $ref are ignored: ' , ignored asArray printString.
+	node := aReferenceNode copy.
+	ignored do: [ :each | node removeKey: each ].
+	^ node
+]
+
 { #category : 'pass 1: creation' }
 FamixOpenApiSchemaVisitor >> createChildrenAt: aKey of: aNode pointer: aPointer [
 	"Create the inline schema under aKey of aNode: an object, or the elements of an array."
@@ -58,18 +76,18 @@ FamixOpenApiSchemaVisitor >> createChildrenOf: aNode at: aPointer [
 		self createChildrenAt: key of: aNode pointer: aPointer ]
 ]
 
-{ #category : 'pass 1: creation' }
+{ #category : 'visiting' }
 FamixOpenApiSchemaVisitor >> createComponentSchemaNamed: aKey from: aNode at: aPointer [
-	"Create the component schema aKey, or register an alias when it is only a reference. Answer the Schema or nil."
+	"Create the component schema aKey and answer it. A schema that is only a reference is a Schema of its own, as the other ones: it keeps the raw reference in its ref and the target in its allOf (see #fillReferenceOf:from:at:); its siblings are ignored (reported), except its description."
 
-	| schema |
-	(self isPureReference: aNode) ifTrue: [
-		self registerAliasFrom: aNode at: aPointer.
-		^ nil ].
+	| schema node |
+	node := (self isPureReference: aNode)
+		        ifTrue: [ self aliasNodeFrom: aNode at: aPointer ]
+		        ifFalse: [ aNode ].
 	schema := self newEntity: OPSchema named: aKey pointer: aPointer.
 	context ensureComponents addSchema: schema.
-	pending add: schema -> aNode.
-	self createChildrenOf: aNode at: aPointer.
+	pending add: schema -> node.
+	self createChildrenOf: node at: aPointer.
 	^ schema
 ]
 
