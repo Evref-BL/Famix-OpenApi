@@ -168,6 +168,7 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #Operation) property: #tagReferences type: #Object) comment: 'Attribute tagReferences from Operation [*]').
     (((self entityNamed: #Operation) property: #summary type: #String) comment: 'Attribute summary from Operation [1]').
     (((self entityNamed: #Operation) property: #description type: #String) comment: 'Attribute description from Operation [1]').
+    (((self entityNamed: #Operation) property: #httpMethod type: #String) comment: 'Attribute httpMethod from Operation [1]: lowercase HTTP verb (get, put, post, delete, options, head, patch, trace).').
     (((self entityNamed: #Operation) property: #operationId type: #String) comment: 'Attribute operationId from Operation [1]').
     (((self entityNamed: #Operation) property: #consumes type: #Object) comment: 'Attribute consumes from Operation [*]').
     (((self entityNamed: #Operation) property: #produces type: #Object) comment: 'Attribute produces from Operation [*]').
@@ -177,7 +178,7 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #ExternalDocs) property: #url type: #String) comment: 'Attribute url from ExternalDocs [1]').
     (((self entityNamed: #Parameter) property: #location type: #String) comment: 'Attribute location from Parameter [1]').
     (((self entityNamed: #Parameter) property: #required type: #Boolean) comment: 'Attribute required from Parameter [1]').
-    (((self entityNamed: #Parameter) property: #allowEmplyValue type: #Boolean) comment: 'Attribute allowEmplyValue from Parameter [1]').
+    (((self entityNamed: #Parameter) property: #allowEmptyValue type: #Boolean) comment: 'Attribute allowEmptyValue from Parameter [1]').
     (((self entityNamed: #Parameter) property: #example type: #String) comment: 'Attribute example from Parameter [1]').
     (((self entityNamed: #Schema) property: #title type: #String) comment: 'Attribute title from Schema [1]').
     (((self entityNamed: #Schema) property: #maxProperties type: #Number) comment: 'Attribute maxProperties from Schema [1]').
@@ -185,7 +186,7 @@ FamixOpenApiGenerator >> defineProperties [
     (((self entityNamed: #Schema) property: #example type: #String) comment: 'Attribute example from Schema [1]').
     (((self entityNamed: #Schema) property: #discriminator type: #String) comment: 'Attribute discriminator from Schema [1]').
     (((self entityNamed: #Schema) property: #readOnly type: #Boolean) comment: 'Attribute readOnly from Schema [1]').
-    (((self entityNamed: #Schema) property: #additonalPropertiesAllowed type: #Boolean) comment: 'Attribute additonalPropertiesAllowed from Schema [1]').
+    (((self entityNamed: #Schema) property: #additionalPropertiesAllowed type: #Boolean) comment: 'Attribute additionalPropertiesAllowed from Schema [1]').
     (((self entityNamed: #Response) property: #description type: #String) comment: 'Attribute description from Response [1]').
     (((self entityNamed: #Tag) property: #description type: #String) comment: 'Attribute description from Tag [1]').
     (((self entityNamed: #SecurityScheme) property: #type type: #String) comment: 'Attribute type from SecurityScheme [1]').
@@ -232,7 +233,7 @@ FamixOpenApiGenerator >> defineProperties [
 { #category : 'definition' }
 FamixOpenApiGenerator >> defineRelations [
     super defineRelations.
-    (((self entityNamed: #ContainedCollections) property: #paramters) comment: 'Reference paramters from ContainedCollections to Parameter [0..*].') <>-* (self entityNamed: #Parameter).
+    (((self entityNamed: #ContainedCollections) property: #parameters) comment: 'Reference parameters from ContainedCollections to Parameter [0..*].') <>-* (self entityNamed: #Parameter).
     (((self entityNamed: #ContainedCollections) property: #schemas) comment: 'Reference schemas from ContainedCollections to Schema [0..*].') <>-* (self entityNamed: #Schema).
     (((self entityNamed: #ContainedCollections) property: #responses) comment: 'Reference responses from ContainedCollections to Response [0..*].') <>-* (self entityNamed: #Response).
     (((self entityNamed: #Api) property: #info) comment: 'Reference info from API to Info [0..1].') <>- (self entityNamed: #Info).
@@ -241,7 +242,7 @@ FamixOpenApiGenerator >> defineRelations [
     (((self entityNamed: #Api) property: #definitions) comment: 'Reference definitions from API to SchemaEntry [0..*].') <>-* (self entityNamed: #SchemaEntry).
     (((self entityNamed: #Api) property: #responses) comment: 'Reference responses from API to ResponseDefinitionEntry [0..*].') <>-* (self entityNamed: #ResponseDefinitionEntry).
     (((self entityNamed: #Api) property: #securityDefinitions) comment: 'Reference securityDefinitions from API to SecuritySchemeEntry [0..*].') <>-* (self entityNamed: #SecuritySchemeEntry).
-    (((self entityNamed: #Api) property: #tags) comment: 'Reference tags from API to Tag [0..*].') <>-* ((self entityNamed: #Tag) property: #anApi).
+    (((self entityNamed: #Api) property: #tags) comment: 'Reference tags from API to Tag [0..*].') <>-* (((self entityNamed: #Tag) property: #api) comment: 'Opposite reference api from Tag to API [0..1].').
     (((self entityNamed: #Api) property: #parameters) comment: 'Reference parameters from API to ParameterEntry [0..*].') <>-* (self entityNamed: #ParameterEntry).
     (((self entityNamed: #Api) property: #containedCollections) comment: 'Reference containedCollections from API to ContainedCollections [0..1].') <>- (self entityNamed: #ContainedCollections).
     (((self entityNamed: #Components) property: #schemas) comment: 'Reference schemas from Components to SchemaEntry [0..*].') <>-* (self entityNamed: #SchemaEntry).
@@ -255,54 +256,47 @@ FamixOpenApiGenerator >> defineRelations [
     (((self entityNamed: #Components) property: #callbacks) comment: 'Reference callbacks from Components to CallbackEntry [0..*].') <>-* (self entityNamed: #CallbackEntry).
     (((self entityNamed: #Info) property: #contact) comment: 'Reference contact from Info to Contact [0..1].') <>- (self entityNamed: #Contact).
     (((self entityNamed: #Info) property: #license) comment: 'Reference license from Info to License [0..1].') <>- (self entityNamed: #License).
-    (((self entityNamed: #Path) property: #get) comment: 'Reference get from Path to Operation [0..1].') <>- (self entityNamed: #Operation).
-    ((((self entityNamed: #Path) property: #put) comment: 'Reference put from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #post) comment: 'Reference post from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #delete) comment: 'Reference delete from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #options) comment: 'Reference options from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #head) comment: 'Reference head from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #patch) comment: 'Reference patch from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    ((((self entityNamed: #Path) property: #trace) comment: 'Reference trace from Path to Operation [0..1].') <>- (self entityNamed: #Operation)) right noContainer.
-    (((self entityNamed: #Path) property: #parameters) comment: 'Reference parameters from Path to Parameter [0..*].') -* (self entityNamed: #Parameter).
+    (((self entityNamed: #Path) property: #operations) comment: 'Reference operations from Path to Operation [0..*]: one operation per HTTP method.') <>-* (((self entityNamed: #Operation) property: #path) comment: 'Opposite reference path from Operation to Path [0..1].').
+    (((self entityNamed: #Path) property: #parameters) comment: 'Reference parameters from Path to Parameter [0..*]. A parameter may be shared by several paths.') *-* (((self entityNamed: #Parameter) property: #usedByPaths) comment: 'Paths using this Parameter [0..*].').
     (((self entityNamed: #Operation) property: #responses) comment: 'Reference responses from Operation to ResponseEntry [1..*].') <>-* (self entityNamed: #ResponseEntry).
-    (((self entityNamed: #Operation) property: #parameters) comment: 'Reference parameters from Operation to Parameter [0..*].') -* (self entityNamed: #Parameter).
-    (((self entityNamed: #Operation) property: #requestBody) comment: 'Reference requestBody from Operation to RequestBody [0..1].') <>- (self entityNamed: #RequestBody).
+    (((self entityNamed: #Operation) property: #parameters) comment: 'Reference parameters from Operation to Parameter [0..*]. A parameter may be shared by several operations.') *-* (((self entityNamed: #Parameter) property: #usedByOperations) comment: 'Operations using this Parameter [0..*].').
+    (((self entityNamed: #Operation) property: #requestBody) comment: 'Reference requestBody from Operation to RequestBody [0..1]. A request body may be shared by several operations.') *- (((self entityNamed: #RequestBody) property: #usedByOperations) comment: 'Operations using this RequestBody [0..*].').
     (((self entityNamed: #Operation) property: #callbacks) comment: 'Reference callbacks from Operation to CallbackEntry [0..*].') <>-* (self entityNamed: #CallbackEntry).
     (((self entityNamed: #Parameter) property: #declaringContext) comment: 'Reference declaringContext from Parameter to ParameterContainer [0..1].') - (self traitNamed: #ParameterContainer).
-    (((self entityNamed: #Parameter) property: #schema) comment: 'Reference schema from Parameter to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #Parameter) property: #schema) comment: 'Reference schema from Parameter to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedByParameters) comment: 'Parameters whose schema is this Schema [0..*].').
     (((self entityNamed: #Schema) property: #properties) comment: 'Reference properties from Schema to Property [0..*].') <>-* (((self entityNamed: #Property) property: #schema) comment: 'Opposite reference schema from Property to Schema [0..1].').
-    (((self entityNamed: #Schema) property: #allOf) comment: 'Reference allOf from Schema to Schema [0..*].') -* (self entityNamed: #Schema).
-    (((self entityNamed: #Schema) property: #items) comment: 'Reference items from Schema to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #Schema) property: #allOf) comment: 'Reference allOf from Schema to Schema [0..*].') *-* (((self entityNamed: #Schema) property: #usedAsAllOfBy) comment: 'Schemas having this Schema in their allOf [0..*].').
+    (((self entityNamed: #Schema) property: #items) comment: 'Reference items from Schema to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedAsItemsBy) comment: 'Schemas having this Schema as their items [0..*].').
     (((self entityNamed: #Schema) property: #xml) comment: 'Reference xml from Schema to XMLElement [0..1].') <>- (self entityNamed: #XMLElement).
-    (((self entityNamed: #Schema) property: #additonalProperties) comment: 'Reference additonalProperties from Schema to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #Schema) property: #additionalProperties) comment: 'Reference additionalProperties from Schema to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedAsAdditionalPropertiesBy) comment: 'Schemas having this Schema as their additionalProperties [0..*].').
     (((self entityNamed: #Schema) property: #declaringContext) comment: 'Reference declaringContext from Schema to SchemaContainer [0..1].') - (self traitNamed: #SchemaContainer).
-    (((self entityNamed: #Schema) property: #tupleItems) comment: 'Reference tupleItems from Schema to Schema [0..*].') -* (self entityNamed: #Schema).
+    (((self entityNamed: #Schema) property: #tupleItems) comment: 'Reference tupleItems from Schema to Schema [0..*].') *-* (((self entityNamed: #Schema) property: #usedAsTupleItemsBy) comment: 'Schemas having this Schema in their tupleItems [0..*].').
     (((self entityNamed: #Response) property: #headers) comment: 'Reference headers from Response to Header [0..*].') <>-* (self entityNamed: #Header).
     (((self entityNamed: #Response) property: #examples) comment: 'Reference examples from Response to Example [0..*].') <>-* (self entityNamed: #Example).
     (((self entityNamed: #Response) property: #declaringContext) comment: 'Reference declaringContext from Response to ResponseContainer [0..1].') - (self traitNamed: #ResponseContainer).
-    (((self entityNamed: #Response) property: #schema) comment: 'Reference schema from Response to Schema [0..1].') - (self entityNamed: #Schema).
-    (((self entityNamed: #Header) property: #schema) comment: 'Reference schema from Header to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #Response) property: #schema) comment: 'Reference schema from Response to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedByResponses) comment: 'Responses whose schema is this Schema [0..*].').
+    (((self entityNamed: #Header) property: #schema) comment: 'Reference schema from Header to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedByHeaders) comment: 'Headers whose schema is this Schema [0..*].').
     (((self traitNamed: #ContentContainer) property: #content) comment: 'Reference content from ContentContainer to MediaTypeEntry [0..*].') <>-* (self entityNamed: #MediaTypeEntry).
-    (((self entityNamed: #MediaType) property: #schema) comment: 'Reference schema from MediaType to Schema [0..1].') - (self entityNamed: #Schema).
+    (((self entityNamed: #MediaType) property: #schema) comment: 'Reference schema from MediaType to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedByMediaTypes) comment: 'Media types whose schema is this Schema [0..*].').
     (((self entityNamed: #MediaType) property: #examples) comment: 'Reference examples from MediaType to ExampleEntry [0..*].') <>-* (self entityNamed: #ExampleEntry).
     (((self entityNamed: #SecurityScheme) property: #scopes) comment: 'Reference scopes from SecurityScheme to SecurityScope [0..*].') <>-* (self entityNamed: #SecurityScope).
     (((self traitNamed: #ExternalDocsContainer) property: #externalDocs) comment: 'Reference externalDocs from ExternalDocsContainer to ExternalDocs [0..1].') <>- (self entityNamed: #ExternalDocs).
     (((self traitNamed: #ArrayContainer) property: #items) comment: 'Reference items from ArrayContainer to ItemsDefinition [0..1].') <>- (self entityNamed: #ItemsDefinition).
     (((self entityNamed: #SecurityRequirement) property: #securitySchemes) comment: 'Reference securitySchemes from SecurityRequirement to RequiredSecurityScheme [0..*].') <>-* (self entityNamed: #RequiredSecurityScheme).
-    (((self entityNamed: #ResponseEntry) property: #value) comment: 'Reference value from ResponseEntry to Response [0..1].') - (self entityNamed: #Response).
-    (((self entityNamed: #SchemaEntry) property: #value) comment: 'Reference value from SchemaEntry to Schema [0..1].') - (self entityNamed: #Schema).
-    (((self entityNamed: #ResponseDefinitionEntry) property: #value) comment: 'Reference value from ResponseDefinitionEntry to Response [0..1].') - (self entityNamed: #Response).
-    (((self entityNamed: #ParameterEntry) property: #value) comment: 'Reference value from ParameterEntry to Parameter [0..1].') - (self entityNamed: #Parameter).
-    (((self entityNamed: #MediaTypeEntry) property: #value) comment: 'Reference value from MediaTypeEntry to MediaType [0..1].') - (self entityNamed: #MediaType).
-    (((self entityNamed: #RequestBodyEntry) property: #value) comment: 'Reference value from RequestBodyEntry to RequestBody [0..1].') - (self entityNamed: #RequestBody).
-    (((self entityNamed: #HeaderEntry) property: #value) comment: 'Reference value from HeaderEntry to Header [0..1].') - (self entityNamed: #Header).
-    (((self entityNamed: #ExampleEntry) property: #value) comment: 'Reference value from ExampleEntry to Example [0..1].') - (self entityNamed: #Example).
-    (((self entityNamed: #LinkEntry) property: #value) comment: 'Reference value from LinkEntry to Link [0..1].') - (self entityNamed: #Link).
-    (((self entityNamed: #CallbackEntry) property: #value) comment: 'Reference value from CallbackEntry to Callback [0..1].') - (self entityNamed: #Callback).
+    (((self entityNamed: #ResponseEntry) property: #value) comment: 'Reference value from ResponseEntry to Response [0..1].') *- (((self entityNamed: #Response) property: #usedByResponseEntries) comment: 'ResponseEntry entries whose value is this Response [0..*].').
+    (((self entityNamed: #SchemaEntry) property: #value) comment: 'Reference value from SchemaEntry to Schema [0..1].') *- (((self entityNamed: #Schema) property: #usedBySchemaEntries) comment: 'SchemaEntry entries whose value is this Schema [0..*].').
+    (((self entityNamed: #ResponseDefinitionEntry) property: #value) comment: 'Reference value from ResponseDefinitionEntry to Response [0..1].') *- (((self entityNamed: #Response) property: #usedByResponseDefinitionEntries) comment: 'ResponseDefinitionEntry entries whose value is this Response [0..*].').
+    (((self entityNamed: #ParameterEntry) property: #value) comment: 'Reference value from ParameterEntry to Parameter [0..1].') *- (((self entityNamed: #Parameter) property: #usedByParameterEntries) comment: 'ParameterEntry entries whose value is this Parameter [0..*].').
+    (((self entityNamed: #MediaTypeEntry) property: #value) comment: 'Reference value from MediaTypeEntry to MediaType [0..1].') *- (((self entityNamed: #MediaType) property: #usedByMediaTypeEntries) comment: 'MediaTypeEntry entries whose value is this MediaType [0..*].').
+    (((self entityNamed: #RequestBodyEntry) property: #value) comment: 'Reference value from RequestBodyEntry to RequestBody [0..1].') *- (((self entityNamed: #RequestBody) property: #usedByRequestBodyEntries) comment: 'RequestBodyEntry entries whose value is this RequestBody [0..*].').
+    (((self entityNamed: #HeaderEntry) property: #value) comment: 'Reference value from HeaderEntry to Header [0..1].') *- (((self entityNamed: #Header) property: #usedByHeaderEntries) comment: 'HeaderEntry entries whose value is this Header [0..*].').
+    (((self entityNamed: #ExampleEntry) property: #value) comment: 'Reference value from ExampleEntry to Example [0..1].') *- (((self entityNamed: #Example) property: #usedByExampleEntries) comment: 'ExampleEntry entries whose value is this Example [0..*].').
+    (((self entityNamed: #LinkEntry) property: #value) comment: 'Reference value from LinkEntry to Link [0..1].') *- (((self entityNamed: #Link) property: #usedByLinkEntries) comment: 'LinkEntry entries whose value is this Link [0..*].').
+    (((self entityNamed: #CallbackEntry) property: #value) comment: 'Reference value from CallbackEntry to Callback [0..1].') *- (((self entityNamed: #Callback) property: #usedByCallbackEntries) comment: 'CallbackEntry entries whose value is this Callback [0..*].').
     (((self traitNamed: #SecurityContainer) property: #security) comment: 'Reference security from SecurityContainer to SecurityRequirement [0..*].') <>-* (self entityNamed: #SecurityRequirement).
-    (((self entityNamed: #SecuritySchemeEntry) property: #value) comment: 'Reference value from SecuritySchemeEntry to SecurityScheme [0..1].') <>- (self entityNamed: #SecurityScheme).
-    (((self entityNamed: #RequiredSecurityScheme) property: #securityScopes) comment: 'Reference securityScopes from RequiredSecurityScheme to SecurityScope [0..*].') -* (self entityNamed: #SecurityScope).
-    (((self entityNamed: #RequiredSecurityScheme) property: #securityScheme) comment: 'Reference securityScheme from RequiredSecurityScheme to SecurityScheme [0..1].') - (self entityNamed: #SecurityScheme).
+    (((self entityNamed: #SecuritySchemeEntry) property: #value) comment: 'Reference value from SecuritySchemeEntry to SecurityScheme [0..1].') *- (((self entityNamed: #SecurityScheme) property: #usedBySecuritySchemeEntries) comment: 'SecuritySchemeEntry entries whose value is this SecurityScheme [0..*].').
+    (((self entityNamed: #RequiredSecurityScheme) property: #securityScopes) comment: 'Reference securityScopes from RequiredSecurityScheme to SecurityScope [0..*].') *-* (((self entityNamed: #SecurityScope) property: #usedByRequiredSecuritySchemes) comment: 'Required security schemes using this SecurityScope [0..*].').
+    (((self entityNamed: #RequiredSecurityScheme) property: #securityScheme) comment: 'Reference securityScheme from RequiredSecurityScheme to SecurityScheme [0..1].') *- (((self entityNamed: #SecurityScheme) property: #usedByRequiredSecuritySchemes) comment: 'Required security schemes using this SecurityScheme [0..*].').
 ]
 
 { #category : 'definition' }

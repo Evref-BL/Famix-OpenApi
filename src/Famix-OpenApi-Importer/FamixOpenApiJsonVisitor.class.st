@@ -9,22 +9,22 @@ Class {
 	#package : 'Famix-OpenApi-Importer'
 }
 
-{ #category : 'private - writing' }
+{ #category : 'private - model' }
 FamixOpenApiJsonVisitor >> add: aChildEntity toManyProperty: aPropertyName of: anEntity [
+	"Add aChildEntity to the many-relation aPropertyName of anEntity. A child shared between several owners is added to each of them (many-to-many relations do not steal it) and is never added twice to the same owner."
+
 	| getter setter collection |
 	getter := aPropertyName asSymbol.
 	(anEntity respondsTo: getter) ifFalse: [ ^ self ].
-
 	collection := anEntity perform: getter.
 	collection ifNil: [
 		setter := (aPropertyName asString , ':') asSymbol.
 		(anEntity respondsTo: setter) ifTrue: [
 			collection := OrderedCollection new.
 			anEntity perform: setter with: collection ] ].
-
 	collection ifNil: [ ^ self ].
 	(collection respondsTo: #add:)
-		ifTrue: [ collection add: aChildEntity ]
+		ifTrue: [ (collection includes: aChildEntity) ifFalse: [ collection add: aChildEntity ] ]
 		ifFalse: [
 			setter := (aPropertyName asString , ':') asSymbol.
 			(anEntity respondsTo: setter)
@@ -147,6 +147,13 @@ FamixOpenApiJsonVisitor >> firstNormalizedNameCandidateIn: aCollection [
 		candidate := self normalizedNameCandidateFrom: each.
 		candidate ifNotNil: [ ^ candidate ] ].
 	^ nil
+]
+
+{ #category : 'private - model' }
+FamixOpenApiJsonVisitor >> httpMethods [
+	"The lowercase HTTP methods an OpenAPI path item may declare an operation for."
+
+	^ #( 'get' 'put' 'post' 'delete' 'options' 'head' 'patch' 'trace' )
 ]
 
 { #category : 'private - testing' }
@@ -800,19 +807,17 @@ FamixOpenApiJsonVisitor >> visitMediaTypeNode: aMediaTypeNode mediaType: aMediaT
 ]
 
 { #category : 'visiting' }
-FamixOpenApiJsonVisitor >> visitOperationIn: aPathNode httpMethod: anHttpMethod relation: aRelationName forPath: aPath [
+FamixOpenApiJsonVisitor >> visitOperationIn: aPathNode httpMethod: anHttpMethod forPath: aPath [
 	self
 		valueAt: anHttpMethod
 		in: aPathNode
 		ifPresent: [ :operationNode |
 			| operation |
 			operation := self
-				visitOperationNode: operationNode
-				httpMethod: anHttpMethod
-				relativePath: ((aPath respondsTo: #relativePath) ifTrue: [ aPath relativePath ]).
-			operation ifNotNil: [ self setProperty: aRelationName on: aPath to: operation.
-				
-				 ] ]
+				             visitOperationNode: operationNode
+				             httpMethod: anHttpMethod
+				             relativePath: ((aPath respondsTo: #relativePath) ifTrue: [ aPath relativePath ]).
+			operation ifNotNil: [ self add: operation toManyProperty: #operations of: aPath ] ]
 ]
 
 { #category : 'visiting' }
@@ -821,6 +826,7 @@ FamixOpenApiJsonVisitor >> visitOperationNode: anOperationNode httpMethod: anHtt
 	(self isDictionaryLike: anOperationNode) ifFalse: [ ^ nil ].
 
 	operation := self newEntityNamed: #Operation fromJsonNode: anOperationNode.
+	self setProperty: #httpMethod on: operation to: anHttpMethod.
 	self copyValueAt: 'tags' from: anOperationNode to: operation property: #tagReferences.
 	self copyValueAt: 'summary' from: anOperationNode to: operation property: #summary.
 	self copyValueAt: 'description' from: anOperationNode to: operation property: #description.
@@ -910,10 +916,7 @@ FamixOpenApiJsonVisitor >> visitParametersNode: aParametersNode forOwner: anOwne
 		| parameter |
 		parameter := self visitParameterNode: parameterNode named: nil.
 		parameter ifNotNil: [
-			self add: parameter toManyProperty: #parameters of: anOwner.
-			((parameter respondsTo: #declaringContext)
-				and: [ parameter declaringContext notNil ])
-				ifFalse: [ self setProperty: #declaringContext on: parameter to: anOwner ] ] ]
+			self add: parameter toManyProperty: #parameters of: anOwner ] ]
 ]
 
 { #category : 'visiting' }
@@ -936,14 +939,8 @@ FamixOpenApiJsonVisitor >> visitPathNode: aPathNode relativePath: aRelativePath 
 		ifPresent: [ :parametersNode |
 			self visitParametersNode: parametersNode forOwner: path ].
 
-	self visitOperationIn: aPathNode httpMethod: 'get' relation: #get forPath: path.
-	self visitOperationIn: aPathNode httpMethod: 'put' relation: #put forPath: path.
-	self visitOperationIn: aPathNode httpMethod: 'post' relation: #post forPath: path.
-	self visitOperationIn: aPathNode httpMethod: 'delete' relation: #delete forPath: path.
-	self visitOperationIn: aPathNode httpMethod: 'options' relation: #options forPath: path.
-	self visitOperationIn: aPathNode httpMethod: 'head' relation: #head forPath: path.
-	self visitOperationIn: aPathNode httpMethod: 'patch' relation: #patch forPath: path.
-	self visitOperationIn: aPathNode httpMethod: 'trace' relation: #trace forPath: path.
+	self httpMethods do: [ :httpMethod |
+		self visitOperationIn: aPathNode httpMethod: httpMethod forPath: path ].
 
 	^ path
 ]
@@ -1158,6 +1155,5 @@ FamixOpenApiJsonVisitor >> visitTagsNode: aTagsNode forApi: anApi [
 		| tag |
 		tag := self visitTagNode: tagNode.
 		tag ifNotNil: [
-			self add: tag toManyProperty: #tags of: anApi.
-			self setProperty: #anApi on: tag to: anApi ] ]
+			self add: tag toManyProperty: #tags of: anApi ] ]
 ]

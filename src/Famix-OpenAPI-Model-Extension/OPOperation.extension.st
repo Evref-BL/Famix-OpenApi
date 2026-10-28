@@ -2,14 +2,12 @@ Extension { #name : 'OPOperation' }
 
 { #category : '*Famix-OpenAPI-Model-Extension' }
 OPOperation >> allParameters [
-	"return the Operation Parameters plus its path parameter is defined. The operation override the parameter from the path"
-		
-	|parameters|
-	self flag: 'TODO'. 
-	
-	^ self parameters,  (self path parameters select: [:p | 
-			|names|
-			names := self parameters collect: #name.
-			(names includes: p name)not ])
-	
+	"Answer the parameters of the receiver plus the parameters of its path. A parameter of the operation overrides a path parameter with the same name and location."
+
+	| ownParameters |
+	ownParameters := self parameters asOrderedCollection.
+	self path ifNil: [ ^ ownParameters ].
+	^ ownParameters , (self path parameters reject: [ :pathParameter |
+		   ownParameters anySatisfy: [ :each |
+			   each name = pathParameter name and: [ each location = pathParameter location ] ] ])
 ]
