@@ -123,6 +123,21 @@ FamixOpenApiSchemaVisitor >> createSchemaFrom: aNode at: aPointer [
 	^ schema
 ]
 
+{ #category : 'pass 2: discriminator and xml' }
+FamixOpenApiSchemaVisitor >> discriminatorNameOf: aDiscriminator in: aSchema [
+	"Answer '<schema name>.<propertyName>' when aSchema is a named component, the propertyName otherwise, or 'discriminator' when the propertyName is missing or blank."
+
+	| property |
+	property := FamixOpenApiNaming limited: aDiscriminator propertyName.
+	property isEmpty ifTrue: [ ^ 'discriminator' ].
+	^ (aSchema components isNotNil and: [
+		   FamixOpenApiNaming hasOwnName: aSchema ])
+		  ifTrue: [
+			  FamixOpenApiNaming limited:
+				  (FamixOpenApiNaming limited: aSchema name) , '.' , property ]
+		  ifFalse: [ property ]
+]
+
 { #category : 'entry points' }
 FamixOpenApiSchemaVisitor >> entityFor: aNode at: aPointer [
 	"Answer the Schema that stands for the node aNode located at aPointer inside a schema: the resolved target when it is a reference, the inline schema created there otherwise, nil for a boolean schema or a node of the wrong type."
@@ -249,7 +264,7 @@ FamixOpenApiSchemaVisitor >> fillDiscriminator: aDiscriminator from: aNode at: a
 
 { #category : 'pass 2: discriminator and xml' }
 FamixOpenApiSchemaVisitor >> fillDiscriminatorOf: aSchema from: aNode at: aPointer [
-	"Set the Discriminator: a string is the propertyName (Swagger 2); an object has a propertyName and a mapping (OpenAPI 3)."
+	"Set the Discriminator: a string is the propertyName (Swagger 2); an object has a propertyName and a mapping (OpenAPI 3). Its name is set once the propertyName is known."
 
 	| value pointer discriminator |
 	value := aNode at: 'discriminator' ifAbsent: [ ^ self ].
@@ -266,6 +281,8 @@ FamixOpenApiSchemaVisitor >> fillDiscriminatorOf: aSchema from: aNode at: aPoint
 			wrongNodeAt: pointer
 			expecting: 'an object or a string'
 			found: value ].
+	discriminator name:
+		(self discriminatorNameOf: discriminator in: aSchema).
 	aSchema discriminator: discriminator
 ]
 
