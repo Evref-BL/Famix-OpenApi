@@ -241,6 +241,31 @@ FamixOpenApiCorpusTest >> testEverySpecFileHasADocumentModel [
 		description: 'Files without a document model'
 ]
 
+{ #category : 'tests' }
+FamixOpenApiCorpusTest >> testNoEntityIsUnnamedExceptTheOptionalOnesWithAndWithoutMerging [
+	"N6 sweep on every corpus file, merging the inline schemas or not: an entity without a name is only an OPContact, OPLicense, OPTag or OPXmlElement (naturally optional names). The failure message lists, per file, the classes that still have nil or blank names."
+
+	| offenders |
+	offenders := OrderedCollection new.
+	self corpusFiles do: [ :file |
+		#( true false ) do: [ :merging |
+			| classNames |
+			classNames := self
+				              unexpectedlyUnnamedClassNamesOf: file
+				              merging: merging.
+			classNames isEmpty ifFalse: [
+				offenders add: (String streamContents: [ :stream |
+						 stream
+							 nextPutAll: file basename;
+							 nextPutAll: ' merging=';
+							 print: merging;
+							 space;
+							 print: classNames ]) ] ] ].
+	self
+		assertNoFailuresIn: offenders
+		description: 'Files with unnamed entities'
+]
+
 { #category : 'tests (step B)' }
 FamixOpenApiCorpusTest >> testOperationCountPerVerbMatchesRawCountForOpenApi3 [
 	"For every verb, the number of Operation entities equals the number of path items declaring that verb."
@@ -337,6 +362,21 @@ FamixOpenApiCorpusTest >> testWebhookCountMatchesRawCountForOpenApi3 [
 	self
 		assertNoFailuresIn: failures
 		description: 'Files whose webhook count differs'
+]
+
+{ #category : 'corpus' }
+FamixOpenApiCorpusTest >> unexpectedlyUnnamedClassNamesOf: aFile merging: aBoolean [
+	"Answer the sorted names of the classes of the entities of aFile, imported with or without merging of the inline schemas, that have a nil or blank name although their name is not naturally optional."
+
+	| model |
+	model := FamixOpenApiImporter new
+		         mergesInlineSchemas: aBoolean;
+		         importFromString: aFile contents.
+	^ ((model allModelEntities select: [ :each |
+		    each name isNil or: [ each name asString trimBoth isEmpty ] ])
+		   collect: [ :each | each class name ]
+		   as: Set) asArray sorted reject: [ :each |
+		  #( #OPContact #OPLicense #OPTag #OPXmlElement ) includes: each ]
 ]
 
 { #category : 'tests' }

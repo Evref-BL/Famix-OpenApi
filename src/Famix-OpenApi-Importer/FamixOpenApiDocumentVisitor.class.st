@@ -171,7 +171,7 @@ FamixOpenApiDocumentVisitor >> visitComponentsSkeleton [
 
 { #category : 'visiting' }
 FamixOpenApiDocumentVisitor >> visitInfo [
-	"Read the Info with its Contact and License. The Info is named 'info' when the document has no title; the OpenApi root takes the title."
+	"Read the Info with its Contact and License. The Info is named after its title, limited in length, or 'info' when the document has no title or a blank one; the OpenApi root takes the title."
 
 	| node info title |
 	node := self dictionaryAt: 'info' in: self json at: '#'.
@@ -179,7 +179,8 @@ FamixOpenApiDocumentVisitor >> visitInfo [
 	title := self stringAt: 'title' in: node at: '#/info'.
 	info := self
 		        newEntity: OPInfo
-		        named: (title ifNil: [ 'info' ])
+		        named:
+		        (FamixOpenApiNaming nameFromAny: { title } fallback: 'info')
 		        pointer: '#/info'.
 	info
 		title: title;

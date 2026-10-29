@@ -79,6 +79,17 @@ FamixOpenApiImporterFidelityTest >> importedSchema: aSchemaJson [
 		  (self importOpenApi3: (self schemasJson: '`S`:' , aSchemaJson))
 ]
 
+{ #category : 'tests - N6 blank names' }
+FamixOpenApiImporterFidelityTest >> infoNameOfTitle: aTitleJsonString [
+	"Answer the name of the Info of a document whose title is the JSON text aTitleJsonString (quotes written as backticks)."
+
+	| model |
+	model := self importJson: (self jsonFrom:
+			          '{`openapi`:`3.0.0`,`info`:{`title`:' , aTitleJsonString
+			          , ',`version`:`1`},`paths`:{}}').
+	^ (self openApiIn: model) info name
+]
+
 { #category : 'tests' }
 FamixOpenApiImporterFidelityTest >> inlineRequestBodyMembers [
 
@@ -439,6 +450,12 @@ FamixOpenApiImporterFidelityTest >> testBackwardReferenceResolvesToComponentEnti
 		'A items should be the B component schema (backward reference)'
 ]
 
+{ #category : 'tests - N6 blank names' }
+FamixOpenApiImporterFidelityTest >> testBlankInfoTitleNamesTheInfoInfo [
+
+	self assert: (self infoNameOfTitle: '``') equals: 'info'
+]
+
 { #category : 'tests - D11 robustness' }
 FamixOpenApiImporterFidelityTest >> testBooleanAdditionalPropertiesCreatesNoGarbageSchema [
 	"D11: additionalProperties true/false is a boolean, not a schema: only the Pet and Closed schemas exist."
@@ -651,6 +668,27 @@ FamixOpenApiImporterFidelityTest >> testEmptyOperationSecurityDisablesTheSecurit
 	self assert: operation effectiveSecurity isEmpty
 ]
 
+{ #category : 'tests - N6 blank names' }
+FamixOpenApiImporterFidelityTest >> testEmptySchemeKeyAloneNamesTheRequirementAnonymous [
+
+	| model |
+	model := self importOpenApi3: '`security`:[{``:[]}],`paths`:{}'.
+	self
+		assert: (self securityRequirementNamesIn: model)
+		equals: #( 'anonymous' )
+]
+
+{ #category : 'tests - N6 blank names' }
+FamixOpenApiImporterFidelityTest >> testEmptySchemeKeyIsLeftOutOfTheRequirementName [
+
+	| model |
+	model := self importOpenApi3:
+		         '`security`:[{``:[],`a`:[]}],`paths`:{}'.
+	self
+		assert: (self securityRequirementNamesIn: model)
+		equals: #( 'a' )
+]
+
 { #category : 'tests - N3 security requirement names' }
 FamixOpenApiImporterFidelityTest >> testEmptySecurityArrayCreatesNoRequirementToName [
 
@@ -734,6 +772,15 @@ FamixOpenApiImporterFidelityTest >> testForwardReferenceResolvesToComponentEntit
 		'A items should be the B component schema (forward reference)'
 ]
 
+{ #category : 'tests - N6 blank names' }
+FamixOpenApiImporterFidelityTest >> testInfoWithoutTitleIsNamedInfo [
+
+	| model |
+	model := self importJson: (self jsonFrom:
+			          '{`openapi`:`3.0.0`,`info`:{`version`:`1`},`paths`:{}}').
+	self assert: (self openApiIn: model) info name equals: 'info'
+]
+
 { #category : 'tests - D9 D10 naming and ref semantics (step B)' }
 FamixOpenApiImporterFidelityTest >> testInlineComponentParameterHasNoSourceRef [
 	"D10: a component parameter written inline must not look like an alias: its #ref is nil (also when other sites reference it)."
@@ -803,6 +850,20 @@ FamixOpenApiImporterFidelityTest >> testInlineSchemaCanonicalPointerIsItsPositio
 			(self propertyNamed: 'tags' ofSchema: pet) valueSchema items
 				canonicalPointer
 		equals: '#/components/schemas/Pet/properties/tags/items'
+]
+
+{ #category : 'tests - N6 blank names' }
+FamixOpenApiImporterFidelityTest >> testLongInfoTitleIsLimitedInTheInfoNameButKeptInItsTitle [
+
+	| model title info |
+	title := String new: 100 withAll: $t.
+	model := self importJson:
+		         (self jsonFrom:
+			          '{`openapi`:`3.0.0`,`info`:{`title`:`' , title
+			          , '`,`version`:`1`},`paths`:{}}').
+	info := (self openApiIn: model) info.
+	self assert: info name size equals: FamixOpenApiNaming maxNameLength.
+	self assert: info title equals: title
 ]
 
 { #category : 'tests - N3 security requirement names' }
@@ -2839,6 +2900,23 @@ FamixOpenApiImporterFidelityTest >> testWebhooksAreImportedAsPathItems [
 		equals: '#/webhooks/newPet'.
 	self assert: (self operationWithId: 'onNewPet' in: model) path
 		== openApi webhooks anyOne
+]
+
+{ #category : 'tests - N6 blank names' }
+FamixOpenApiImporterFidelityTest >> testWhitespaceInfoTitleNamesTheInfoInfo [
+
+	self assert: (self infoNameOfTitle: '` \n\t `') equals: 'info'
+]
+
+{ #category : 'tests - N6 blank names' }
+FamixOpenApiImporterFidelityTest >> testWhitespaceSchemeKeyIsLeftOutOfTheRequirementName [
+
+	| model |
+	model := self importOpenApi3:
+		         '`security`:[{`  `:[],`b`:[],`a`:[]},{` `:[]}],`paths`:{}'.
+	self
+		assert: (self securityRequirementNamesIn: model)
+		equals: #( 'a + b' 'anonymous' )
 ]
 
 { #category : 'fixtures' }

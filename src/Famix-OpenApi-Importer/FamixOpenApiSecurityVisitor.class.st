@@ -170,11 +170,14 @@ FamixOpenApiSecurityVisitor >> itemNamed: aName scopes: aScopes at: aPointer [
 
 { #category : 'visiting' }
 FamixOpenApiSecurityVisitor >> nameOfRequirementWithItems: aCollectionOfItems [
-	"Answer the name of a requirement: the sorted names of its items joined with ' + ' (all the schemes are required together), or 'anonymous' when it has no item or only blank names."
+	"Answer the name of a requirement: the sorted names of its items joined with ' + ' (all the schemes are required together), ignoring the items whose name is nil or blank. Answer 'anonymous' when no item has a usable name."
 
+	| names |
+	names := (aCollectionOfItems collect: [ :each |
+		          FamixOpenApiNaming limited: each name ]) reject: [ :each |
+		         each isEmpty ].
 	^ FamixOpenApiNaming
-		  nameFromAny:
-		  { (' + ' join: (aCollectionOfItems collect: #name) asArray sorted) }
+		  nameFromAny: { (' + ' join: names asArray sorted) }
 		  fallback: 'anonymous'
 ]
 
