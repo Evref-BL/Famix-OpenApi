@@ -203,17 +203,56 @@ FamixOpenApiPathVisitor >> fillRequestBodyOf: anOperation from: aNode at: aPoint
 
 { #category : 'visiting' }
 FamixOpenApiPathVisitor >> fillSwagger2RequestBodyOf: anOperation from: aNode at: aPointer [
-	"Swagger 2 has no requestBody: the in body parameter of aNode is the request body of anOperation, with the pointer of the parameter and the consumes media types. The formData parameters will build the request body here too (step C6)."
+	"Swagger 2 has no requestBody: the in body parameter of aNode is the request body of anOperation, with the pointer of the parameter and the consumes media types. Without body parameter, the formData parameters build a form request body. The body wins over the formData parameters, and the body parameters after the first one are ignored: both are reported."
 
-	self parameterVisitor
-		swagger2BodyParameterIn: aNode
-		at: aPointer
-		do: [ :parameter :pointer |
-			anOperation requestBody:
-				(self
-					 swagger2RequestBodyFrom: parameter
-					 at: pointer
-					 operation: aNode) ]
+	| bodies forms |
+	bodies := self parameterVisitor
+		          swagger2ParametersLocated: 'body'
+		          in: aNode
+		          at: aPointer.
+	forms := self parameterVisitor
+		         swagger2ParametersLocated: 'formData'
+		         in: aNode
+		         at: aPointer.
+	bodies size > 1 ifTrue: [
+		bodies allButFirst do: [ :each |
+			self diagnostics
+				warning: #extraBodyParameter
+				pointer: each key
+				message:
+				'Only the first body parameter is the request body: this one is ignored' ] ].
+	bodies ifNotEmpty: [
+		forms ifNotEmpty: [
+			self diagnostics
+				info: #conflictingBodyAndFormData
+				pointer: aPointer
+				message:
+				'The operation has body and formData parameters: the formData parameters are ignored' ].
+		anOperation requestBody: (self
+				 swagger2RequestBodyFrom: bodies first value
+				 at: bodies first key
+				 operation: aNode).
+		^ self ].
+	forms ifNotEmpty: [
+		anOperation requestBody: (self
+				 swagger2FormRequestBodyFrom: (forms collect: #value)
+				 at: (self pointer: aPointer appending: 'requestBody')
+				 operation: aNode) ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiPathVisitor >> formMediaTypesFor: anOperationNode hasFile: aBoolean [
+	"Answer the form media types of the consumes of anOperationNode (multipart/form-data and application/x-www-form-urlencoded); when it has none, multipart/form-data if a parameter is a file, else application/x-www-form-urlencoded."
+
+	| forms |
+	forms := (self mediaTypesFor: 'consumes' in: anOperationNode)
+		         select: [ :each |
+			         #( 'multipart/form-data' 'application/x-www-form-urlencoded' )
+				         includes: each ].
+	forms ifNotEmpty: [ ^ forms ].
+	^ aBoolean
+		  ifTrue: [ #( 'multipart/form-data' ) ]
+		  ifFalse: [ #( 'application/x-www-form-urlencoded' ) ]
 ]
 
 { #category : 'visiting' }
@@ -290,6 +329,26 @@ FamixOpenApiPathVisitor >> reportDuplicateOperationIds [
 				pointer: operations first canonicalPointer
 				message: 'operationId ' , id printString , ' is used by '
 					, (', ' join: (operations collect: #canonicalPointer)) ] ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiPathVisitor >> swagger2FormRequestBodyFrom: aCollection at: aPointer operation: anOperationNode [
+	"Answer a new RequestBody at aPointer (synthetic: the document has none) whose schema is made of the formData parameters aCollection (nodes), for each form media type consumed by anOperationNode. It is required when one of the parameters is."
+
+	| body schemaNode |
+	body := self newEntity: OPRequestBody named: nil pointer: aPointer.
+	schemaNode := self parameterVisitor swagger2FormSchemaNodeFor:
+		              aCollection.
+	body required: (schemaNode at: 'required') isEmpty not.
+	self contentVisitor
+		fillSwagger2ContentOf: body
+		from: (Dictionary with: 'schema' -> schemaNode)
+		mediaTypes: (self
+				 formMediaTypesFor: anOperationNode
+				 hasFile: (aCollection anySatisfy: [ :each |
+						  (each at: 'type' ifAbsent: [ nil ]) = 'file' ]))
+		at: aPointer.
+	^ body
 ]
 
 { #category : 'visiting' }

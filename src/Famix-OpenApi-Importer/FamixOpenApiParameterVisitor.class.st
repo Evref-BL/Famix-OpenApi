@@ -171,25 +171,41 @@ FamixOpenApiParameterVisitor >> schemaNodeOf: aNode [
 FamixOpenApiParameterVisitor >> swagger2BodyParameterIn: anOperationNode at: aPointer do: aBlock [
 	"Evaluate the two arguments block aBlock with the effective node (references followed) and the pointer, in the document, of the first body parameter of anOperationNode located at aPointer. Does nothing when there is none."
 
-	| found |
-	found := false.
-	self
-		elementsAt: 'parameters'
-		in: anOperationNode
-		at: aPointer
-		do: [ :node :pointer |
-			(found not and: [ (self swagger2LocationOf: node) = 'body' ])
-				ifTrue: [
-					| effective |
-					effective := (self isReferenceNode: node)
-						             ifTrue: [
-						             self
-							             referencedNodeFor: (node at: '$ref')
-							             at: pointer ]
-						             ifFalse: [ node ].
-					effective ifNotNil: [
-						found := true.
-						aBlock value: effective value: pointer ] ] ]
+	(self
+		 swagger2ParametersLocated: 'body'
+		 in: anOperationNode
+		 at: aPointer) ifNotEmpty: [ :found |
+		aBlock value: found first value value: found first key ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> swagger2FormSchemaNodeFor: aCollection [
+	"Answer the schema node (type object) whose properties are the formData parameters, the nodes of aCollection: each is described by its schema keys and its description, a file being a binary string. The required ones are listed in required."
+
+	| properties required |
+	properties := OrderedDictionary new.
+	required := OrderedCollection new.
+	aCollection do: [ :node |
+		| name |
+		name := node at: 'name' ifAbsent: [ nil ].
+		name isString ifTrue: [
+			| property |
+			property := self schemaNodeOf: node.
+			(property at: 'type' ifAbsent: [ nil ]) = 'file' ifTrue: [
+				property
+					at: 'type' put: 'string';
+					at: 'format' put: 'binary' ].
+			node
+				at: 'description'
+				ifPresent: [ :text | property at: 'description' put: text ].
+			properties at: name put: property.
+			(node at: 'required' ifAbsent: [ false ]) == true ifTrue: [
+				required add: name ] ] ].
+	^ OrderedDictionary new
+		  at: 'type' put: 'object';
+		  at: 'properties' put: properties;
+		  at: 'required' put: required asArray;
+		  yourself
 ]
 
 { #category : 'visiting' }
@@ -210,4 +226,27 @@ FamixOpenApiParameterVisitor >> swagger2LocationOf: aNode [
 		node == FamixOpenApiJsonPointer notFound ifTrue: [ ^ nil ] ].
 	node isDictionary ifFalse: [ ^ nil ].
 	^ node at: 'in' ifAbsent: [ nil ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> swagger2ParametersLocated: aLocation in: anOperationNode at: aPointer [
+	"Answer the associations pointer -> effective node (references followed) of the parameters of anOperationNode (located at aPointer) whose in is aLocation, in document order. Unresolved references are left out."
+
+	| found |
+	found := OrderedCollection new.
+	self
+		elementsAt: 'parameters'
+		in: anOperationNode
+		at: aPointer
+		do: [ :node :pointer |
+			(self swagger2LocationOf: node) = aLocation ifTrue: [
+				| effective |
+				effective := (self isReferenceNode: node)
+					             ifTrue: [
+					             self
+						             referencedNodeFor: (node at: '$ref')
+						             at: pointer ]
+					             ifFalse: [ node ].
+				effective ifNotNil: [ found add: pointer -> effective ] ] ].
+	^ found
 ]
