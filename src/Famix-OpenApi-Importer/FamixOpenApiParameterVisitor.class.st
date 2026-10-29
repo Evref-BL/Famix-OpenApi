@@ -7,16 +7,17 @@ Class {
 
 { #category : 'visiting' }
 FamixOpenApiParameterVisitor >> addParametersTo: anOwner from: aNode at: aPointer [
-	"Add to anOwner (a Path or an Operation) the Parameters of the parameters array of aNode: the shared target for a reference, a new Parameter otherwise. A Parameter is added once."
+	"Add to anOwner (a Path or an Operation) the Parameters of the parameters array of aNode: the shared target for a reference, a new Parameter otherwise. A Parameter is added once. In Swagger 2 the body and formData parameters are not Parameters: they build the request body of the operation."
 
 	self
 		elementsAt: 'parameters'
 		in: aNode
 		at: aPointer
 		do: [ :node :pointer |
-			(self parameterIn: node at: pointer) ifNotNil: [ :parameter |
-				(anOwner parameters includes: parameter) ifFalse: [
-					anOwner addParameter: parameter ] ] ]
+			(self isSwagger2RequestBodyParameter: node) ifFalse: [
+				(self parameterIn: node at: pointer) ifNotNil: [ :parameter |
+					(anOwner parameters includes: parameter) ifFalse: [
+						anOwner addParameter: parameter ] ] ] ]
 ]
 
 { #category : 'visiting' }
@@ -114,6 +115,16 @@ FamixOpenApiParameterVisitor >> isInlineSwagger2Parameter: aNode [
 ]
 
 { #category : 'visiting' }
+FamixOpenApiParameterVisitor >> isSwagger2RequestBodyParameter: aNode [
+	"Answer whether aNode is, in Swagger 2, a body or a formData parameter: not a Parameter but a part of the request body."
+
+	| location |
+	self specVersion isSwagger2 ifFalse: [ ^ false ].
+	location := self swagger2LocationOf: aNode.
+	^ location = 'body' or: [ location = 'formData' ]
+]
+
+{ #category : 'visiting' }
 FamixOpenApiParameterVisitor >> knownKeys [
 
 	^ #( 'name' 'in' 'required' 'deprecated' 'description' 'allowEmptyValue'
@@ -154,4 +165,49 @@ FamixOpenApiParameterVisitor >> schemaNodeOf: aNode [
 	self specVersion parameterSchemaKeys do: [ :key |
 		aNode at: key ifPresent: [ :value | schemaNode at: key put: value ] ].
 	^ schemaNode
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> swagger2BodyParameterIn: anOperationNode at: aPointer do: aBlock [
+	"Evaluate the two arguments block aBlock with the effective node (references followed) and the pointer, in the document, of the first body parameter of anOperationNode located at aPointer. Does nothing when there is none."
+
+	| found |
+	found := false.
+	self
+		elementsAt: 'parameters'
+		in: anOperationNode
+		at: aPointer
+		do: [ :node :pointer |
+			(found not and: [ (self swagger2LocationOf: node) = 'body' ])
+				ifTrue: [
+					| effective |
+					effective := (self isReferenceNode: node)
+						             ifTrue: [
+						             self
+							             referencedNodeFor: (node at: '$ref')
+							             at: pointer ]
+						             ifFalse: [ node ].
+					effective ifNotNil: [
+						found := true.
+						aBlock value: effective value: pointer ] ] ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> swagger2LocationOf: aNode [
+	"Answer the in of the effective node of aNode, the node itself or the one its references designate, or nil when there is none. Nothing is reported here: an unresolved reference is reported when the parameter is read."
+
+	| node visited |
+	node := aNode.
+	visited := Set new.
+	[ self isReferenceNode: node ] whileTrue: [
+		| reference |
+		reference := node at: '$ref'.
+		(visited includes: reference) ifTrue: [ ^ nil ].
+		visited add: reference.
+		node := FamixOpenApiJsonPointer
+			        resolveReference: reference
+			        in: self json.
+		node == FamixOpenApiJsonPointer notFound ifTrue: [ ^ nil ] ].
+	node isDictionary ifFalse: [ ^ nil ].
+	^ node at: 'in' ifAbsent: [ nil ]
 ]

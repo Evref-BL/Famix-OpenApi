@@ -189,11 +189,31 @@ FamixOpenApiPathVisitor >> fillPathItemContent: aPath from: aNode at: aPointer [
 FamixOpenApiPathVisitor >> fillRequestBodyOf: anOperation from: aNode at: aPointer [
 
 	| node |
+	self specVersion isSwagger2 ifTrue: [
+		^ self
+			  fillSwagger2RequestBodyOf: anOperation
+			  from: aNode
+			  at: aPointer ].
 	node := self dictionaryAt: 'requestBody' in: aNode at: aPointer.
 	node ifNil: [ ^ self ].
 	anOperation requestBody: (self contentVisitor
 			 requestBodyIn: node
 			 at: (self pointer: aPointer appending: 'requestBody'))
+]
+
+{ #category : 'visiting' }
+FamixOpenApiPathVisitor >> fillSwagger2RequestBodyOf: anOperation from: aNode at: aPointer [
+	"Swagger 2 has no requestBody: the in body parameter of aNode is the request body of anOperation, with the pointer of the parameter and the consumes media types. The formData parameters will build the request body here too (step C6)."
+
+	self parameterVisitor
+		swagger2BodyParameterIn: aNode
+		at: aPointer
+		do: [ :parameter :pointer |
+			anOperation requestBody:
+				(self
+					 swagger2RequestBodyFrom: parameter
+					 at: pointer
+					 operation: aNode) ]
 ]
 
 { #category : 'visiting' }
@@ -270,6 +290,33 @@ FamixOpenApiPathVisitor >> reportDuplicateOperationIds [
 				pointer: operations first canonicalPointer
 				message: 'operationId ' , id printString , ' is used by '
 					, (', ' join: (operations collect: #canonicalPointer)) ] ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiPathVisitor >> swagger2RequestBodyFrom: aParameterNode at: aPointer operation: anOperationNode [
+	"Answer a new RequestBody described by the body parameter aParameterNode located at aPointer, its content being its schema for each media type consumed by anOperationNode."
+
+	| body |
+	body := self newEntity: OPRequestBody named: nil pointer: aPointer.
+	body
+		description:
+			(self stringAt: 'description' in: aParameterNode at: aPointer);
+		required:
+			(self booleanAt: 'required' in: aParameterNode at: aPointer);
+		extensions: (self
+				 extensionsOf: aParameterNode
+				 known: #( 'name' 'in' 'required' 'description' 'schema' )
+				 at: aPointer).
+	self contentVisitor
+		fillSwagger2ContentOf: body
+		from: aParameterNode
+		mediaTypes: (self mediaTypesFor: 'consumes' in: anOperationNode)
+		at: aPointer.
+	context
+		recordSourceTextOf: body
+		from: aParameterNode
+		category: (self sourceCategoryOf: body).
+	^ body
 ]
 
 { #category : 'visiting' }
