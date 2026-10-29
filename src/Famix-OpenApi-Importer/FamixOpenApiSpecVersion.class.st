@@ -159,6 +159,13 @@ FamixOpenApiSpecVersion >> explicitNullFlagFrom: aSchemaNode [
 	^ false
 ]
 
+{ #category : 'security normalisation' }
+FamixOpenApiSpecVersion >> flowTypeFor: aFlowName [
+	"Answer the OpenAPI 3 flow type spelled aFlowName in the source."
+
+	^ aFlowName
+]
+
 { #category : 'schema normalisation' }
 FamixOpenApiSpecVersion >> isBooleanExclusive: aKey in: aSchemaNode [
 
@@ -282,6 +289,28 @@ FamixOpenApiSpecVersion >> schemaKeywords [
 	"Answer the JSON-Schema keywords mapped to Schema slots."
 
 	^ self class schemaKeywords
+]
+
+{ #category : 'security normalisation' }
+FamixOpenApiSpecVersion >> securitySchemeFor: aType declared: aSchemeName [
+	"Answer the HTTP authentication scheme of a security scheme of source type aType, declared as aSchemeName."
+
+	^ aSchemeName
+]
+
+{ #category : 'security normalisation' }
+FamixOpenApiSpecVersion >> securitySchemeKeys [
+	"Answer the keys of a security scheme node that are modelled in this version."
+
+	^ #( 'type' 'description' 'name' 'in' 'scheme' 'bearerFormat'
+	     'flows' 'openIdConnectUrl' )
+]
+
+{ #category : 'security normalisation' }
+FamixOpenApiSpecVersion >> securityTypeFrom: aType [
+	"Answer the OpenAPI 3 security scheme type spelled aType in the source."
+
+	^ aType
 ]
 
 { #category : 'references and servers' }

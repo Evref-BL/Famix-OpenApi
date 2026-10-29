@@ -15,6 +15,18 @@ FamixOpenApiSwagger2Version >> explicitNullFlagFrom: aSchemaNode [
 	^ (aSchemaNode at: 'x-nullable' ifAbsent: [ nil ]) == true
 ]
 
+{ #category : 'security normalisation' }
+FamixOpenApiSwagger2Version >> flowTypeFor: aFlowName [
+	"Answer the OpenAPI 3 flow type of the Swagger 2 flow aFlowName."
+
+	^ aFlowName = 'accessCode'
+		  ifTrue: [ 'authorizationCode' ]
+		  ifFalse: [
+			  aFlowName = 'application'
+				  ifTrue: [ 'clientCredentials' ]
+				  ifFalse: [ aFlowName ] ]
+]
+
 { #category : 'testing' }
 FamixOpenApiSwagger2Version >> isSwagger2 [
 
@@ -42,6 +54,32 @@ FamixOpenApiSwagger2Version >> sectionMapping [
 		  ('#/parameters/' -> '#/components/parameters/').
 		  ('#/responses/' -> '#/components/responses/').
 		  ('#/securityDefinitions/' -> '#/components/securitySchemes/') }
+]
+
+{ #category : 'security normalisation' }
+FamixOpenApiSwagger2Version >> securitySchemeFor: aType declared: aSchemeName [
+	"A Swagger 2 basic security definition is the HTTP basic scheme."
+
+	^ aType = 'basic'
+		  ifTrue: [ 'basic' ]
+		  ifFalse: [ aSchemeName ]
+]
+
+{ #category : 'security normalisation' }
+FamixOpenApiSwagger2Version >> securitySchemeKeys [
+	"A Swagger 2 oauth2 scheme carries its single flow directly."
+
+	^ super securitySchemeKeys
+	  , #( 'flow' 'authorizationUrl' 'tokenUrl' 'scopes' )
+]
+
+{ #category : 'security normalisation' }
+FamixOpenApiSwagger2Version >> securityTypeFrom: aType [
+	"Swagger 2 spells the HTTP basic type basic."
+
+	^ aType = 'basic'
+		  ifTrue: [ 'http' ]
+		  ifFalse: [ aType ]
 ]
 
 { #category : 'references and servers' }

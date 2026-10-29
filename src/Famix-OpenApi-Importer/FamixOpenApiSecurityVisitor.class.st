@@ -15,8 +15,11 @@ FamixOpenApiSecurityVisitor >> declaresEmptySecurityIn: aNode [
 
 { #category : 'visiting' }
 FamixOpenApiSecurityVisitor >> fillFlowsOf: aScheme from: aNode at: aPointer [
-	"Add to aScheme one OAuthFlow per entry of the flows object of aNode."
+	"Add to aScheme one OAuthFlow per entry of the flows object of aNode, or the single flow of a Swagger 2 oauth2 scheme."
 
+	(self specVersion isSwagger2 and: [ aScheme type = 'oauth2' ])
+		ifTrue: [
+		^ aScheme addFlow: (self inlineFlowFrom: aNode at: aPointer) ].
 	self
 		fixedEntriesAt: 'flows'
 		in: aNode
@@ -71,20 +74,24 @@ FamixOpenApiSecurityVisitor >> fillSecurityOfOperation: anOperation from: aNode 
 FamixOpenApiSecurityVisitor >> fillSecurityScheme: aScheme from: aNode at: aPointer [
 	"Fill aScheme, a component created with the key as name, from aNode, with its OAuth flows."
 
+	| rawType declaredScheme |
+	rawType := self stringAt: 'type' in: aNode at: aPointer.
+	declaredScheme := self stringAt: 'scheme' in: aNode at: aPointer.
 	aScheme
-		type: (self stringAt: 'type' in: aNode at: aPointer);
+		type: (self specVersion securityTypeFrom: rawType);
 		description: (self stringAt: 'description' in: aNode at: aPointer);
 		parameterName: (self stringAt: 'name' in: aNode at: aPointer);
 		inLocation: (self stringAt: 'in' in: aNode at: aPointer);
-		scheme: (self stringAt: 'scheme' in: aNode at: aPointer);
+		scheme:
+			(self specVersion
+				 securitySchemeFor: rawType
+				 declared: declaredScheme);
 		bearerFormat: (self stringAt: 'bearerFormat' in: aNode at: aPointer);
 		openIdConnectUrl:
 			(self stringAt: 'openIdConnectUrl' in: aNode at: aPointer);
 		extensions: (self
 				 extensionsOf: aNode
-				 known:
-					 #( 'type' 'description' 'name' 'in' 'scheme' 'bearerFormat'
-					    'flows' 'openIdConnectUrl' )
+				 known: self specVersion securitySchemeKeys
 				 at: aPointer).
 	self fillFlowsOf: aScheme from: aNode at: aPointer.
 	context
@@ -111,6 +118,25 @@ FamixOpenApiSecurityVisitor >> flowNamed: aKey from: aNode at: aPointer [
 				 at: aPointer).
 	self fillScopesOf: flow from: aNode at: aPointer.
 	context recordSourceTextOf: flow from: aNode category: #inline.
+	^ flow
+]
+
+{ #category : 'visiting' }
+FamixOpenApiSecurityVisitor >> inlineFlowFrom: aSchemeNode at: aPointer [
+	"Answer the OAuthFlow a Swagger 2 oauth2 scheme declares on itself. It shares the pointer of its scheme, so it is not registered."
+
+	| rawFlow flow |
+	rawFlow := self stringAt: 'flow' in: aSchemeNode at: aPointer.
+	flow := context
+		        newUnindexedEntity: OPOAuthFlow
+		        named: (rawFlow ifNil: [ 'flow' ])
+		        pointer: aPointer.
+	flow
+		flowType: (self specVersion flowTypeFor: rawFlow);
+		authorizationUrl:
+			(self stringAt: 'authorizationUrl' in: aSchemeNode at: aPointer);
+		tokenUrl: (self stringAt: 'tokenUrl' in: aSchemeNode at: aPointer).
+	self fillScopesOf: flow from: aSchemeNode at: aPointer.
 	^ flow
 ]
 
