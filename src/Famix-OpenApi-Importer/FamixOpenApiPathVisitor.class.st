@@ -131,7 +131,7 @@ FamixOpenApiPathVisitor >> fillOperation: anOperation from: aNode at: aPointer [
 		extensions: (context
 				 extensionsTextOf: aNode
 				 known: self operationKeys
-				 extra: self laterStepKeys
+				 extra: self swagger2ExtensionKeys
 				 unmodelled: #(  )
 				 at: aPointer).
 	self fillServersOf: anOperation from: aNode at: aPointer.
@@ -263,15 +263,6 @@ FamixOpenApiPathVisitor >> initialize [
 ]
 
 { #category : 'visiting' }
-FamixOpenApiPathVisitor >> laterStepKeys [
-	"Answer the keys that only Swagger 2 operations have: they are kept in the extensions until step C reads them."
-
-	^ self specVersion isSwagger2
-		  ifTrue: [ #( 'consumes' 'produces' 'schemes' ) ]
-		  ifFalse: [ #(  ) ]
-]
-
-{ #category : 'visiting' }
 FamixOpenApiPathVisitor >> newPathNamed: aKey at: aPointer [
 
 	^ (self newEntity: OPPath named: aKey pointer: aPointer)
@@ -329,6 +320,15 @@ FamixOpenApiPathVisitor >> reportDuplicateOperationIds [
 				pointer: operations first canonicalPointer
 				message: 'operationId ' , id printString , ' is used by '
 					, (', ' join: (operations collect: #canonicalPointer)) ] ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiPathVisitor >> swagger2ExtensionKeys [
+	"Answer the keys that only Swagger 2 operations have and that are kept in the extensions."
+
+	^ self specVersion isSwagger2
+		  ifTrue: [ #( 'consumes' 'produces' 'schemes' ) ]
+		  ifFalse: [ #(  ) ]
 ]
 
 { #category : 'visiting' }

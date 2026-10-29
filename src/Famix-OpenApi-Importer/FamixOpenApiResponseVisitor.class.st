@@ -112,7 +112,7 @@ FamixOpenApiResponseVisitor >> fillResponse: aResponse from: aNode at: aPointer 
 						  ifTrue: [
 							  #( 'description' 'headers' 'content' 'links' 'schema' ) ]
 						  ifFalse: [ #( 'description' 'headers' 'content' 'links' ) ])
-				 extra: self laterStepKeys
+				 extra: self swagger2ExtensionKeys
 				 unmodelled: #(  )
 				 at: aPointer).
 	self fillHeadersOf: aResponse from: aNode at: aPointer.
@@ -159,15 +159,6 @@ FamixOpenApiResponseVisitor >> headerNamed: aKey from: aNode at: aPointer [
 	header := self newEntity: OPHeader named: aKey pointer: aPointer.
 	self fillHeader: header from: aNode at: aPointer.
 	^ header
-]
-
-{ #category : 'visiting' }
-FamixOpenApiResponseVisitor >> laterStepKeys [
-	"Answer the keys that only Swagger 2 responses have and that are kept in the extensions."
-
-	^ self specVersion isSwagger2
-		  ifTrue: [ #( 'examples' ) ]
-		  ifFalse: [ #(  ) ]
 ]
 
 { #category : 'visiting' }
@@ -225,4 +216,13 @@ FamixOpenApiResponseVisitor >> responseIn: aNode at: aPointer statusCode: aCode 
 		at: aPointer
 		mediaTypes: aList.
 	^ response
+]
+
+{ #category : 'visiting' }
+FamixOpenApiResponseVisitor >> swagger2ExtensionKeys [
+	"Answer the keys that only Swagger 2 responses have and that are kept in the extensions."
+
+	^ self specVersion isSwagger2
+		  ifTrue: [ #( 'examples' ) ]
+		  ifFalse: [ #(  ) ]
 ]

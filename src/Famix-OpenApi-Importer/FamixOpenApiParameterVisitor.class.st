@@ -59,7 +59,7 @@ FamixOpenApiParameterVisitor >> fillParameter: aParameter from: aNode at: aPoint
 					  ifFalse: [ self knownKeys ])
 			 extra: (inline
 					  ifTrue: [ #( 'collectionFormat' ) ]
-					  ifFalse: [ self laterStepKeys ])
+					  ifFalse: [ self swagger2ExtensionKeys ])
 			 unmodelled: #(  )
 			 at: aPointer).
 	self contentVisitor
@@ -133,15 +133,6 @@ FamixOpenApiParameterVisitor >> knownKeys [
 ]
 
 { #category : 'visiting' }
-FamixOpenApiParameterVisitor >> laterStepKeys [
-	"Answer the keys that only Swagger 2 parameters have: they are kept in the extensions until step C reads them."
-
-	^ self specVersion isSwagger2
-		  ifTrue: [ #( 'type' 'format' 'items' 'collectionFormat' ) ]
-		  ifFalse: [ #(  ) ]
-]
-
-{ #category : 'visiting' }
 FamixOpenApiParameterVisitor >> parameterIn: aNode at: aPointer [
 	"Answer the Parameter described by aNode: the shared target when it is a reference (nil when it cannot be resolved), a new Parameter otherwise."
 
@@ -176,6 +167,15 @@ FamixOpenApiParameterVisitor >> swagger2BodyParameterIn: anOperationNode at: aPo
 		 in: anOperationNode
 		 at: aPointer) ifNotEmpty: [ :found |
 		aBlock value: found first value value: found first key ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> swagger2ExtensionKeys [
+	"Answer the keys that only Swagger 2 parameters have and that are kept in the extensions."
+
+	^ self specVersion isSwagger2
+		  ifTrue: [ #( 'type' 'format' 'items' 'collectionFormat' ) ]
+		  ifFalse: [ #(  ) ]
 ]
 
 { #category : 'visiting' }

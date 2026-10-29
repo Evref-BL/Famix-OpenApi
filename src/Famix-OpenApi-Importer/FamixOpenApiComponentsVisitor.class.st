@@ -150,7 +150,7 @@ FamixOpenApiComponentsVisitor >> createSections [
 
 { #category : 'visiting' }
 FamixOpenApiComponentsVisitor >> createSwagger2Sections [
-	"Create the entities of the Swagger 2 root sections parameters, responses and securityDefinitions. Body and formData global parameters are read as OPParameter components for now (resolved in later steps)."
+	"Create the entities of the Swagger 2 root sections parameters, responses and securityDefinitions. Body and formData global parameters are read as OPParameter components."
 
 	| parameters |
 	parameters := self parameterVisitor.

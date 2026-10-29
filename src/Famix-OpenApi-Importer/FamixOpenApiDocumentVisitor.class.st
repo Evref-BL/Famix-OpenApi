@@ -47,17 +47,6 @@ FamixOpenApiDocumentVisitor >> fillRoot: aRoot [
 ]
 
 { #category : 'visiting' }
-FamixOpenApiDocumentVisitor >> keysHandledByLaterSteps [
-	"Answer the top level keys that only Swagger 2 documents have and that step C reads (the others are read by the visitors of the paths, the security and the components). They are not reported as unknown keywords."
-
-	^ self specVersion isSwagger2
-		  ifTrue: [
-			  #( 'host' 'basePath' 'schemes' 'consumes' 'produces' 'definitions'
-			     'parameters' 'responses' 'securityDefinitions' ) ]
-		  ifFalse: [ #(  ) ]
-]
-
-{ #category : 'visiting' }
 FamixOpenApiDocumentVisitor >> keysReadHere [
 	"Answer the top level keys read by this visitor and the ones it delegates (the schemas, the paths, the webhooks, the security)."
 
@@ -71,7 +60,7 @@ FamixOpenApiDocumentVisitor >> keysReadHere [
 
 { #category : 'known keys' }
 FamixOpenApiDocumentVisitor >> knownComponentKeys [
-	"Answer the keys of a components object: the schemas, and the sections left to the later steps."
+	"Answer the keys of a components object: the schemas and the other sections, read by the components visitor."
 
 	^ #( 'schemas' 'responses' 'parameters' 'examples' 'requestBodies'
 	     'headers' 'securitySchemes' 'links' 'callbacks' 'pathItems' )
@@ -79,9 +68,9 @@ FamixOpenApiDocumentVisitor >> knownComponentKeys [
 
 { #category : 'known keys' }
 FamixOpenApiDocumentVisitor >> knownRootKeys [
-	"Answer the top level keys that are not unknown: the ones read here and the ones left to the later steps."
+	"Answer the top level keys that are not unknown: the ones read here and the Swagger 2 ones."
 
-	^ self keysReadHere , self keysHandledByLaterSteps
+	^ self keysReadHere , self swagger2RootKeys
 ]
 
 { #category : 'visiting' }
@@ -106,6 +95,17 @@ FamixOpenApiDocumentVisitor >> licenseIn: anInfoNode [
 				 at: '#/info/license').
 	context recordSourceTextOf: license from: node category: #inline.
 	^ license
+]
+
+{ #category : 'visiting' }
+FamixOpenApiDocumentVisitor >> swagger2RootKeys [
+	"Answer the top level keys that only Swagger 2 documents have (the others are read by the visitors of the paths, the security and the components). They are not reported as unknown keywords."
+
+	^ self specVersion isSwagger2
+		  ifTrue: [
+			  #( 'host' 'basePath' 'schemes' 'consumes' 'produces' 'definitions'
+			     'parameters' 'responses' 'securityDefinitions' ) ]
+		  ifFalse: [ #(  ) ]
 ]
 
 { #category : 'visiting' }
