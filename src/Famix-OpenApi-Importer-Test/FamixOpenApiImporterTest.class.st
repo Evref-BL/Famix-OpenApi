@@ -473,7 +473,8 @@ FamixOpenApiImporterTest >> testSourceTextPolicyComponentsKeepsSourceTextOnCompo
 	| model schemas component inline |
 	model := self importJson: self minimalOpenApi3Json.
 	schemas := self entitiesNamed: #Schema in: model.
-	component := schemas detect: [ :each | each name = 'Pet' ].
+	component := (schemas select: [ :each | each components isNotNil ])
+		             detect: [ :each | each name = 'Pet' ].
 	self deny: component sourceText isEmptyOrNil.
 	self assert:
 		(NeoJSONReader fromString: component sourceText) isDictionary.
@@ -493,7 +494,7 @@ FamixOpenApiImporterTest >> testSourceTextPolicyComponentsKeepsSourceTextOnCompo
 				  (self entitiesNamed: #Operation in: model) anyOne sourceText)
 				 at: 'operationId')
 		equals: 'createPet'.
-	inline := schemas select: [ :each | each name isNil ].
+	inline := schemas select: [ :each | each components isNil ].
 	self deny: inline isEmpty.
 	inline do: [ :each | self assert: each sourceText isNil ]
 ]

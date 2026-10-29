@@ -224,8 +224,10 @@ FamixOpenApiImporterTestCase >> schemasJson: aSchemasString [
 
 { #category : 'helpers' }
 FamixOpenApiImporterTestCase >> schemasNamed: aName in: aModel [
+	"Answer the component schemas (declared under components) named aName. Inline schemas are ignored."
 
-	^ (self schemasIn: aModel) select: [ :each | each name = aName ]
+	^ (self schemasIn: aModel) select: [ :each |
+		  each components isNotNil and: [ each name = aName ] ]
 ]
 
 { #category : 'helpers' }

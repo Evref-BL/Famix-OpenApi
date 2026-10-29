@@ -72,7 +72,10 @@ FamixOpenApiExampleTest >> operationNamed: anOperationId [
 
 { #category : 'helpers' }
 FamixOpenApiExampleTest >> schemaNamed: aName [
-	^ (model allWithSubTypesOf: OPSchema) detect: [ :each | each name = aName ]
+	"Answer the component schema named aName; inline schemas are ignored."
+
+	^ (model allWithSubTypesOf: OPSchema) detect: [ :each |
+		  each components isNotNil and: [ each name = aName ] ]
 ]
 
 { #category : 'running' }
