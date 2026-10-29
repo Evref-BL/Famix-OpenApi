@@ -130,13 +130,14 @@ FamixOpenApiDocumentVisitor >> tagFrom: aNode at: aPointer [
 
 { #category : 'visiting' }
 FamixOpenApiDocumentVisitor >> visit [
-	"Read the root entity and what hangs directly from it: info, servers, tags, external documentation, extensions and the components skeleton."
+	"Read the root entity and what hangs directly from it: info, servers, tags, external documentation, extensions and the components skeleton. The root is named after the info title, or 'openapi' when there is none."
 
 	| root |
 	root := self newEntity: OPOpenApi named: nil pointer: '#'.
 	context openApi: root.
 	self fillRoot: root.
 	self guard: [ self visitInfo ] at: '#/info'.
+	root name ifNil: [ root name: 'openapi' ].
 	self guard: [ self visitServers ] at: '#/servers'.
 	self guard: [ self visitTags ] at: '#/tags'.
 	self
@@ -170,17 +171,18 @@ FamixOpenApiDocumentVisitor >> visitComponentsSkeleton [
 
 { #category : 'visiting' }
 FamixOpenApiDocumentVisitor >> visitInfo [
-	"Read the Info with its Contact and License."
+	"Read the Info with its Contact and License. The Info is named 'info' when the document has no title; the OpenApi root takes the title."
 
-	| node info |
+	| node info title |
 	node := self dictionaryAt: 'info' in: self json at: '#'.
 	node ifNil: [ ^ self ].
+	title := self stringAt: 'title' in: node at: '#/info'.
 	info := self
 		        newEntity: OPInfo
-		        named: (self stringAt: 'title' in: node at: '#/info')
+		        named: (title ifNil: [ 'info' ])
 		        pointer: '#/info'.
 	info
-		title: info name;
+		title: title;
 		version: (self stringAt: 'version' in: node at: '#/info');
 		description: (self stringAt: 'description' in: node at: '#/info');
 		termsOfService:
@@ -197,7 +199,7 @@ FamixOpenApiDocumentVisitor >> visitInfo [
 				 at: '#/info').
 	context recordSourceTextOf: info from: node category: #inline.
 	self openApi info: info.
-	self openApi name: info name
+	self openApi name: title
 ]
 
 { #category : 'visiting' }

@@ -51,6 +51,141 @@ FamixOpenApiNamingTest >> testDotIsNotKeptAsIs [
 ]
 
 { #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedCollapsesNewlinesAndTabs [
+
+	self
+		assert: (FamixOpenApiNaming limited: 'a
+		b		c')
+		equals: 'a b c'
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedCollapsesRunsOfWhitespaceAndControlCharacters [
+
+	self
+		assert: (FamixOpenApiNaming limited: (String withAll: {
+						  $a.
+						  Character space.
+						  Character space.
+						  Character tab.
+						  Character cr.
+						  Character lf.
+						  (Character value: 0).
+						  $b }))
+		equals: 'a b'
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedCountsUnicodeAsOneCharacter [
+
+	| result |
+	result := FamixOpenApiNaming limited: (String
+			           new: FamixOpenApiNaming maxNameLength
+			           withAll: (Character value: 233)).
+	self assert: result size equals: FamixOpenApiNaming maxNameLength.
+	self assert: result last equals: (Character value: 233)
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedKeepsATextOfExactlyMaxNameLength [
+
+	| text |
+	text := String new: FamixOpenApiNaming maxNameLength withAll: $x.
+	self assert: (FamixOpenApiNaming limited: text) equals: text
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedKeepsUnicode [
+
+	self
+		assert: (FamixOpenApiNaming limited:
+				 'Caf' , (String with: (Character value: 233)) , ' '
+				 , (String with: (Character value: 16r4E2D)))
+		equals: 'Caf' , (String with: (Character value: 233)) , ' '
+			, (String with: (Character value: 16r4E2D))
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedNeverLeavesASpaceBeforeTheEllipsis [
+
+	| result |
+	result := FamixOpenApiNaming limited:
+		          (String
+			           new: FamixOpenApiNaming maxNameLength - 2
+			           withAll: $x) , ' yyyy'.
+	self assert: result size <= FamixOpenApiNaming maxNameLength.
+	self assert: result last equals: (Character value: 16r2026).
+	self deny: (result at: result size - 1) isSeparator
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedOfBlankStringIsEmpty [
+
+	self
+		assert:
+		(FamixOpenApiNaming limited: '  ' , (String with: Character tab))
+		equals: ''
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedOfEmptyStringIsEmpty [
+
+	self assert: (FamixOpenApiNaming limited: '') equals: ''
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedOfNilIsEmptyString [
+
+	self assert: (FamixOpenApiNaming limited: nil) equals: ''
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedTrimsTheEnds [
+
+	self
+		assert: (FamixOpenApiNaming limited: (String withAll: {
+						  Character lf.
+						  Character space.
+						  $a.
+						  Character tab }))
+		equals: 'a'
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testLimitedTruncatesOneCharacterOverMaxNameLength [
+
+	| result |
+	result := FamixOpenApiNaming limited:
+		          (String
+			           new: FamixOpenApiNaming maxNameLength + 1
+			           withAll: $x).
+	self assert: result size equals: FamixOpenApiNaming maxNameLength.
+	self assert: result last equals: (Character value: 16r2026).
+	self
+		assert: result allButLast
+		equals:
+		(String new: FamixOpenApiNaming maxNameLength - 1 withAll: $x)
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testNameFromAnyAnswersTheFallbackWhenNoCandidate [
+
+	self
+		assert: (FamixOpenApiNaming nameFromAny: { nil. '' } fallback: 'fb')
+		equals: 'fb'
+]
+
+{ #category : 'tests' }
+FamixOpenApiNamingTest >> testNameFromAnyAnswersTheFirstNonBlankCandidate [
+
+	self
+		assert: (FamixOpenApiNaming
+				 nameFromAny: { nil. '  '. 'b'. 'c' }
+				 fallback: 'fb')
+		equals: 'b'
+]
+
+{ #category : 'tests' }
 FamixOpenApiNamingTest >> testNestedPathSegmentsJoinedByUnderscore [
 
 	self

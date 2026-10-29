@@ -77,7 +77,7 @@ FamixOpenApiImportContext >> ensureComponents [
 	components ifNil: [
 		components := self
 			              newEntity: OPComponents
-			              named: nil
+			              named: 'components'
 			              pointer: '#/components'.
 		openApi ifNotNil: [ openApi components: components ] ].
 	^ components

@@ -546,6 +546,14 @@ FamixOpenApiImporterFidelityTest >> testComponentSchemaCanonicalPointer [
 		equals: '#/components/schemas/Owner'
 ]
 
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testComponentsEntityIsNamedComponents [
+
+	| model |
+	model := self importOpenApi3: '`components`:{`schemas`:{}}'.
+	self assert: (self componentsIn: model) name equals: 'components'
+]
+
 { #category : 'tests - D11 robustness' }
 FamixOpenApiImporterFidelityTest >> testDanglingReferenceLeavesTheReferringSlotEmpty [
 
@@ -592,6 +600,41 @@ FamixOpenApiImporterFidelityTest >> testEmptyOperationSecurityDisablesTheSecurit
 	self assert: operation securityDisabled equals: true.
 	self assert: operation securityRequirements isEmpty.
 	self assert: operation effectiveSecurity isEmpty
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testExternalDocsIsNamedByItsUrl [
+
+	| model |
+	model := self importOpenApi3:
+		         '`externalDocs`:{`url`:`https://docs.example.com`,`description`:`more`}'.
+	self
+		assert:
+		(self entitiesNamed: #ExternalDocumentation in: model) anyOne name
+		equals: 'https://docs.example.com'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testExternalDocsWithoutUrlIsNamedByItsDescription [
+
+	| model |
+	model := self importOpenApi3:
+		         '`externalDocs`:{`description`:`Find more\ninfo`}'.
+	self
+		assert:
+		(self entitiesNamed: #ExternalDocumentation in: model) anyOne name
+		equals: 'Find more info'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testExternalDocsWithoutUrlNorDescriptionIsNamedExternalDocs [
+
+	| model |
+	model := self importOpenApi3: '`externalDocs`:{}'.
+	self
+		assert:
+		(self entitiesNamed: #ExternalDocumentation in: model) anyOne name
+		equals: 'externalDocs'
 ]
 
 { #category : 'tests - D3 reference resolution order' }
@@ -668,6 +711,22 @@ FamixOpenApiImporterFidelityTest >> testInlineSchemaCanonicalPointerIsItsPositio
 			(self propertyNamed: 'tags' ofSchema: pet) valueSchema items
 				canonicalPointer
 		equals: '#/components/schemas/Pet/properties/tags/items'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testLongServerUrlIsLimitedInName [
+
+	| model server |
+	model := self importOpenApi3:
+		         '`servers`:[{`url`:`https://example.com/'
+		         , (String new: 120 withAll: $a) , '`}]'.
+	server := (self entitiesNamed: #Server in: model) anyOne.
+	self
+		assert: server name size
+		equals: FamixOpenApiNaming maxNameLength.
+	self
+		assert: server url size
+		equals: 'https://example.com/' size + 120
 ]
 
 { #category : 'tests - D11 robustness' }
@@ -811,6 +870,35 @@ FamixOpenApiImporterFidelityTest >> testOAuth2SchemeKeepsScopes [
 		assert:
 		(flow scopes detect: [ :each | each name = 'read' ]) description
 		equals: 'Read'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testOpenApiAndInfoKeepTheInfoTitle [
+
+	| model |
+	model := self importOpenApi3: '`paths`:{}'.
+	self assert: (self openApiIn: model) name equals: 't'.
+	self assert: (self openApiIn: model) info name equals: 't'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testOpenApiWithoutInfoIsNamedOpenapi [
+
+	| model |
+	model := self importJson:
+		         (self jsonFrom: '{`openapi`:`3.0.0`,`paths`:{}}').
+	self assert: (self openApiIn: model) name equals: 'openapi'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testOpenApiWithoutInfoTitleIsNamedOpenapiAndInfoInfo [
+
+	| model |
+	model := self importJson: (self jsonFrom:
+			          '{`openapi`:`3.0.0`,`info`:{`version`:`1`},`paths`:{}}').
+	self assert: (self openApiIn: model) name equals: 'openapi'.
+	self assert: (self openApiIn: model) info name equals: 'info'.
+	self assert: (self openApiIn: model) info title isNil
 ]
 
 { #category : 'tests - D5 operations (step B)' }
@@ -1610,6 +1698,17 @@ FamixOpenApiImporterFidelityTest >> testSelfReferenceResolvesToItself [
 		description: 'Tree items should be Tree itself'
 ]
 
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testServerIsNamedByItsUrl [
+
+	| model |
+	model := self importOpenApi3:
+		         '`servers`:[{`url`:`https://api.example.com/v1`}]'.
+	self
+		assert: (self entitiesNamed: #Server in: model) anyOne name
+		equals: 'https://api.example.com/v1'
+]
+
 { #category : 'tests - D7 D8 missing sections' }
 FamixOpenApiImporterFidelityTest >> testServerVariablesAreImported [
 	"D7: server variables are kept (variables of the server, with name, default and enum)."
@@ -1623,6 +1722,16 @@ FamixOpenApiImporterFidelityTest >> testServerVariablesAreImported [
 	self assert: variable name equals: 'env'.
 	self assert: variable defaultValue equals: 'prod'.
 	self assert: variable enumValues asArray equals: #( 'prod' 'dev' )
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testServerWithoutUrlIsNamedServer [
+
+	| model |
+	model := self importOpenApi3: '`servers`:[{`description`:`d`}]'.
+	self
+		assert: (self entitiesNamed: #Server in: model) anyOne name
+		equals: 'server'
 ]
 
 { #category : 'tests - D7 D8 missing sections' }
@@ -2229,6 +2338,29 @@ FamixOpenApiImporterFidelityTest >> testSwagger2SecurityDefinitionsAreImported [
 		equals: '#/securityDefinitions/basic'.
 	self assert: schemes anyOne type equals: 'http'.
 	self assert: schemes anyOne scheme equals: 'basic'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testSwagger2ServerWithoutHostIsNamedByItsBasePath [
+
+	| model |
+	model := self importSwagger2: '`basePath`:`/api`'.
+	self
+		assert: (self entitiesNamed: #Server in: model) anyOne name
+		equals: '/api'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testSwagger2SynthesizedServerIsNamedByItsUrl [
+
+	| model |
+	model := self importSwagger2:
+		         '`host`:`h.example.com`,`basePath`:`/api`,`schemes`:[`https`,`http`]'.
+	self
+		assert:
+		((self entitiesNamed: #Server in: model) collect: #name) asSet
+		equals:
+		#( 'https://h.example.com/api' 'http://h.example.com/api' ) asSet
 ]
 
 { #category : 'tests - D4 swagger 2.0' }

@@ -115,7 +115,7 @@ FamixOpenApiNodeVisitor >> extensionsOf: aNode known: aKnownKeys at: aPointer [
 
 { #category : 'helpers' }
 FamixOpenApiNodeVisitor >> externalDocsIn: aNode at: aPointer [
-	"Answer the ExternalDocumentation described under the externalDocs key of aNode (located at aPointer), or nil."
+	"Answer the ExternalDocumentation described under the externalDocs key of aNode (located at aPointer), or nil. It is named after its url, else its description, else 'externalDocs'."
 
 	| node pointer docs |
 	node := self dictionaryAt: 'externalDocs' in: aNode at: aPointer.
@@ -133,6 +133,11 @@ FamixOpenApiNodeVisitor >> externalDocsIn: aNode at: aPointer [
 				 extensionsOf: node
 				 known: #( 'description' 'url' )
 				 at: pointer).
+	docs name: (FamixOpenApiNaming
+			 nameFromAny: {
+					 docs url.
+					 docs description }
+			 fallback: 'externalDocs').
 	context recordSourceTextOf: docs from: node category: #inline.
 	^ docs
 ]
@@ -338,7 +343,7 @@ FamixOpenApiNodeVisitor >> securityVisitor [
 
 { #category : 'helpers' }
 FamixOpenApiNodeVisitor >> serverFrom: aNode at: aPointer [
-	"Answer the Server described by aNode with its variables."
+	"Answer the Server described by aNode with its variables. It is named after its url, or 'server' when it has none."
 
 	| server variables |
 	server := self newEntity: OPServer named: nil pointer: aPointer.
@@ -349,6 +354,8 @@ FamixOpenApiNodeVisitor >> serverFrom: aNode at: aPointer [
 				 extensionsOf: aNode
 				 known: #( 'url' 'description' 'variables' )
 				 at: aPointer).
+	server name:
+		(FamixOpenApiNaming nameFromAny: { server url } fallback: 'server').
 	context recordSourceTextOf: server from: aNode category: #inline.
 	variables := self dictionaryAt: 'variables' in: aNode at: aPointer.
 	variables ifNotNil: [
