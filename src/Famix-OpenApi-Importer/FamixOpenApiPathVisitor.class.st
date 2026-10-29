@@ -187,6 +187,7 @@ FamixOpenApiPathVisitor >> fillPathItemContent: aPath from: aNode at: aPointer [
 
 { #category : 'visiting' }
 FamixOpenApiPathVisitor >> fillRequestBodyOf: anOperation from: aNode at: aPointer [
+	"Fill the request body of anOperation, then name it (see nameRequestBodyOf:): the operation is already named."
 
 	| node |
 	self specVersion isSwagger2 ifTrue: [
@@ -198,12 +199,13 @@ FamixOpenApiPathVisitor >> fillRequestBodyOf: anOperation from: aNode at: aPoint
 	node ifNil: [ ^ self ].
 	anOperation requestBody: (self contentVisitor
 			 requestBodyIn: node
-			 at: (self pointer: aPointer appending: 'requestBody'))
+			 at: (self pointer: aPointer appending: 'requestBody')).
+	self nameRequestBodyOf: anOperation
 ]
 
 { #category : 'visiting' }
 FamixOpenApiPathVisitor >> fillSwagger2RequestBodyOf: anOperation from: aNode at: aPointer [
-	"Swagger 2 has no requestBody: the in body parameter of aNode is the request body of anOperation, with the pointer of the parameter and the consumes media types. Without body parameter, the formData parameters build a form request body. The body wins over the formData parameters, and the body parameters after the first one are ignored: both are reported."
+	"Swagger 2 has no requestBody: the in body parameter of aNode is the request body of anOperation, with the pointer of the parameter and the consumes media types. Without body parameter, the formData parameters build a form request body. The body wins over the formData parameters, and the body parameters after the first one are ignored: both are reported. The synthesized request body is always new (even when the body parameter is a reference to a global parameter) and is named after anOperation (see nameRequestBodyOf:)."
 
 	| bodies forms |
 	bodies := self parameterVisitor
@@ -232,12 +234,14 @@ FamixOpenApiPathVisitor >> fillSwagger2RequestBodyOf: anOperation from: aNode at
 				 swagger2RequestBodyFrom: bodies first value
 				 at: bodies first key
 				 operation: aNode).
+		self nameRequestBodyOf: anOperation.
 		^ self ].
 	forms ifNotEmpty: [
 		anOperation requestBody: (self
 				 swagger2FormRequestBodyFrom: (forms collect: #value)
 				 at: (self pointer: aPointer appending: 'requestBody')
-				 operation: aNode) ]
+				 operation: aNode).
+		self nameRequestBodyOf: anOperation ]
 ]
 
 { #category : 'visiting' }
@@ -260,6 +264,17 @@ FamixOpenApiPathVisitor >> initialize [
 
 	super initialize.
 	activeReferences := OrderedCollection new
+]
+
+{ #category : 'visiting' }
+FamixOpenApiPathVisitor >> nameRequestBodyOf: anOperation [
+	"Name the request body of anOperation '<operation name> requestBody', limited. A request body that already has a name (shared through a reference, named by its component key) is never renamed, and an operation without request body is left alone."
+
+	anOperation requestBody ifNotNil: [ :body |
+		body name ifNil: [
+			body name: (FamixOpenApiNaming limited: (anOperation name
+						  ifNil: [ 'requestBody' ]
+						  ifNotNil: [ :operationName | operationName , ' requestBody' ])) ] ]
 ]
 
 { #category : 'visiting' }

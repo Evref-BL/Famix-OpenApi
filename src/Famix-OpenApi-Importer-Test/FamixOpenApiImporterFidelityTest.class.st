@@ -45,6 +45,13 @@ FamixOpenApiImporterFidelityTest >> backwardReferenceJson [
 		  '`B`:{`type`:`object`},`A`:{`type`:`array`,`items`:{`$ref`:`#/components/schemas/B`}}'
 ]
 
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> callbackRequestBodyMembers [
+
+	^ self jsonFrom:
+		  '`paths`:{`/subscribe`:{`post`:{`operationId`:`subscribe`,`responses`:{`200`:{`description`:`ok`}},`callbacks`:{`onEvent`:{`{$request.query.callbackUrl}`:{`post`:{`requestBody`:{`content`:{`application/json`:{`schema`:{`type`:`object`}}}},`responses`:{`200`:{`description`:`ok`}}}}}}}}}'
+]
+
 { #category : 'fixtures' }
 FamixOpenApiImporterFidelityTest >> forwardReferenceJson [
 
@@ -70,6 +77,13 @@ FamixOpenApiImporterFidelityTest >> importedSchema: aSchemaJson [
 		  componentSchemaNamed: 'S'
 		  in:
 		  (self importOpenApi3: (self schemasJson: '`S`:' , aSchemaJson))
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> inlineRequestBodyMembers [
+
+	^ self jsonFrom:
+		  '`paths`:{`/pets`:{`post`:{`operationId`:`addPet`,`requestBody`:{`content`:{`application/json`:{`schema`:{`type`:`object`}}}},`responses`:{`200`:{`description`:`ok`}}}}}'
 ]
 
 { #category : 'fixtures' }
@@ -107,6 +121,13 @@ FamixOpenApiImporterFidelityTest >> petWithOwnerJson [
 
 	^ self jsonFrom:
 		  '`paths`:{},`components`:{`schemas`:{`Owner`:{`type`:`object`},`Pet`:{`type`:`object`,`properties`:{`id`:{`type`:`integer`,`format`:`int64`},`name`:{`type`:`string`},`owner`:{`$ref`:`#/components/schemas/Owner`},`tags`:{`type`:`array`,`items`:{`type`:`string`}}}}}}'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> requestBodyNamesIn: aModel [
+
+	^ ((self entitiesNamed: #RequestBody in: aModel) collect: #name)
+		  asArray sort
 ]
 
 { #category : 'fixtures' }
@@ -210,6 +231,13 @@ FamixOpenApiImporterFidelityTest >> swagger2PetJson [
 
 	^ self jsonFrom:
 		  '`paths`:{`/pets`:{`post`:{`operationId`:`addPet`,`parameters`:[{`name`:`body`,`in`:`body`,`schema`:{`$ref`:`#/definitions/Pet`}},{`name`:`ids`,`in`:`query`,`type`:`array`,`items`:{`type`:`integer`,`format`:`int64`},`collectionFormat`:`csv`}],`responses`:{`200`:{`description`:`ok`,`schema`:{`$ref`:`#/definitions/Pet`}},`default`:{`$ref`:`#/responses/GenericError`}}}}},`definitions`:{`Pet`:{`type`:`object`,`properties`:{`id`:{`type`:`integer`,`format`:`int64`},`name`:{`type`:`string`}}}},`securityDefinitions`:{`basic`:{`type`:`basic`}},`parameters`:{`Trace`:{`name`:`trace`,`in`:`header`,`type`:`string`}},`responses`:{`GenericError`:{`description`:`error`}}'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> swagger2ReferencedBodyJson [
+
+	^ self jsonFrom:
+		  '`paths`:{`/pets`:{`post`:{`operationId`:`addPet`,`parameters`:[{`$ref`:`#/parameters/PetBody`}],`responses`:{`200`:{`description`:`ok`}}}},`/dogs`:{`post`:{`operationId`:`addDog`,`parameters`:[{`$ref`:`#/parameters/PetBody`}],`responses`:{`200`:{`description`:`ok`}}}}},`parameters`:{`PetBody`:{`name`:`body`,`in`:`body`,`schema`:{`type`:`object`}}}'
 ]
 
 { #category : 'fixtures' }
@@ -449,6 +477,19 @@ FamixOpenApiImporterFidelityTest >> testBooleanExclusiveMinimumOfOpenApi30MovesT
 		          '{`type`:`integer`,`minimum`:5,`exclusiveMinimum`:true}'.
 	self assert: schema exclusiveMinimum equals: 5.
 	self assert: schema minimum isNil
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testCallbackOperationRequestBodyIsNamedAfterTheCallbackOperation [
+
+	| model callbackOperation |
+	model := self importOpenApi3: self callbackRequestBodyMembers.
+	callbackOperation := (self entitiesNamed: #Operation in: model)
+		                     detect: [ :each | each operationId isNil ].
+	self deny: callbackOperation name isNil.
+	self
+		assert: callbackOperation requestBody name
+		equals: callbackOperation name , ' requestBody'
 ]
 
 { #category : 'tests - canonical pointers (step B)' }
@@ -692,6 +733,31 @@ FamixOpenApiImporterFidelityTest >> testInlineComponentSchemaHasNoSourceRef [
 	self
 		assert: schema ref isNil
 		description: 'ref should be nil, got ' , schema ref printString
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testInlineOpenApi31RequestBodyIsNamedAfterItsOperation [
+
+	| operation |
+	operation := self
+		             operationWithId: 'addPet'
+		             in:
+		             (self importOpenApi31: self inlineRequestBodyMembers).
+	self assert: operation requestBody name equals: 'addPet requestBody'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testInlineOpenApi3RequestBodyIsNamedAfterItsOperation [
+
+	| operation |
+	operation := self
+		             operationWithId: 'addPet'
+		             in:
+		             (self importOpenApi3: self inlineRequestBodyMembers).
+	self assert: operation requestBody name equals: 'addPet requestBody'.
+	self
+		assert: operation requestBody canonicalPointer
+		equals: '#/paths/~1pets/post/requestBody'
 ]
 
 { #category : 'tests - canonical pointers' }
@@ -1199,6 +1265,38 @@ FamixOpenApiImporterFidelityTest >> testReferencedComponentSchemaKeepsNoRef [
 	| model |
 	model := self importOpenApi3: self forwardReferenceJson.
 	self assert: (self componentSchemaNamed: 'B' in: model) ref isNil
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testRequestBodyOfLongOperationNameIsLimited [
+
+	| id operation |
+	id := String new: 100 withAll: $a.
+	operation := self operationWithId: id in: (self importOpenApi3:
+			              (self inlineRequestBodyMembers
+				               copyReplaceAll: 'addPet'
+				               with: id)).
+	self
+		assert: operation requestBody name
+		equals: (FamixOpenApiNaming limited: id , ' requestBody').
+	self
+		assert: operation requestBody name size
+		equals: FamixOpenApiNaming maxNameLength
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testRequestBodyOfOperationWithoutOperationIdUsesTheSynthesizedName [
+
+	| operation |
+	operation := (self
+		              entitiesNamed: #Operation
+		              in: (self importOpenApi3:
+				               '`paths`:{`/pets`:{`post`:{`requestBody`:{`content`:{`application/json`:{`schema`:{`type`:`object`}}}},`responses`:{`200`:{`description`:`ok`}}}}}'))
+		             anyOne.
+	self deny: operation name isNil.
+	self
+		assert: operation requestBody name
+		equals: operation name , ' requestBody'
 ]
 
 { #category : 'tests - D7 D8 missing sections (step B)' }
@@ -1766,6 +1864,20 @@ FamixOpenApiImporterFidelityTest >> testSharedCallbackIsTheSameEntityFromBothUsa
 	self assert: component pathItems size equals: 1
 ]
 
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testSharedComponentRequestBodyKeepsItsComponentKey [
+
+	| model |
+	model := self importOpenApi3: self sharedComponentsJson.
+	self assert: (self requestBodyNamesIn: model) equals: #( 'PetBody' ).
+	self
+		assert: (self operationWithId: 'opA' in: model) requestBody name
+		equals: 'PetBody'.
+	self
+		assert: (self operationWithId: 'opB' in: model) requestBody name
+		equals: 'PetBody'
+]
+
 { #category : 'tests - D2 shared references (step B)' }
 FamixOpenApiImporterFidelityTest >> testSharedExampleIsTheSameEntityFromBothUsages [
 	"D2: a $ref example is shared by the media types that use it."
@@ -2006,6 +2118,30 @@ FamixOpenApiImporterFidelityTest >> testSwagger2BodyParameterRefResolvesToDefini
 		description: 'the body parameter is not a parameter any more'
 ]
 
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testSwagger2BodyParameterReferenceToGlobalParameterIsNamedAfterItsOperation [
+	"The synthesized body is built from the resolved node at the site pointer: it is an inline request body, named after each operation that uses it."
+
+	| model |
+	model := self importSwagger2: self swagger2ReferencedBodyJson.
+	self
+		assert: (self operationWithId: 'addPet' in: model) requestBody name
+		equals: 'addPet requestBody'.
+	self
+		assert: (self operationWithId: 'addDog' in: model) requestBody name
+		equals: 'addDog requestBody'
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testSwagger2BodyParameterRequestBodyIsNamedAfterItsOperation [
+
+	| operation |
+	operation := self
+		             operationWithId: 'addPet'
+		             in: (self importSwagger2: self swagger2PetJson).
+	self assert: operation requestBody name equals: 'addPet requestBody'
+]
+
 { #category : 'tests - D4 swagger 2.0 (step C)' }
 FamixOpenApiImporterFidelityTest >> testSwagger2BodyParameterRequestBodyTakesThePointerOfTheParameter [
 	"Convention: canonicalPointer = the position of the SOURCE node. The request body synthesized from the `in: body` parameter has the pointer of that parameter."
@@ -2143,6 +2279,19 @@ FamixOpenApiImporterFidelityTest >> testSwagger2FormDataParametersBecomeAFormReq
 	self assert:
 		((self operationWithId: 'submit' in: model) parameters noneSatisfy: [
 			 :each | each location = 'formData' ])
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testSwagger2FormDataRequestBodyIsNamedAfterItsOperation [
+
+	| model |
+	model := self importSwagger2: self swagger2FormJson.
+	self
+		assert: (self operationWithId: 'submit' in: model) requestBody name
+		equals: 'submit requestBody'.
+	self
+		assert: (self operationWithId: 'upload' in: model) requestBody name
+		equals: 'upload requestBody'
 ]
 
 { #category : 'tests - D4 swagger 2.0 (step C)' }
@@ -2464,6 +2613,17 @@ FamixOpenApiImporterFidelityTest >> testUnresolvedReferenceIsReportedAsDiagnosti
 		description: 'The dangling $ref should be reported'.
 	self assert:
 		(importer diagnostics withCode: #unresolvedReference) notEmpty
+]
+
+{ #category : 'tests' }
+FamixOpenApiImporterFidelityTest >> testWebhookRequestBodyIsNamedAfterTheWebhookOperation [
+
+	| operation |
+	operation := self
+		             operationWithId: 'onPet'
+		             in: (self importOpenApi31:
+				              '`paths`:{},`webhooks`:{`petEvent`:{`post`:{`operationId`:`onPet`,`requestBody`:{`content`:{`application/json`:{`schema`:{`type`:`object`}}}},`responses`:{`200`:{`description`:`ok`}}}}}').
+	self assert: operation requestBody name equals: 'onPet requestBody'
 ]
 
 { #category : 'tests - D7 D8 missing sections (step B)' }
