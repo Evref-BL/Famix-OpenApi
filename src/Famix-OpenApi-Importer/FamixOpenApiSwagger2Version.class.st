@@ -33,6 +33,15 @@ FamixOpenApiSwagger2Version >> isSwagger2 [
 	^ true
 ]
 
+{ #category : 'parameters' }
+FamixOpenApiSwagger2Version >> parameterSchemaKeys [
+	"Answer the keys of a non-body, non-formData parameter that describe its schema."
+
+	^ #( 'type' 'format' 'items' 'default' 'enum' 'maximum' 'exclusiveMaximum'
+	     'minimum' 'exclusiveMinimum' 'maxLength' 'minLength' 'pattern'
+	     'maxItems' 'minItems' 'uniqueItems' 'multipleOf' )
+]
+
 { #category : 'references and servers' }
 FamixOpenApiSwagger2Version >> refTargetPointerFor: aRefString [
 	"Answer aRefString with its Swagger 2 section prefix replaced by the OpenAPI 3 components section."
@@ -109,4 +118,21 @@ FamixOpenApiSwagger2Version >> serversFrom: aDocumentNode [
 		schemes := #( 'https' ) ].
 	^ (schemes select: #isString) asArray collect: [ :scheme |
 		  self serverAt: scheme , '://' , host , basePath ]
+]
+
+{ #category : 'parameters' }
+FamixOpenApiSwagger2Version >> styleAndExplodeFor: aCollectionFormat in: aLocation [
+	"Answer an array with the OpenAPI 3 style and explode matching aCollectionFormat of a parameter located in aLocation, or nil when there is no equivalent (tsv, or an unknown format or location)."
+
+	aCollectionFormat = 'multi' ifTrue: [ ^ #( 'form' true ) ].
+	(aLocation = 'query' or: [ aLocation = 'cookie' ]) ifTrue: [
+		aCollectionFormat = 'csv' ifTrue: [ ^ #( 'form' false ) ].
+		aCollectionFormat = 'ssv' ifTrue: [ ^ #( 'spaceDelimited'
+			     false ) ].
+		aCollectionFormat = 'pipes' ifTrue: [ ^ #( 'pipeDelimited'
+			     false ) ].
+		^ nil ].
+	(aLocation = 'path' or: [ aLocation = 'header' ]) ifTrue: [
+		aCollectionFormat = 'csv' ifTrue: [ ^ #( 'simple' false ) ] ].
+	^ nil
 ]

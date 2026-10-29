@@ -32,6 +32,8 @@ FamixOpenApiParameterVisitor >> fillComponentParameter: aParameter from: aNode a
 FamixOpenApiParameterVisitor >> fillParameter: aParameter from: aNode at: aPointer [
 	"Fill aParameter, created with its name, from aNode: attributes, schema, content, examples and extensions."
 
+	| inline |
+	inline := self isInlineSwagger2Parameter: aNode.
 	aParameter
 		location: (self stringAt: 'in' in: aNode at: aPointer);
 		required: (self booleanAt: 'required' in: aNode at: aPointer);
@@ -43,13 +45,22 @@ FamixOpenApiParameterVisitor >> fillParameter: aParameter from: aNode at: aPoint
 		explode: (self booleanAt: 'explode' in: aNode at: aPointer);
 		allowReserved:
 			(self booleanAt: 'allowReserved' in: aNode at: aPointer);
-		schema: (self schemaIn: aNode at: aPointer);
-		extensions: (context
-				 extensionsTextOf: aNode
-				 known: self knownKeys
-				 extra: self laterStepKeys
-				 unmodelled: #(  )
-				 at: aPointer).
+		schema: (inline
+				 ifTrue: [ self inlineSchemaIn: aNode at: aPointer ]
+				 ifFalse: [ self schemaIn: aNode at: aPointer ]).
+	inline ifTrue: [
+		self fillStyleAndExplodeOf: aParameter from: aNode at: aPointer ].
+	aParameter extensions: (context
+			 extensionsTextOf: aNode
+			 known: (inline
+					  ifTrue: [
+					  self knownKeys , self specVersion parameterSchemaKeys ]
+					  ifFalse: [ self knownKeys ])
+			 extra: (inline
+					  ifTrue: [ #( 'collectionFormat' ) ]
+					  ifFalse: [ self laterStepKeys ])
+			 unmodelled: #(  )
+			 at: aPointer).
 	self contentVisitor
 		fillContentOf: aParameter
 		from: aNode
@@ -62,6 +73,44 @@ FamixOpenApiParameterVisitor >> fillParameter: aParameter from: aNode at: aPoint
 		recordSourceTextOf: aParameter
 		from: aNode
 		category: (self sourceCategoryOf: aParameter)
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> fillStyleAndExplodeOf: aParameter from: aNode at: aPointer [
+	"Derive the style and the explode of aParameter from the collectionFormat of aNode, when they have an OpenAPI 3 equivalent."
+
+	| derived |
+	(self stringAt: 'collectionFormat' in: aNode at: aPointer) ifNotNil: [
+		:format |
+		derived := self specVersion
+			           styleAndExplodeFor: format
+			           in: aParameter location.
+		derived ifNotNil: [
+			aParameter style: derived first.
+			aParameter explode: derived second ] ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> inlineSchemaIn: aNode at: aPointer [
+	"Answer the Schema built from the schema keys that a Swagger 2 inline parameter (aNode, located at aPointer) has directly in its node, or nil when there is none."
+
+	| schemaNode |
+	schemaNode := self schemaNodeOf: aNode.
+	schemaNode ifEmpty: [ ^ nil ].
+	^ self
+		  schemaFrom: schemaNode
+		  at: (self pointer: aPointer appending: 'schema')
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> isInlineSwagger2Parameter: aNode [
+	"Answer whether aNode is a Swagger 2 parameter that describes its schema itself (type, items...): neither a body nor a formData one."
+
+	| location |
+	self specVersion isSwagger2 ifFalse: [ ^ false ].
+	aNode isDictionary ifFalse: [ ^ false ].
+	location := aNode at: 'in' ifAbsent: [ ^ false ].
+	^ (location = 'body' or: [ location = 'formData' ]) not
 ]
 
 { #category : 'visiting' }
@@ -94,4 +143,15 @@ FamixOpenApiParameterVisitor >> parameterIn: aNode at: aPointer [
 		             pointer: aPointer.
 	self fillParameter: parameter from: aNode at: aPointer.
 	^ parameter
+]
+
+{ #category : 'visiting' }
+FamixOpenApiParameterVisitor >> schemaNodeOf: aNode [
+	"Answer a node with the keys of aNode that describe the schema of a Swagger 2 inline parameter."
+
+	| schemaNode |
+	schemaNode := OrderedDictionary new.
+	self specVersion parameterSchemaKeys do: [ :key |
+		aNode at: key ifPresent: [ :value | schemaNode at: key put: value ] ].
+	^ schemaNode
 ]

@@ -254,6 +254,13 @@ FamixOpenApiSpecVersion >> openApiServersFrom: aDocumentNode [
 		  ifFalse: [ servers asArray ]
 ]
 
+{ #category : 'parameters' }
+FamixOpenApiSpecVersion >> parameterSchemaKeys [
+	"Answer the keys of a non-body parameter that describe its schema: none in OpenAPI 3, where the parameter has a schema key."
+
+	^ #(  )
+]
+
 { #category : 'accessing' }
 FamixOpenApiSpecVersion >> printOn: aStream [
 
@@ -331,6 +338,13 @@ FamixOpenApiSpecVersion >> sourceVersion [
 	"Answer the version String as read in the document."
 
 	^ sourceVersion
+]
+
+{ #category : 'parameters' }
+FamixOpenApiSpecVersion >> styleAndExplodeFor: aCollectionFormat in: aLocation [
+	"Answer an array with the style and the explode matching aCollectionFormat of a parameter located in aLocation, or nil when there is no equivalent. Only Swagger 2 has a collectionFormat."
+
+	^ nil
 ]
 
 { #category : 'schema normalisation' }
