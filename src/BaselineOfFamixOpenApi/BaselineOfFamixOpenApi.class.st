@@ -57,6 +57,8 @@ BaselineOfFamixOpenApi >> definePackages: spec [
 	spec package: 'Famix-OpenApi-Analysis-Test' with: [ spec requires: #( 'Famix-OpenApi-Analysis' 'Famix-OpenApi-Importer' ) ].
 	spec package: 'Famix-OpenAPI-Model' with: [ spec requires: #( 'FamixOpenApiGenerator' ) ].
 	spec package: 'Famix-OpenAPI-Model-Extension' with: [ spec requires: #( 'Famix-OpenAPI-Model' ) ].
+	spec package: 'Famix-OpenApi-Validation' with: [ spec requires: #( 'Famix-OpenAPI-Model' ) ].
+	spec package: 'Famix-OpenApi-Validation-Test' with: [ spec requires: #( 'Famix-OpenApi-Validation' 'Famix-OpenApi-Importer' ) ].
 
 ]
 
