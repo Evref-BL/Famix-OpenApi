@@ -148,11 +148,12 @@ FamixOpenApiDocumentVisitor >> visit [
 
 { #category : 'visiting' }
 FamixOpenApiDocumentVisitor >> visitComponentsSkeleton [
-	"Create the Components entity when the document has components (Swagger 2: definitions) and keep its extensions. Its sections are filled by the visitors of each kind of component."
+	"Create the Components entity when the document has components (Swagger 2: definitions, parameters, responses or securityDefinitions at the root) and keep its extensions. Its sections are filled by the visitors of each kind of component."
 
 	| node |
 	self specVersion isSwagger2 ifTrue: [
-		(self json includesKey: 'definitions') ifTrue: [
+		(#( 'definitions' 'parameters' 'responses' 'securityDefinitions' )
+			 anySatisfy: [ :each | self json includesKey: each ]) ifTrue: [
 			context ensureComponents ].
 		^ self ].
 	node := self dictionaryAt: 'components' in: self json at: '#'.

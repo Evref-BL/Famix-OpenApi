@@ -16,23 +16,22 @@ FamixOpenApiComponentsVisitor >> components [
 
 { #category : 'visiting' }
 FamixOpenApiComponentsVisitor >> createComponents [
-	"Pass 1: create and register an empty entity for every component of the reusable sections other than the schemas, so that every reference resolves (to an entity of the right kind or not). Swagger 2 sections are read by step C."
+	"Pass 1: create and register an empty entity for every component of the reusable sections other than the schemas, so that every reference resolves (to an entity of the right kind or not). Swagger 2 sections live at the root of the document."
 
-	self specVersion isSwagger2 ifTrue: [ ^ self ].
-	self createSections
+	self specVersion isSwagger2
+		ifTrue: [ self createSwagger2Sections ]
+		ifFalse: [ self createSections ]
 ]
 
 { #category : 'visiting' }
-FamixOpenApiComponentsVisitor >> createSection: aKey of: aClass adding: anAddBlock filling: aFillBlock [
-	"Create, for every entry of the components section aKey, an empty entity of aClass named by the key, add it with anAddBlock and register it for pass 2 (aFillBlock gets the entity and its node). An entry that is only a reference is an alias, reported as a componentAlias."
+FamixOpenApiComponentsVisitor >> createSection: aKey in: holder at: aBasePointer of: aClass adding: anAddBlock filling: aFillBlock [
+	"Create, for every entry of the section aKey of holder (located at aBasePointer), an empty entity of aClass named by the key, add it with anAddBlock and register it for pass 2 (aFillBlock gets the entity and its node). An entry that is only a reference is an alias, reported as a componentAlias."
 
-	| holder |
-	holder := self json at: 'components' ifAbsent: [ ^ self ].
 	holder isDictionary ifFalse: [ ^ self ].
 	self
 		entriesAt: aKey
 		in: holder
-		at: '#/components'
+		at: aBasePointer
 		do: [ :key :node :pointer |
 			(self isReferenceNode: node)
 				ifTrue: [ self registerAliasFrom: node at: pointer ]
@@ -44,6 +43,21 @@ FamixOpenApiComponentsVisitor >> createSection: aKey of: aClass adding: anAddBlo
 							entity.
 							node.
 							aFillBlock } ] ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiComponentsVisitor >> createSection: aKey of: aClass adding: anAddBlock filling: aFillBlock [
+	"Create the entities of the components section aKey (see createSection:in:at:of:adding:filling:)."
+
+	| holder |
+	holder := self json at: 'components' ifAbsent: [ ^ self ].
+	self
+		createSection: aKey
+		in: holder
+		at: '#/components'
+		of: aClass
+		adding: anAddBlock
+		filling: aFillBlock
 ]
 
 { #category : 'visiting' }
@@ -130,6 +144,47 @@ FamixOpenApiComponentsVisitor >> createSections [
 		filling: [ :each :node |
 			self pathVisitor
 				fillPathItem: each
+				from: node
+				at: each canonicalPointer ]
+]
+
+{ #category : 'visiting' }
+FamixOpenApiComponentsVisitor >> createSwagger2Sections [
+	"Create the entities of the Swagger 2 root sections parameters, responses and securityDefinitions. Body and formData global parameters are read as OPParameter components for now (resolved in later steps)."
+
+	| parameters |
+	parameters := self parameterVisitor.
+	self
+		createSection: 'parameters'
+		in: self json
+		at: '#'
+		of: OPParameter
+		adding: [ :each | self components addParameter: each ]
+		filling: [ :each :node |
+			parameters
+				fillComponentParameter: each
+				from: node
+				at: each canonicalPointer ].
+	self
+		createSection: 'responses'
+		in: self json
+		at: '#'
+		of: OPResponse
+		adding: [ :each | self components addResponse: each ]
+		filling: [ :each :node |
+			self responseVisitor
+				fillResponse: each
+				from: node
+				at: each canonicalPointer ].
+	self
+		createSection: 'securityDefinitions'
+		in: self json
+		at: '#'
+		of: OPSecurityScheme
+		adding: [ :each | self components addSecurityScheme: each ]
+		filling: [ :each :node |
+			self securityVisitor
+				fillSecurityScheme: each
 				from: node
 				at: each canonicalPointer ]
 ]
