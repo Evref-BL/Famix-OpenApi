@@ -91,18 +91,38 @@ FamixOpenApiResponseVisitor >> fillLinksOf: aResponse from: aNode at: aPointer [
 
 { #category : 'visiting' }
 FamixOpenApiResponseVisitor >> fillResponse: aResponse from: aNode at: aPointer [
-	"Fill aResponse, created empty, from aNode: description, headers, content, links and extensions."
+	"Fill aResponse, created empty, from aNode. It has no operation: a Swagger 2 schema takes the root produces as media types."
+
+	self
+		fillResponse: aResponse
+		from: aNode
+		at: aPointer
+		mediaTypes: (self mediaTypesFor: 'produces' in: nil)
+]
+
+{ #category : 'visiting' }
+FamixOpenApiResponseVisitor >> fillResponse: aResponse from: aNode at: aPointer mediaTypes: aList [
+	"Fill aResponse, created empty, from aNode: description, headers, content, links and extensions. aList holds the media types of a Swagger 2 schema."
 
 	aResponse
 		description: (self stringAt: 'description' in: aNode at: aPointer);
 		extensions: (context
 				 extensionsTextOf: aNode
-				 known: #( 'description' 'headers' 'content' 'links' )
+				 known: (self specVersion isSwagger2
+						  ifTrue: [
+							  #( 'description' 'headers' 'content' 'links' 'schema' ) ]
+						  ifFalse: [ #( 'description' 'headers' 'content' 'links' ) ])
 				 extra: self laterStepKeys
 				 unmodelled: #(  )
 				 at: aPointer).
 	self fillHeadersOf: aResponse from: aNode at: aPointer.
 	self contentVisitor fillContentOf: aResponse from: aNode at: aPointer.
+	self specVersion isSwagger2 ifTrue: [
+		self contentVisitor
+			fillSwagger2ContentOf: aResponse
+			from: aNode
+			mediaTypes: aList
+			at: aPointer ].
 	self fillLinksOf: aResponse from: aNode at: aPointer.
 	context
 		recordSourceTextOf: aResponse
@@ -112,15 +132,21 @@ FamixOpenApiResponseVisitor >> fillResponse: aResponse from: aNode at: aPointer 
 
 { #category : 'visiting' }
 FamixOpenApiResponseVisitor >> fillResponsesOf: anOperation from: aNode at: aPointer [
-	"Add to anOperation one Response per entry of the responses object of aNode (the status code is the key). A response that is a reference is cloned at its position."
+	"Add to anOperation one Response per entry of the responses object of aNode (the status code is the key). A response that is a reference is cloned at its position. The Swagger 2 media types come from the produces of aNode, else of the root."
 
+	| mediaTypes |
+	mediaTypes := self mediaTypesFor: 'produces' in: aNode.
 	self
 		fixedEntriesAt: 'responses'
 		in: aNode
 		at: aPointer
 		do: [ :key :node :pointer |
-			(self responseIn: node at: pointer statusCode: key) ifNotNil: [
-				:response | anOperation addResponse: response ] ]
+			(self
+				 responseIn: node
+				 at: pointer
+				 statusCode: key
+				 mediaTypes: mediaTypes) ifNotNil: [ :response |
+				anOperation addResponse: response ] ]
 ]
 
 { #category : 'visiting' }
@@ -137,10 +163,10 @@ FamixOpenApiResponseVisitor >> headerNamed: aKey from: aNode at: aPointer [
 
 { #category : 'visiting' }
 FamixOpenApiResponseVisitor >> laterStepKeys [
-	"Answer the keys that only Swagger 2 responses have: they are kept in the extensions until step C reads them."
+	"Answer the keys that only Swagger 2 responses have and that are kept in the extensions."
 
 	^ self specVersion isSwagger2
-		  ifTrue: [ #( 'schema' 'examples' ) ]
+		  ifTrue: [ #( 'examples' ) ]
 		  ifFalse: [ #(  ) ]
 ]
 
@@ -166,18 +192,37 @@ FamixOpenApiResponseVisitor >> newResponseAt: aPointer statusCode: aCode [
 
 { #category : 'visiting' }
 FamixOpenApiResponseVisitor >> responseIn: aNode at: aPointer statusCode: aCode [
-	"Answer a new Response of status aCode at aPointer: described by aNode, or, when aNode is a reference, a copy of the referenced node read at aPointer (it keeps the raw reference in its ref). Nil when the reference cannot be resolved."
+	"Answer a new Response of status aCode at aPointer, with the root produces as Swagger 2 media types."
+
+	^ self
+		  responseIn: aNode
+		  at: aPointer
+		  statusCode: aCode
+		  mediaTypes: (self mediaTypesFor: 'produces' in: nil)
+]
+
+{ #category : 'visiting' }
+FamixOpenApiResponseVisitor >> responseIn: aNode at: aPointer statusCode: aCode mediaTypes: aList [
+	"Answer a new Response of status aCode at aPointer: described by aNode, or, when aNode is a reference, a copy of the referenced node read at aPointer (it keeps the raw reference in its ref). aList holds the Swagger 2 media types. Nil when the reference cannot be resolved."
 
 	| response ref target |
 	(self isReferenceNode: aNode) ifFalse: [
 		response := self newResponseAt: aPointer statusCode: aCode.
-		self fillResponse: response from: aNode at: aPointer.
+		self
+			fillResponse: response
+			from: aNode
+			at: aPointer
+			mediaTypes: aList.
 		^ response ].
 	ref := aNode at: '$ref'.
 	target := self referencedNodeFor: ref at: aPointer.
 	target ifNil: [ ^ nil ].
 	response := self newResponseAt: aPointer statusCode: aCode.
 	response ref: ref.
-	self fillResponse: response from: target at: aPointer.
+	self
+		fillResponse: response
+		from: target
+		at: aPointer
+		mediaTypes: aList.
 	^ response
 ]

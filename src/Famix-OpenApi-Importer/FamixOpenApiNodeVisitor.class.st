@@ -167,6 +167,16 @@ FamixOpenApiNodeVisitor >> guard: aBlock at: aPointer [
 	^ context guard: aBlock at: aPointer
 ]
 
+{ #category : 'helpers' }
+FamixOpenApiNodeVisitor >> hasMediaTypeListAt: aKey in: aNode [
+	"Answer whether aNode is an object holding a non-empty list at aKey."
+
+	^ aNode isDictionary and: [
+		  | value |
+		  value := aNode at: aKey ifAbsent: [ nil ].
+		  (context isList: value) and: [ value isNotEmpty ] ]
+]
+
 { #category : 'accessing' }
 FamixOpenApiNodeVisitor >> index [
 
@@ -191,6 +201,16 @@ FamixOpenApiNodeVisitor >> json [
 FamixOpenApiNodeVisitor >> listAt: aKey in: aNode at: aPointer [
 
 	^ context listAt: aKey in: aNode pointer: aPointer
+]
+
+{ #category : 'helpers' }
+FamixOpenApiNodeVisitor >> mediaTypesFor: aKey in: anOperationNode [
+	"Answer the media types (Swagger 2 produces or consumes, named by aKey) that apply to anOperationNode: its own list, else the root list, else #('*/*'). An empty or non-list value falls back to the next level. anOperationNode is nil for the global objects, which have no operation."
+
+	^ (Array with: anOperationNode with: self json)
+		  detect: [ :node | self hasMediaTypeListAt: aKey in: node ]
+		  ifFound: [ :node | (node at: aKey) asArray ]
+		  ifNone: [ #( '*/*' ) ]
 ]
 
 { #category : 'accessing' }

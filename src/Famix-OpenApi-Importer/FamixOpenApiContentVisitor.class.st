@@ -132,6 +132,24 @@ FamixOpenApiContentVisitor >> fillRequestBody: aBody from: aNode at: aPointer [
 ]
 
 { #category : 'visiting' }
+FamixOpenApiContentVisitor >> fillSwagger2ContentOf: anOwner from: aNode mediaTypes: aList at: aPointer [
+	"Add to anOwner (a Response) one MediaType per media type of aList, all sharing the schema of aNode, read once. Does nothing when aNode has no schema."
+
+	| schema |
+	(aNode at: 'schema' ifAbsent: [ nil ]) ifNil: [ ^ self ].
+	schema := self schemaIn: aNode at: aPointer.
+	schema ifNil: [ ^ self ].
+	aList do: [ :each |
+		anOwner addContent:
+			((self newEntity: OPMediaType named: each pointer: (self
+						   pointer: (self pointer: aPointer appending: 'content')
+						   appending: each))
+				 mediaType: each;
+				 schema: schema;
+				 yourself) ]
+]
+
+{ #category : 'visiting' }
 FamixOpenApiContentVisitor >> mediaTypeNamed: aKey from: aNode at: aPointer [
 	"Answer the MediaType aKey described by aNode, with its schema, examples and encodings."
 
