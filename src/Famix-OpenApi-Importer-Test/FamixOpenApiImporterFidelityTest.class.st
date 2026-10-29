@@ -137,6 +137,14 @@ FamixOpenApiImporterFidelityTest >> richDocumentJson [
 		  '`servers`:[{`url`:`https://{env}.example.com`,`variables`:{`env`:{`default`:`prod`,`enum`:[`prod`,`dev`]}}}],`externalDocs`:{`url`:`https://docs.example.com`},`tags`:[{`name`:`pets`}],`security`:[{`ApiKeyAuth`:[]}],`paths`:{`/pets`:{`get`:{`operationId`:`listPets`,`tags`:[`pets`],`externalDocs`:{`url`:`https://op.example.com`},`security`:[{`OAuth`:[`read`,`write`]}],`responses`:{`200`:{`description`:`ok`,`headers`:{`X-Rate-Limit`:{`description`:`rate`,`schema`:{`type`:`integer`}}},`links`:{`next`:{`operationId`:`listPets`}},`content`:{`application/json`:{`schema`:{`type`:`string`},`encoding`:{`a`:{`contentType`:`text/plain`}}}}}}}}},`components`:{`securitySchemes`:{`ApiKeyAuth`:{`type`:`apiKey`,`in`:`header`,`name`:`X-API-Key`},`OAuth`:{`type`:`oauth2`,`flows`:{`authorizationCode`:{`authorizationUrl`:`https://auth.example.com`,`tokenUrl`:`https://token.example.com`,`scopes`:{`read`:`Read`,`write`:`Write`}}}}}}'
 ]
 
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> securityRequirementNamesIn: aModel [
+	"Answer the names of all the security requirements of aModel, sorted."
+
+	^ ((self entitiesNamed: #SecurityRequirement in: aModel) collect:
+		   #name) asArray sorted
+]
+
 { #category : 'fixtures' }
 FamixOpenApiImporterFidelityTest >> selfReferenceJson [
 
@@ -643,6 +651,24 @@ FamixOpenApiImporterFidelityTest >> testEmptyOperationSecurityDisablesTheSecurit
 	self assert: operation effectiveSecurity isEmpty
 ]
 
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testEmptySecurityArrayCreatesNoRequirementToName [
+
+	| model |
+	model := self importOpenApi3: '`security`:[],`paths`:{}'.
+	self assert: (self securityRequirementNamesIn: model) isEmpty
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testEmptySecurityRequirementIsNamedAnonymous [
+
+	| model |
+	model := self importOpenApi3: '`security`:[{}],`paths`:{}'.
+	self
+		assert: (self openApiIn: model) securityRequirements anyOne name
+		equals: 'anonymous'
+]
+
 { #category : 'tests' }
 FamixOpenApiImporterFidelityTest >> testExternalDocsIsNamedByItsUrl [
 
@@ -779,6 +805,24 @@ FamixOpenApiImporterFidelityTest >> testInlineSchemaCanonicalPointerIsItsPositio
 		equals: '#/components/schemas/Pet/properties/tags/items'
 ]
 
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testLongSecurityRequirementNameIsLimited [
+
+	| model requirement |
+	model := self importOpenApi3:
+		         '`security`:[{`' , (String new: 60 withAll: $a) , '`:[],`'
+		         , (String new: 60 withAll: $b) , '`:[]}],`paths`:{}'.
+	requirement := (self openApiIn: model) securityRequirements anyOne.
+	self
+		assert: requirement name size
+		equals: FamixOpenApiNaming maxNameLength.
+	self assert:
+		(requirement name beginsWith: (String new: 60 withAll: $a)).
+	self
+		assert: (requirement items collect: #name) asArray sorted first size
+		equals: 60
+]
+
 { #category : 'tests' }
 FamixOpenApiImporterFidelityTest >> testLongServerUrlIsLimitedInName [
 
@@ -811,6 +855,29 @@ FamixOpenApiImporterFidelityTest >> testMalformedReferenceIsReportedAsDiagnostic
 		equals: '#/components/schemas/A/items/$ref'
 ]
 
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testMalformedSecurityItemKeepsTheValidRequirementNamed [
+
+	| model |
+	model := self importOpenApi3: '`security`:[1,{`a`:[]}],`paths`:{}'.
+	self
+		assert: (self securityRequirementNamesIn: model)
+		equals: #( 'a' ).
+	self assert: importer diagnostics notEmpty
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testMalformedSecurityLeavesNoUnnamedRequirement [
+
+	#( 'null' '`text`' '[1]' '[`x`,null]' ) do: [ :malformed |
+		| model |
+		model := self importOpenApi3:
+			         '`security`:' , malformed , ',`paths`:{}'.
+		self
+			assert: (self securityRequirementNamesIn: model) isEmpty
+			description: malformed ]
+]
+
 { #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testMediaTypeEncodingIsImported [
 	"D8: media type encoding is kept (encodings of the media type, one Encoding per property name)."
@@ -838,6 +905,19 @@ FamixOpenApiImporterFidelityTest >> testMergedPointersNeverRepeatACanonicalPoint
 		all add: each canonicalPointer.
 		all addAll: each mergedPointers ].
 	self assert: all asSet size equals: all size
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testMixedSecurityRequirementListIsNamedPerRequirementInOrder [
+
+	| model |
+	model := self importOpenApi3:
+		         '`security`:[{},{`x`:[]}],`paths`:{},`components`:{`securitySchemes`:{`x`:{`type`:`apiKey`,`in`:`header`,`name`:`k`}}}'.
+	self
+		assert:
+		((self openApiIn: model) securityRequirements collect: #name)
+			asArray
+		equals: #( 'anonymous' 'x' )
 ]
 
 { #category : 'tests - D3 reference resolution order' }
@@ -938,6 +1018,17 @@ FamixOpenApiImporterFidelityTest >> testOAuth2SchemeKeepsScopes [
 		equals: 'Read'
 ]
 
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testOpenApi31SecurityRequirementsAreNamed [
+
+	| model |
+	model := self importOpenApi31:
+		         '`security`:[{`b`:[],`a`:[]},{}],`paths`:{},`components`:{`securitySchemes`:{`a`:{`type`:`apiKey`,`in`:`header`,`name`:`ka`},`b`:{`type`:`apiKey`,`in`:`query`,`name`:`kb`}}}'.
+	self
+		assert: (self securityRequirementNamesIn: model)
+		equals: #( 'a + b' 'anonymous' )
+]
+
 { #category : 'tests' }
 FamixOpenApiImporterFidelityTest >> testOpenApiAndInfoKeepTheInfoTitle [
 
@@ -1033,6 +1124,24 @@ FamixOpenApiImporterFidelityTest >> testOperationSecurityRequirementKeepsScopes 
 	item := requirement anyOne items anyOne.
 	self assert: item scopeNames asSet equals: #( 'read' 'write' ) asSet.
 	self assert: item scheme == (self oauthSchemeIn: model)
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testOperationSecurityRequirementsAreNamedAndSharedNamesAreAccepted [
+
+	| model first second |
+	model := self importOpenApi3:
+		         '`paths`:{`/a`:{`get`:{`operationId`:`a`,`security`:[{`k`:[`read`]}],`responses`:{`200`:{`description`:`ok`}}}},`/b`:{`get`:{`operationId`:`b`,`security`:[{`k`:[`read`]}],`responses`:{`200`:{`description`:`ok`}}}}},`components`:{`securitySchemes`:{`k`:{`type`:`apiKey`,`in`:`header`,`name`:`x`}}}'.
+	first := (self operationWithId: 'a' in: model) securityRequirements
+		         anyOne.
+	second := (self operationWithId: 'b' in: model) securityRequirements
+		          anyOne.
+	self assert: first name equals: 'k'.
+	self assert: second name equals: 'k'.
+	self deny: first == second.
+	self
+		assert: first items anyOne scopeNames asArray
+		equals: #( 'read' )
 ]
 
 { #category : 'tests - D7 D8 missing sections (step B)' }
@@ -1325,6 +1434,22 @@ FamixOpenApiImporterFidelityTest >> testResponseLinksAreImported [
 	self assert: response links anyOne operationId equals: 'listPets'.
 	self assert: response links anyOne operation
 		== (self operationWithId: 'listPets' in: model)
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testRootAndOperationSecurityRequirementsAreBothNamed [
+
+	| model |
+	model := self importOpenApi3:
+		         '`security`:[{`g`:[]}],`paths`:{`/a`:{`get`:{`operationId`:`a`,`security`:[{`l`:[`s`]},{}],`responses`:{`200`:{`description`:`ok`}}}}},`components`:{`securitySchemes`:{`g`:{`type`:`apiKey`,`in`:`header`,`name`:`x`},`l`:{`type`:`apiKey`,`in`:`query`,`name`:`y`}}}'.
+	self
+		assert: (self securityRequirementNamesIn: model)
+		equals: #( 'anonymous' 'g' 'l' ).
+	self
+		assert:
+			((self operationWithId: 'a' in: model) securityRequirements
+				 collect: #name) asArray
+		equals: #( 'l' 'anonymous' )
 ]
 
 { #category : 'tests - D5 operations (step B)' }
@@ -1734,6 +1859,56 @@ FamixOpenApiImporterFidelityTest >> testSchemaNameIsComponentKeyNotTitle [
 		equals: 'Pet'
 ]
 
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testSecurityRequirementNameDoesNotChangeItsPointerOrScopes [
+
+	| model requirement |
+	model := self importOpenApi3:
+		         '`security`:[{`a`:[`s`]}],`paths`:{},`components`:{`securitySchemes`:{`a`:{`type`:`apiKey`,`in`:`header`,`name`:`k`}}}'.
+	requirement := (self openApiIn: model) securityRequirements anyOne.
+	self assert: requirement name equals: 'a'.
+	self assert: requirement canonicalPointer equals: '#/security/0'.
+	self
+		assert: (requirement items collect: #scopeNames) asArray
+		equals: #( #( 's' ) )
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testSecurityRequirementNameKeepsSpacesOfSchemeNames [
+
+	| model |
+	model := self importOpenApi3:
+		         '`security`:[{`my key`:[],`other key`:[]}],`paths`:{}'.
+	self
+		assert: (self openApiIn: model) securityRequirements anyOne name
+		equals: 'my key + other key'
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testSecurityRequirementOfAnUndeclaredSchemeIsNamedAfterItAndStillReported [
+
+	| model |
+	model := self importOpenApi3: '`security`:[{`ghost`:[]}],`paths`:{}'.
+	self
+		assert: (self openApiIn: model) securityRequirements anyOne name
+		equals: 'ghost'.
+	self
+		assert:
+		(importer diagnostics withCode: #securitySchemeUnresolved) size
+		equals: 1
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testSecurityRequirementWithOneSchemeIsNamedAfterIt [
+
+	| model |
+	model := self importOpenApi3:
+		         '`security`:[{`api_key`:[]}],`paths`:{},`components`:{`securitySchemes`:{`api_key`:{`type`:`apiKey`,`in`:`header`,`name`:`k`}}}'.
+	self
+		assert: (self openApiIn: model) securityRequirements anyOne name
+		equals: 'api_key'
+]
+
 { #category : 'tests - D7 D8 missing sections (step B)' }
 FamixOpenApiImporterFidelityTest >> testSecurityRequirementWithTwoSchemesHasTwoItems [
 	"{a: [], b: []} is ONE requirement whose two items must both be satisfied."
@@ -1751,6 +1926,17 @@ FamixOpenApiImporterFidelityTest >> testSecurityRequirementWithTwoSchemesHasTwoI
 		(requirement items collect: [ :each | each scheme name ]) asSet
 		equals: #( 'a' 'b' ) asSet.
 	self assert: requirement schemes size equals: 2
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testSecurityRequirementWithTwoSchemesIsNamedWithSortedSchemeNames [
+
+	| model |
+	model := self importOpenApi3:
+		         '`security`:[{`z_auth`:[],`a_auth`:[]}],`paths`:{},`components`:{`securitySchemes`:{`z_auth`:{`type`:`apiKey`,`in`:`header`,`name`:`z`},`a_auth`:{`type`:`apiKey`,`in`:`query`,`name`:`a`}}}'.
+	self
+		assert: (self openApiIn: model) securityRequirements anyOne name
+		equals: 'a_auth + z_auth'
 ]
 
 { #category : 'tests - D7 D8 missing sections (step B)' }
@@ -2487,6 +2673,17 @@ FamixOpenApiImporterFidelityTest >> testSwagger2SecurityDefinitionsAreImported [
 		equals: '#/securityDefinitions/basic'.
 	self assert: schemes anyOne type equals: 'http'.
 	self assert: schemes anyOne scheme equals: 'basic'
+]
+
+{ #category : 'tests - N3 security requirement names' }
+FamixOpenApiImporterFidelityTest >> testSwagger2SecurityRequirementsAreNamed [
+
+	| model |
+	model := self importSwagger2:
+		         '`security`:[{`oauth`:[`read`],`key`:[]}],`paths`:{},`securityDefinitions`:{`key`:{`type`:`apiKey`,`name`:`X-Key`,`in`:`query`},`oauth`:{`type`:`oauth2`,`flow`:`accessCode`,`authorizationUrl`:`https://auth.example.com`,`tokenUrl`:`https://token.example.com`,`scopes`:{`read`:`Read`}}}'.
+	self
+		assert: (self securityRequirementNamesIn: model)
+		equals: #( 'key + oauth' )
 ]
 
 { #category : 'tests' }

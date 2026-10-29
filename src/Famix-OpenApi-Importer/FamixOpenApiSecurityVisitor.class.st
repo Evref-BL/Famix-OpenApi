@@ -169,8 +169,18 @@ FamixOpenApiSecurityVisitor >> itemNamed: aName scopes: aScopes at: aPointer [
 ]
 
 { #category : 'visiting' }
+FamixOpenApiSecurityVisitor >> nameOfRequirementWithItems: aCollectionOfItems [
+	"Answer the name of a requirement: the sorted names of its items joined with ' + ' (all the schemes are required together), or 'anonymous' when it has no item or only blank names."
+
+	^ FamixOpenApiNaming
+		  nameFromAny:
+		  { (' + ' join: (aCollectionOfItems collect: #name) asArray sorted) }
+		  fallback: 'anonymous'
+]
+
+{ #category : 'visiting' }
 FamixOpenApiSecurityVisitor >> requirementFrom: aNode at: aPointer [
-	"Answer the SecurityRequirement described by aNode: one item per scheme name (none for an empty object)."
+	"Answer the SecurityRequirement described by aNode: one item per scheme name (none for an empty object). The requirement is named after its items."
 
 	| requirement |
 	requirement := self
@@ -182,6 +192,8 @@ FamixOpenApiSecurityVisitor >> requirementFrom: aNode at: aPointer [
 				 itemNamed: key
 				 scopes: scopes
 				 at: (self pointer: aPointer appending: key)) ].
+	requirement name:
+		(self nameOfRequirementWithItems: requirement items).
 	context recordSourceTextOf: requirement from: aNode category: #inline.
 	^ requirement
 ]
