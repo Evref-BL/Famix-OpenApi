@@ -10,23 +10,22 @@ Class {
 
 { #category : 'support' }
 FamixOpenApiValidatorIntegrationTest >> assertDocument: aJsonString [
-	"The validator answers no error and no warning on the model of aJsonString, imported with and without merging of the inline schemas."
+	"The validator (every rule) answers no finding at all on the model of aJsonString, imported with and without merging of the inline schemas."
 
 	#( true false ) do: [ :merging |
 		| findings |
 		findings := FamixOpenApiModelValidator new validate:
 			            (self import: aJsonString merging: merging).
 		self
-			assertNoErrorsNorWarningsIn: findings
+			assertNoFindingsIn: findings
 			described: ('merging={1}' format: { merging }) ]
 ]
 
 { #category : 'support' }
-FamixOpenApiValidatorIntegrationTest >> assertNoErrorsNorWarningsIn: aFindings described: aString [
+FamixOpenApiValidatorIntegrationTest >> assertNoFindingsIn: aFindings described: aString [
 
 	self
-		assert:
-		(aFindings errors isEmpty and: [ aFindings warnings isEmpty ])
+		assert: aFindings isEmpty
 		description: (String streamContents: [ :stream |
 				 stream
 					 nextPutAll: aString;
@@ -124,6 +123,17 @@ FamixOpenApiValidatorIntegrationTest >> swagger2Document [
 ]
 
 { #category : 'tests' }
+FamixOpenApiValidatorIntegrationTest >> testCorpusFilesAreTheTwentyJsonFilesWithoutTheSourcesList [
+
+	| files |
+	files := self corpusFiles.
+	self assert: files size equals: 20.
+	self assert: (files allSatisfy: [ :each | each extension = 'json' ]).
+	self deny:
+		(files anySatisfy: [ :each | each basename = 'SOURCES.txt' ])
+]
+
+{ #category : 'tests' }
 FamixOpenApiValidatorIntegrationTest >> testCorpusIsCoherentWithAndWithoutMerging [
 	"The validator reports exactly the known findings on the corpus files, merging the inline schemas or not; the failure lists every finding with its file."
 
@@ -167,16 +177,10 @@ FamixOpenApiValidatorIntegrationTest >> testSwagger2PetstoreIsCoherent [
 { #category : 'tests' }
 FamixOpenApiValidatorIntegrationTest >> testValidationClassesDoNotReferenceTheImporter [
 
-	| classes |
-	classes := {
-		           FamixOpenApiFinding.
-		           FamixOpenApiFindings.
-		           FamixOpenApiValidationRule.
-		           FamixOpenApiModelValidator.
-		           FamixOpenApiNamedEntitiesRule.
-		           FamixOpenApiContainmentRule.
-		           FamixOpenApiOneRootRule }.
-	classes do: [ :each |
+	FamixOpenApiValidationRule withAllSubclasses , {
+		FamixOpenApiFinding.
+		FamixOpenApiFindings.
+		FamixOpenApiModelValidator } do: [ :each |
 		{
 			each.
 			each class } do: [ :side |

@@ -64,6 +64,19 @@ FamixOpenApiContainmentRuleTest >> testCoherentModelHasNoFinding [
 ]
 
 { #category : 'tests' }
+FamixOpenApiContainmentRuleTest >> testDescriptionStatesItsOneHopLimitAndTheNamingConvention [
+
+	| text |
+	text := FamixOpenApiContainmentRule new description.
+	self assert: (text includesSubstring: 'one hop').
+	self assert: (text includesSubstring: 'detached from the root').
+	self assert: (text includesSubstring: 'usedBy*').
+	self assert: (text includesSubstring: 'usedAs*').
+	self assert: (text includesSubstring: 'naming convention').
+	self assert: (text includesSubstring: 'FamixOpenApiReachabilityRule')
+]
+
+{ #category : 'tests' }
 FamixOpenApiContainmentRuleTest >> testOrphanSchemaIsAWarning [
 
 	| model orphan findings |

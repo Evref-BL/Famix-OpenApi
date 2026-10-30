@@ -41,7 +41,7 @@ FamixOpenApiContainmentRule >> code [
 { #category : 'description' }
 FamixOpenApiContainmentRule >> description [
 
-	^ 'Every entity other than the OPOpenApi root is owned or referenced by another entity.'
+	^ 'Every entity other than the OPOpenApi root is owned or referenced by another entity (no orphan). Limit: the check is one hop only, an entity is anchored as soon as ONE of its container or back-pointer relations is set, whatever the owner is, so a whole subtree detached from the root (a path with its operations) is anchored by its own members and not reported (see FamixOpenApiReachabilityRule). It relies on the Fame meta-description and on the naming convention of the reverse side of a shared reference (the usedBy* and usedAs* properties): a relation renamed outside that convention is no longer seen as a back-pointer.'
 ]
 
 { #category : 'initialization' }
@@ -61,43 +61,11 @@ FamixOpenApiContainmentRule >> is: aProperty setIn: anEntity [
 		  ifFalse: [ value isNotNil ]
 ]
 
-{ #category : 'metamodel' }
-FamixOpenApiContainmentRule >> isAnchorProperty: aProperty [
-	"Answer whether aProperty is a relation that points from a child to its owner."
-
-	aProperty type isPrimitive ifTrue: [ ^ false ].
-	aProperty isContainer ifTrue: [ ^ true ].
-	aProperty opposite ifNil: [ ^ false ].
-	aProperty opposite isContainer ifTrue: [ ^ false ].
-	^ self isBackPointer: aProperty
-]
-
 { #category : 'checking' }
 FamixOpenApiContainmentRule >> isAnchored: anEntity [
 
 	^ (self anchorPropertiesOf: anEntity class) anySatisfy: [ :each |
 		  self is: each setIn: anEntity ]
-]
-
-{ #category : 'metamodel' }
-FamixOpenApiContainmentRule >> isBackPointer: aProperty [
-	"Answer whether aProperty is the reverse side of a non-containment relation: a usedBy/usedAs property, or the single-valued side when neither side is named so."
-
-	^ (self isUsageName: aProperty name) or: [
-		  (self isUsageName: aProperty opposite name) not and: [
-			  aProperty isMultivalued not ] ]
-]
-
-{ #category : 'checking' }
-FamixOpenApiContainmentRule >> isRoot: anEntity [
-
-	^ anEntity class includesBehavior: OPOpenApi
-]
-
-{ #category : 'metamodel' }
-FamixOpenApiContainmentRule >> isUsageName: aName [
-
-	^ (aName beginsWith: 'usedBy') or: [ aName beginsWith: 'usedAs' ]
 ]
 
 { #category : 'description' }

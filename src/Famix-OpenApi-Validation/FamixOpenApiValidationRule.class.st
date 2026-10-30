@@ -32,17 +32,28 @@ FamixOpenApiValidationRule class >> isAbstract [
 ]
 
 { #category : 'checking' }
-FamixOpenApiValidationRule >> addFindingTo: aFindings entity: anEntity message: aString [
-	"Record in aFindings a finding with the code and the severity of the receiver."
+FamixOpenApiValidationRule >> addFindingTo: aFindings entity: anEntity code: aCode message: aString [
+	"Record in aFindings a finding of the severity of the receiver with the code aCode (one of #codes)."
 
 	| finding |
 	finding := FamixOpenApiFinding
 		           severity: self severity
-		           code: self code
+		           code: aCode
 		           entity: anEntity
 		           message: aString.
 	aFindings add: finding.
 	^ finding
+]
+
+{ #category : 'checking' }
+FamixOpenApiValidationRule >> addFindingTo: aFindings entity: anEntity message: aString [
+	"Record in aFindings a finding with the code and the severity of the receiver."
+
+	^ self
+		  addFindingTo: aFindings
+		  entity: anEntity
+		  code: self code
+		  message: aString
 ]
 
 { #category : 'checking' }
@@ -68,10 +79,50 @@ FamixOpenApiValidationRule >> code [
 ]
 
 { #category : 'description' }
+FamixOpenApiValidationRule >> codes [
+	"Answer the Symbols of every finding code the receiver can record (the primary #code by default; a rule recording several codes overrides it)."
+
+	^ { self code }
+]
+
+{ #category : 'description' }
 FamixOpenApiValidationRule >> description [
 	"Answer the String describing the invariant checked."
 
 	^ self subclassResponsibility
+]
+
+{ #category : 'metamodel' }
+FamixOpenApiValidationRule >> isAnchorProperty: aProperty [
+	"Answer whether aProperty is a relation that points from a child to its owner."
+
+	aProperty type isPrimitive ifTrue: [ ^ false ].
+	aProperty isContainer ifTrue: [ ^ true ].
+	aProperty opposite ifNil: [ ^ false ].
+	aProperty opposite isContainer ifTrue: [ ^ false ].
+	^ self isBackPointer: aProperty
+]
+
+{ #category : 'metamodel' }
+FamixOpenApiValidationRule >> isBackPointer: aProperty [
+	"Answer whether aProperty is the reverse side of a non-containment relation: a usedBy/usedAs property, or the single-valued side when neither side is named so."
+
+	^ (self isUsageName: aProperty name) or: [
+		  (self isUsageName: aProperty opposite name) not and: [
+			  aProperty isMultivalued not ] ]
+]
+
+{ #category : 'metamodel' }
+FamixOpenApiValidationRule >> isRoot: anEntity [
+
+	^ anEntity class includesBehavior: OPOpenApi
+]
+
+{ #category : 'metamodel' }
+FamixOpenApiValidationRule >> isUsageName: aName [
+	"Answer whether aName follows the naming convention of the reverse side of a shared reference (usedBy* and usedAs*)."
+
+	^ (aName beginsWith: 'usedBy') or: [ aName beginsWith: 'usedAs' ]
 ]
 
 { #category : 'description' }
@@ -79,6 +130,25 @@ FamixOpenApiValidationRule >> name [
 	"Answer the name of the class of the receiver."
 
 	^ self class name
+]
+
+{ #category : 'metamodel' }
+FamixOpenApiValidationRule >> relatedEntitiesOf: anEntity through: aProperty [
+	"Answer an Array of the entities anEntity holds in the relation aProperty (none when it is unset)."
+
+	| value |
+	value := anEntity mmGetProperty: aProperty.
+	aProperty isMultivalued ifTrue: [ ^ value asArray ].
+	^ value ifNil: [ #(  ) ] ifNotNil: [ { value } ]
+]
+
+{ #category : 'metamodel' }
+FamixOpenApiValidationRule >> relationPropertiesOf: aClass [
+	"Answer the Fame relation properties of aClass that have an opposite (primitive and derived properties excluded)."
+
+	^ aClass mooseDescription allProperties select: [ :each |
+		  each type isPrimitive not and: [
+			  each isDerived not and: [ each opposite isNotNil ] ] ]
 ]
 
 { #category : 'description' }

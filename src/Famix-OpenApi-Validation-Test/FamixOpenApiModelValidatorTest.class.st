@@ -9,6 +9,67 @@ Class {
 }
 
 { #category : 'tests' }
+FamixOpenApiModelValidatorTest >> addBlankReferenceTo: aModel [
+
+	| reference |
+	reference := OPReference new
+		             target: ' ';
+		             canonicalPointer: '#/blank';
+		             yourself.
+	(self rootOf: aModel) addUnresolvedReference: reference.
+	aModel add: reference
+]
+
+{ #category : 'tests' }
+FamixOpenApiModelValidatorTest >> addOrphanSchemaTo: aModel [
+
+	aModel add: (OPSchema new
+			 name: 'Lost';
+			 canonicalPointer: '#/lost';
+			 yourself)
+]
+
+{ #category : 'tests' }
+FamixOpenApiModelValidatorTest >> breakItemsInverseIn: aModel [
+
+	| pet |
+	pet := self componentSchemaNamed: 'Pet' in: aModel.
+	pet usedAsItemsBy unsafeRemove: pet usedAsItemsBy anyOne
+]
+
+{ #category : 'tests' }
+FamixOpenApiModelValidatorTest >> duplicatePathPointerIn: aModel [
+
+	| paths |
+	paths := (aModel allWithType: OPPath) asArray.
+	paths last canonicalPointer: paths first canonicalPointer
+]
+
+{ #category : 'tests' }
+FamixOpenApiModelValidatorTest >> mutationScenarios [
+	"Answer an Array of associations: the code a mutation of the imported model must produce -> a block that applies it to the model. The first cases are those of the V4 validator (names, orphan, roots), the others are detected by the V5 rules (the detached subtree was undetected before)."
+
+	^ {
+		  (#unnamedEntity
+		   -> [ :model |
+		   (self componentSchemaNamed: 'Pet' in: model) name: nil ]).
+		  (#orphanEntity -> [ :model | self addOrphanSchemaTo: model ]).
+		  (#rootCount -> [ :model | model add: OPOpenApi new ]).
+		  (#inverseMismatch -> [ :model | self breakItemsInverseIn: model ]).
+		  (#referenceMalformed
+		   -> [ :model | self addBlankReferenceTo: model ]).
+		  (#pointerMissing
+		   -> [ :model |
+		   (model allWithType: OPPath) anyOne canonicalPointer: nil ]).
+		  (#pointerDuplicated
+		   -> [ :model | self duplicatePathPointerIn: model ]).
+		  (#subSchemaDetached
+		   -> [ :model |
+		   (model allWithType: OPSubSchema) anyOne subSchemaOf: nil ]).
+		  (#unreachableEntity -> [ :model | self detachPetPathFrom: model ]) }
+]
+
+{ #category : 'tests' }
 FamixOpenApiModelValidatorTest >> testAllRulesRunByDefault [
 
 	| model findings |
@@ -29,6 +90,21 @@ FamixOpenApiModelValidatorTest >> testCoherentModelHasNoFinding [
 ]
 
 { #category : 'tests' }
+FamixOpenApiModelValidatorTest >> testDetachedSubtreeIsReportedByReachabilityBeyondTheOrphanPath [
+
+	| model findings |
+	model := self importedModel.
+	self detachPetPathFrom: model.
+	findings := FamixOpenApiModelValidator new validate: model.
+	self assert: findings errors isEmpty.
+	self
+		assert: findings codes
+		equals: #( #orphanEntity #unreachableEntity ) asSet.
+	self assert: (findings countOf: #orphanEntity) equals: 1.
+	self assert: (findings countOf: #unreachableEntity) > 1
+]
+
+{ #category : 'tests' }
 FamixOpenApiModelValidatorTest >> testEmptyModelHasOnlyTheRootCountError [
 
 	| findings |
@@ -43,6 +119,20 @@ FamixOpenApiModelValidatorTest >> testEmptyRuleSubsetAnswersNoFinding [
 	self assert:
 		(FamixOpenApiModelValidator new validate: OPModel new rules: #(  ))
 			isEmpty
+]
+
+{ #category : 'tests' }
+FamixOpenApiModelValidatorTest >> testEveryMutationScenarioIsDetectedByItsRule [
+
+	self mutationScenarios do: [ :each |
+		| model findings |
+		model := self importedModel.
+		each value value: model.
+		findings := FamixOpenApiModelValidator new validate: model.
+		self
+			assert: (findings countOf: each key) >= 1
+			description: ('Undetected mutation: {1}' format: { each key }).
+		self deny: (findings countOf: #ruleFailed) > 0 ]
 ]
 
 { #category : 'tests' }
@@ -84,6 +174,16 @@ FamixOpenApiModelValidatorTest >> testFailingRuleRegisteredInTheRegistryIsReport
 ]
 
 { #category : 'tests' }
+FamixOpenApiModelValidatorTest >> testMutationOnAnImportedModelIsAlsoDetectedWithoutMerging [
+
+	| model findings |
+	model := self importedModelMerging: false.
+	self detachPetPathFrom: model.
+	findings := FamixOpenApiModelValidator new validate: model.
+	self assert: (findings countOf: #unreachableEntity) >= 2
+]
+
+{ #category : 'tests' }
 FamixOpenApiModelValidatorTest >> testSubsetRunsOnlyTheGivenRules [
 
 	| model findings |
@@ -109,4 +209,16 @@ FamixOpenApiModelValidatorTest >> testValidationDoesNotModifyTheModel [
 	before := self snapshotOf: model.
 	FamixOpenApiModelValidator new validate: model.
 	self assert: (self snapshotOf: model) equals: before
+]
+
+{ #category : 'tests' }
+FamixOpenApiModelValidatorTest >> testValidationWithAllRulesDoesNotModifyAnImportedModel [
+
+	#( true false ) do: [ :merging |
+		| model before |
+		model := self importedModelMerging: merging.
+		self detachPetPathFrom: model.
+		before := self snapshotOf: model.
+		FamixOpenApiModelValidator new validate: model.
+		self assert: (self snapshotOf: model) equals: before ]
 ]

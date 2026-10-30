@@ -33,10 +33,35 @@ FamixOpenApiValidationRuleTest >> testAllRulesAnswersOneInstanceOfEachConcreteRu
 
 	| classes |
 	classes := FamixOpenApiValidationRule allRules collect: #class.
-	self assert: (classes includes: FamixOpenApiNamedEntitiesRule).
-	self assert: (classes includes: FamixOpenApiContainmentRule).
-	self assert: (classes includes: FamixOpenApiOneRootRule).
-	self assert: classes asSet size equals: classes size
+	self assert: classes size equals: 8.
+	self assert: classes asSet size equals: classes size.
+	self assert: classes asArray equals: {
+			FamixOpenApiCanonicalPointersRule.
+			FamixOpenApiContainmentRule.
+			FamixOpenApiInverseRelationsRule.
+			FamixOpenApiNamedEntitiesRule.
+			FamixOpenApiOneRootRule.
+			FamixOpenApiReachabilityRule.
+			FamixOpenApiReferencesRule.
+			FamixOpenApiSubSchemaRule }
+]
+
+{ #category : 'tests' }
+FamixOpenApiValidationRuleTest >> testCodesDefaultToTheCode [
+
+	self
+		assert: FamixOpenApiOneRootRule new codes
+		equals: { FamixOpenApiOneRootRule new code }
+]
+
+{ #category : 'tests' }
+FamixOpenApiValidationRuleTest >> testEveryCodeOfEveryRuleIsDistinct [
+
+	| codes |
+	codes := FamixOpenApiValidationRule allRules flatCollect: #codes.
+	self assert: codes asSet size equals: codes size.
+	FamixOpenApiValidationRule allRules do: [ :each |
+		self assert: (each codes includes: each code) ]
 ]
 
 { #category : 'tests' }
