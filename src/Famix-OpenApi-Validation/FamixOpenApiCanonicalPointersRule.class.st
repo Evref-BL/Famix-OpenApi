@@ -79,11 +79,9 @@ FamixOpenApiCanonicalPointersRule >> description [
 
 { #category : 'checking' }
 FamixOpenApiCanonicalPointersRule >> familyOf: anEntity [
-	"Answer the class of anEntity directly below OPEntity: entities of a family are the ones that may be compared by pointer."
+	"Answer the class of anEntity directly below OPEntity: entities of a family may be compared by pointer (see FamixOpenApiPointerLookup)."
 
-	^ anEntity class withAllSuperclasses
-		  detect: [ :each | each superclass == OPEntity ]
-		  ifNone: [ anEntity class ]
+	^ FamixOpenApiPointerLookup familyOf: anEntity
 ]
 
 { #category : 'checking' }

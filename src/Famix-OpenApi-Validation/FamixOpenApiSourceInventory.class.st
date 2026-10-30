@@ -8,7 +8,8 @@ Class {
 		'version',
 		'nodes',
 		'nodesByObject',
-		'childrenByParent'
+		'childrenByParent',
+		'edgesByPointer'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -44,6 +45,13 @@ FamixOpenApiSourceInventory >> addNode: aNode to: anIndex under: aKey [
 FamixOpenApiSourceInventory >> allNodes [
 
 	^ nodes values
+]
+
+{ #category : 'querying' }
+FamixOpenApiSourceInventory >> ancestorsOf: aNode [
+	"The nodes above aNode, the nearest first up to the root. The containers of a map or an array are not nodes"
+
+	^ self nodesAbovePointer: aNode pointer
 ]
 
 { #category : 'querying' }
@@ -89,10 +97,25 @@ FamixOpenApiSourceInventory >> counts [
 ]
 
 { #category : 'querying' }
+FamixOpenApiSourceInventory >> edgeAt: aPointer [
+	"The grammar edge that led to the node at aPointer (the edge of the map or array for an entry), nil for the root"
+
+	^ edgesByPointer at: aPointer ifAbsent: [ nil ]
+]
+
+{ #category : 'querying' }
 FamixOpenApiSourceInventory >> extensionKeys [
 	"The pointers of the extension (x-*) keys, in document order"
 
 	^ self keyPointersOf: [ :node | node extensionKeys ]
+]
+
+{ #category : 'querying' }
+FamixOpenApiSourceInventory >> fieldOf: aNode [
+	"The name of the grammar field that led to aNode: 'properties' for an entry of the properties of a schema, 'schema' for the schema of a media type. Nil for the root"
+
+	^ (self edgeAt: aNode pointer) ifNotNil: [ :edge |
+		  edge name asString ]
 ]
 
 { #category : 'private' }
@@ -116,7 +139,8 @@ FamixOpenApiSourceInventory >> initialize [
 	super initialize.
 	nodes := OrderedDictionary new.
 	nodesByObject := Dictionary new.
-	childrenByParent := Dictionary new
+	childrenByParent := Dictionary new.
+	edgesByPointer := Dictionary new
 ]
 
 { #category : 'testing' }
@@ -173,10 +197,30 @@ FamixOpenApiSourceInventory >> nodeAt: aPointer ifAbsent: aBlock [
 ]
 
 { #category : 'querying' }
+FamixOpenApiSourceInventory >> nodesAbovePointer: aPointer [
+	"The nodes whose pointer is a strict prefix of aPointer (a pointer of the document, node or not), the nearest first up to the root"
+
+	| found pointer |
+	found := OrderedCollection new.
+	pointer := self pointerAbove: aPointer.
+	[ pointer isNotNil ] whileTrue: [
+		nodes at: pointer ifPresent: [ :each | found add: each ].
+		pointer := self pointerAbove: pointer ].
+	^ found
+]
+
+{ #category : 'querying' }
 FamixOpenApiSourceInventory >> nodesOf: aSpecObjectName [
 	"The nodes of the spec object in document order, the wrong-shape nodes excluded"
 
 	^ (nodesByObject at: aSpecObjectName ifAbsent: [ ^ #(  ) ]) asArray
+]
+
+{ #category : 'adding' }
+FamixOpenApiSourceInventory >> noteEdge: anEdge at: aPointer [
+	"Remember that the grammar edge anEdge led to the node, or to the map or array, at aPointer"
+
+	edgesByPointer at: aPointer put: anEdge
 ]
 
 { #category : 'counting' }
@@ -188,6 +232,15 @@ FamixOpenApiSourceInventory >> operationCountOf: aVerb [
 			  (FamixOpenApiSourceNode pointerOf: path pointer child: aVerb) ]
 ]
 
+{ #category : 'querying' }
+FamixOpenApiSourceInventory >> ownerOf: aNode [
+	"The object node that holds aNode: its parent, or the parent of its container when it is an entry of a map or an array. Nil for the root"
+
+	^ (self ancestorsOf: aNode)
+		  ifEmpty: [ nil ]
+		  ifNotEmpty: [ :ancestors | ancestors first ]
+]
+
 { #category : 'counting' }
 FamixOpenApiSourceInventory >> pathCount [
 	"The entries of paths (extensions excluded)"
@@ -195,11 +248,28 @@ FamixOpenApiSourceInventory >> pathCount [
 	^ (self childrenOf: '#/paths') size
 ]
 
+{ #category : 'private' }
+FamixOpenApiSourceInventory >> pointerAbove: aPointer [
+	"The pointer of the parent of aPointer, nil for the root"
+
+	(aPointer includes: $/) ifFalse: [ ^ nil ].
+	^ aPointer copyUpToLast: $/
+]
+
 { #category : 'querying' }
 FamixOpenApiSourceInventory >> pointers [
 	"The pointers of every node (wrong-shape nodes included) in document order"
 
 	^ nodes keys
+]
+
+{ #category : 'querying' }
+FamixOpenApiSourceInventory >> siteSpecObjectOf: aNode [
+	"The spec object the grammar expects at the place of aNode: for a Reference node, the one it had before it was recognised as a $ref"
+
+	^ (self edgeAt: aNode pointer)
+		  ifNil: [ aNode specObject ]
+		  ifNotNil: [ :edge | edge target ifNil: [ aNode specObject ] ]
 ]
 
 { #category : 'reporting' }

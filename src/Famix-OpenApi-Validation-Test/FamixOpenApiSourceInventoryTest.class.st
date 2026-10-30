@@ -16,6 +16,29 @@ FamixOpenApiSourceInventoryTest >> inventory [
 ]
 
 { #category : 'tests' }
+FamixOpenApiSourceInventoryTest >> testAncestorsAndOwnerSkipTheContainersOfMapsAndArrays [
+
+	| inventory node |
+	inventory := FamixOpenApiSourceWalker new walk:
+		             (NeoJSONReader fromString:
+			              '{"openapi":"3.0.3","paths":{"/a":{"get":{"parameters":[{"name":"p","in":"query"}]}}}}').
+	node := inventory nodeAt: '#/paths/~1a/get/parameters/0'.
+	self
+		assert: ((inventory ancestorsOf: node) collect: #pointer)
+		equals:
+		#( '#/paths/~1a/get' '#/paths/~1a' '#/paths' '#' )
+			asOrderedCollection.
+	self
+		assert: (inventory ownerOf: node) pointer
+		equals: '#/paths/~1a/get'.
+	self
+		assert: (inventory ownerOf: (inventory nodeAt: '#/paths')) pointer
+		equals: '#'.
+	self assert: (inventory ownerOf: (inventory nodeAt: '#')) isNil.
+	self assert: (inventory ancestorsOf: (inventory nodeAt: '#')) isEmpty
+]
+
+{ #category : 'tests' }
 FamixOpenApiSourceInventoryTest >> testCountsAndNodes [
 
 	| inventory |
@@ -70,6 +93,20 @@ FamixOpenApiSourceInventoryTest >> testNodeAtAnUnknownPointer [
 ]
 
 { #category : 'tests' }
+FamixOpenApiSourceInventoryTest >> testNodesAbovePointerAcceptsPointersWithoutNode [
+
+	| inventory |
+	inventory := FamixOpenApiSourceWalker new walk:
+		             (NeoJSONReader fromString:
+			              '{"openapi":"3.0.3","info":{"title":"t"}}').
+	self
+		assert:
+		((inventory nodesAbovePointer: '#/info/zzz/yyy') collect: #pointer)
+		equals: #( '#/info' '#' ) asOrderedCollection.
+	self assert: (inventory nodesAbovePointer: '#') isEmpty
+]
+
+{ #category : 'tests' }
 FamixOpenApiSourceInventoryTest >> testPathAndOperationCounts [
 
 	| inventory |
@@ -97,6 +134,16 @@ FamixOpenApiSourceInventoryTest >> testSummaryOfAnUnknownVersion [
 	self assert: inventory summary equals: (self textOfLines:
 			 #( 'version: #unknownVersion' 'nodes: 0' 'unknown keys: 0'
 			    'extension keys: 0' 'wrong shapes: 0' ))
+]
+
+{ #category : 'tests' }
+FamixOpenApiSourceInventoryTest >> testUnescapeTokenIsTheInverseOfEscapeToken [
+
+	#( 'a/b' 'a~b' '~1' '~01' 'plain' '/' '~' ) do: [ :name |
+		self
+			assert: (FamixOpenApiSourceNode unescapeToken:
+					 (FamixOpenApiSourceNode escapeToken: name))
+			equals: name ]
 ]
 
 { #category : 'tests' }

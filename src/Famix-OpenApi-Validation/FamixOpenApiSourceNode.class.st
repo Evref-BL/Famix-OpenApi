@@ -41,6 +41,15 @@ FamixOpenApiSourceNode class >> rootPointer [
 	^ '#'
 ]
 
+{ #category : 'pointers' }
+FamixOpenApiSourceNode class >> unescapeToken: aString [
+	"The name written as the token aString of a pointer: '~1' is '/' then '~0' is '~' (the order matters)"
+
+	^ (aString copyReplaceAll: '~1' with: '/')
+		  copyReplaceAll: '~0'
+		  with: '~'
+]
+
 { #category : 'operations' }
 FamixOpenApiSourceNode >> addExtensionKey: aKey [
 
@@ -58,6 +67,20 @@ FamixOpenApiSourceNode >> extensionKeys [
 	"The x-* keys of my object"
 
 	^ extensionKeys
+]
+
+{ #category : 'querying' }
+FamixOpenApiSourceNode >> hasKeysBesideReference [
+	"True when the object holds other keys than $ref (extensions included)"
+
+	^ self isReference and: [ value size > 1 ]
+]
+
+{ #category : 'querying' }
+FamixOpenApiSourceNode >> includesKey: aKey [
+	"True when the node is an object that has the key aKey"
+
+	^ value isDictionary and: [ value includesKey: aKey ]
 ]
 
 { #category : 'initialization' }
@@ -139,6 +162,16 @@ FamixOpenApiSourceNode >> printOn: aStream [
 		nextPut: $)
 ]
 
+{ #category : 'querying' }
+FamixOpenApiSourceNode >> referenceText [
+	"The text of the $ref of a Reference node, or nil when the node is not a reference or its $ref is not a string (the importer reads such a node as an object of its own)"
+
+	self isReference ifFalse: [ ^ nil ].
+	^ (value at: '$ref') isString
+		  ifTrue: [ value at: '$ref' ]
+		  ifFalse: [ nil ]
+]
+
 { #category : 'accessing' }
 FamixOpenApiSourceNode >> specObject [
 	"The name of the spec object (the expected one when the node is wrongShape)"
@@ -159,7 +192,7 @@ FamixOpenApiSourceNode >> unknownKeys [
 	^ unknownKeys
 ]
 
-{ #category : 'accessing' }
+{ #category : 'evaluating' }
 FamixOpenApiSourceNode >> value [
 	"The raw JSON value of the node"
 
@@ -170,6 +203,14 @@ FamixOpenApiSourceNode >> value [
 FamixOpenApiSourceNode >> value: aJsonValue [
 
 	value := aJsonValue
+]
+
+{ #category : 'querying' }
+FamixOpenApiSourceNode >> valueAt: aKey [
+	"The raw value of the key aKey of an object node, nil when the node is not an object or has no such key"
+
+	value isDictionary ifFalse: [ ^ nil ].
+	^ value at: aKey ifAbsent: [ nil ]
 ]
 
 { #category : 'accessing' }

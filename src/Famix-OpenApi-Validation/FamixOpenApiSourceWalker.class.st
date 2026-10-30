@@ -53,6 +53,7 @@ FamixOpenApiSourceWalker >> collectEdge: anEdge key: aKey value: aJsonValue of: 
 		        parent: aNode pointer
 		        key: aKey
 		        value: aJsonValue.
+	inventory noteEdge: anEdge at: node pointer.
 	anEdge isObjectEdge
 		ifTrue: [ children add: node ]
 		ifFalse: [ self collectContainerEdge: anEdge node: node ]
@@ -63,10 +64,12 @@ FamixOpenApiSourceWalker >> collectElementsOfArray: aContainerNode as: aSpecObje
 
 	aContainerNode value withIndexDo: [ :element :index |
 		children add: (self
-				 nodeSpec: aSpecObjectName
-				 parent: aContainerNode pointer
-				 key: index - 1
-				 value: element) ]
+				 noteEntry: (self
+						  nodeSpec: aSpecObjectName
+						  parent: aContainerNode pointer
+						  key: index - 1
+						  value: element)
+				 of: aContainerNode) ]
 ]
 
 { #category : 'private - visiting' }
@@ -74,10 +77,12 @@ FamixOpenApiSourceWalker >> collectEntriesOfMap: aContainerNode as: aSpecObjectN
 
 	aContainerNode value keysAndValuesDo: [ :key :entry |
 		children add: (self
-				 nodeSpec: aSpecObjectName
-				 parent: aContainerNode pointer
-				 key: key asString
-				 value: entry) ]
+				 noteEntry: (self
+						  nodeSpec: aSpecObjectName
+						  parent: aContainerNode pointer
+						  key: key asString
+						  value: entry)
+				 of: aContainerNode) ]
 ]
 
 { #category : 'private - visiting' }
@@ -113,6 +118,18 @@ FamixOpenApiSourceWalker >> hasChildren: aNode [
 		  aNode isReference not and: [ aNode value isDictionary ] ]
 ]
 
+{ #category : 'version' }
+FamixOpenApiSourceWalker >> is: aVersionString releaseOf: aMinorString [
+	"True for aMinorString itself ('3.1') or for a patch release of it ('3.1.0', '3.1.1-rc1'): the text after the dot must start with a digit, so that '3.10.0' is not a 3.1"
+
+	| prefix |
+	aVersionString = aMinorString ifTrue: [ ^ true ].
+	prefix := aMinorString , '.'.
+	^ (aVersionString beginsWith: prefix) and: [
+		  aVersionString size > prefix size and: [
+			  (aVersionString at: prefix size + 1) isDigit ] ]
+]
+
 { #category : 'private - visiting' }
 FamixOpenApiSourceWalker >> isBooleanSchema: aNode [
 	"A boolean is a valid Schema (true accepts everything, false nothing)"
@@ -133,6 +150,16 @@ FamixOpenApiSourceWalker >> nodeSpec: aSpecObjectName parent: aParentPointer key
 		  key: aKey;
 		  value: aJsonValue;
 		  yourself
+]
+
+{ #category : 'private - nodes' }
+FamixOpenApiSourceWalker >> noteEntry: anEntryNode of: aContainerNode [
+	"An entry of a map or an array was led to by the edge of its container. Answer the entry"
+
+	inventory
+		noteEdge: (inventory edgeAt: aContainerNode pointer)
+		at: anEntryNode pointer.
+	^ anEntryNode
 ]
 
 { #category : 'private - nodes' }
@@ -169,8 +196,8 @@ FamixOpenApiSourceWalker >> versionOf: aJsonObject [
 FamixOpenApiSourceWalker >> versionOfOpenApi: aValue [
 
 	aValue isString ifFalse: [ ^ #unknownVersion ].
-	(aValue beginsWith: '3.0') ifTrue: [ ^ #v30 ].
-	(aValue beginsWith: '3.1') ifTrue: [ ^ #v31 ].
+	(self is: aValue releaseOf: '3.0') ifTrue: [ ^ #v30 ].
+	(self is: aValue releaseOf: '3.1') ifTrue: [ ^ #v31 ].
 	^ #unknownVersion
 ]
 

@@ -174,6 +174,24 @@ FamixOpenApiSpecGrammarTest >> testEdgeVersionsAreTheOnesOfTheFieldRows [
 	self assert: wrong isEmpty
 ]
 
+{ #category : 'tests - api' }
+FamixOpenApiSpecGrammarTest >> testEdgesForAnObjectAreTheEdgesOfItsIndexForTheVersion [
+
+	| edges |
+	edges := FamixOpenApiSpecGrammar edgesFor: 'Info' in: #v30.
+	self assert: edges isNotEmpty.
+	self
+		assert: (edges collect: #name as: Set)
+		equals:
+			(FamixOpenApiSpecGrammar fieldIndexFor: 'Info' version: #v30) keys
+				asSet.
+	self assert: (edges anySatisfy: [ :each | each name = 'title' ]).
+	self assert:
+		(FamixOpenApiSpecGrammar edgesFor: 'Info' in: #v2) isNotEmpty.
+	self assert:
+		(FamixOpenApiSpecGrammar edgesFor: 'NoSuchObject' in: #v30) isEmpty
+]
+
 { #category : 'tests' }
 FamixOpenApiSpecGrammarTest >> testEveryDeclaredEdgeHasAFieldOfTheTableExceptScopes [
 	"The only grammar-only edge is the patterned scope name of the Swagger 2 Scopes object"

@@ -314,6 +314,34 @@ FamixOpenApiSourceWalkerTest >> testExtensionKeysDependOnTheObjectAndTheVersion 
 		equals: #( '#/components/schemas/A/discriminator/x-d' )
 ]
 
+{ #category : 'tests - nodes' }
+FamixOpenApiSourceWalkerTest >> testFieldOfANodeIsTheNameOfItsEdge [
+
+	| inventory |
+	inventory := FamixOpenApiSourceWalker new walk:
+		             (NeoJSONReader fromString:
+			              '{"openapi":"3.0.3","info":{"title":"t","version":"1"},"paths":{"/a":{"get":{"responses":{"200":{"description":"d","content":{"a/b":{"schema":{"type":"object","properties":{"p":{"type":"string"}}}}}}}}}}}').
+	self assert: (inventory fieldOf: (inventory nodeAt: '#')) isNil.
+	self
+		assert: (inventory fieldOf: (inventory nodeAt: '#/info'))
+		equals: 'info'.
+	self
+		assert: (inventory fieldOf: (inventory nodeAt: '#/paths/~1a'))
+		equals: '/{path}'.
+	self
+		assert: (inventory fieldOf:
+				 (inventory nodeAt: '#/paths/~1a/get/responses/200'))
+		equals: '{HTTP status code}'.
+	self
+		assert: (inventory fieldOf:
+				 (inventory nodeAt: '#/paths/~1a/get/responses/200/content/a~1b'))
+		equals: 'content'.
+	self
+		assert: (inventory fieldOf: (inventory nodeAt:
+					  '#/paths/~1a/get/responses/200/content/a~1b/schema/properties/p'))
+		equals: 'properties'
+]
+
 { #category : 'tests - keys' }
 FamixOpenApiSourceWalkerTest >> testKeyOrderOfTheDocumentIsKept [
 
@@ -337,6 +365,15 @@ FamixOpenApiSourceWalkerTest >> testMalformedDocumentsStillRecordTheirValidParts
 		assert: (inventory wrongShapeNodes collect: #pointer)
 		equals: #( '#/paths' '#/components/schemas/a' ).
 	self assert: inventory pathCount equals: 0
+]
+
+{ #category : 'tests - versions' }
+FamixOpenApiSourceWalkerTest >> testMinorVersionsThatOnlyStartWithTheSameDigitsAreUnknown [
+	"3.10.0 is not a 3.1, 3.00 is not a 3.0"
+
+	#( '3.10.0' '3.10' '3.100.1' '3.1x' '3.1.' '3.1.x' '3.0.' '3.00'
+	   '3.0x' '3.2.0' '30.1' ' 3.1.0' '' '3' ) do: [ :text |
+		self assert: (self versionOfOpenApi: text) equals: #unknownVersion ]
 ]
 
 { #category : 'tests - OpenAPI 3.0' }
@@ -430,6 +467,15 @@ FamixOpenApiSourceWalkerTest >> testOpenApi31SchemaKeywordPointers [
 			 '#/components/schemas/Pet/discriminator/mapping')
 ]
 
+{ #category : 'tests - versions' }
+FamixOpenApiSourceWalkerTest >> testPatchReleasesAreRecognisedInTheirMinorVersion [
+
+	#( '3.0' '3.0.0' '3.0.3' '3.0.4-rc1' ) do: [ :text |
+		self assert: (self versionOfOpenApi: text) equals: #v30 ].
+	#( '3.1' '3.1.0' '3.1.1' '3.1.2-rc1' ) do: [ :text |
+		self assert: (self versionOfOpenApi: text) equals: #v31 ]
+]
+
 { #category : 'tests - pointers' }
 FamixOpenApiSourceWalkerTest >> testPointerEscaping [
 
@@ -485,6 +531,24 @@ FamixOpenApiSourceWalkerTest >> testReferenceNodeIsCountedAndNotFollowed [
 	self assert: (inventory countOf: 'Schema') equals: 1.
 	self deny: (inventory includesPointer:
 			 '#/components/responses/R/content/a~1b/schema/type')
+]
+
+{ #category : 'tests - nodes' }
+FamixOpenApiSourceWalkerTest >> testReferenceNodeKeepsTheSpecObjectOfItsPlaceAndItsField [
+
+	| inventory node |
+	inventory := FamixOpenApiSourceWalker new walk:
+		             (NeoJSONReader fromString:
+			              '{"openapi":"3.0.3","components":{"schemas":{"A":{"type":"string"},"B":{"$ref":"#/components/schemas/A"}}}}').
+	node := inventory nodeAt: '#/components/schemas/B'.
+	self assert: node specObject equals: 'Reference'.
+	self assert: (inventory siteSpecObjectOf: node) equals: 'Schema'.
+	self assert: (inventory fieldOf: node) equals: 'schemas'.
+	self assert: node referenceText equals: '#/components/schemas/A'.
+	self deny: node hasKeysBesideReference.
+	node := inventory nodeAt: '#/components/schemas/A'.
+	self assert: (inventory siteSpecObjectOf: node) equals: 'Schema'.
+	self assert: node referenceText isNil
 ]
 
 { #category : 'tests - references' }
@@ -673,6 +737,17 @@ FamixOpenApiSourceWalkerTest >> testVersionDetection [
 		equals: #v2
 ]
 
+{ #category : 'tests - versions' }
+FamixOpenApiSourceWalkerTest >> testVersionOfAnOpenApiThatIsNotAStringIsUnknown [
+
+	{
+		3.
+		3.1.
+		nil.
+		#( '3.1.0' ) } do: [ :value |
+		self assert: (self versionOfOpenApi: value) equals: #unknownVersion ]
+]
+
 { #category : 'tests - wrong shapes' }
 FamixOpenApiSourceWalkerTest >> testWalkerNeverRaisesOnMalformedDocuments [
 
@@ -749,6 +824,15 @@ FamixOpenApiSourceWalkerTest >> testWrongShapesAreRecordedInDocumentOrder [
 			   '#/paths/~1c/get/tags' '#/components/schemas'
 			   '#/components/responses/R' '#/components/securitySchemes/s/flows'
 			   '#/servers' '#/security/0' '#/tags' )
+]
+
+{ #category : 'helpers' }
+FamixOpenApiSourceWalkerTest >> versionOfOpenApi: aValue [
+	"The version the walker gives to a document whose openapi field is aValue"
+
+	^ (FamixOpenApiSourceWalker new walk: (Dictionary new
+			    at: 'openapi' put: aValue;
+			    yourself)) version
 ]
 
 { #category : 'tests - wrong shapes' }
