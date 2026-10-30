@@ -29,6 +29,15 @@ FamixOpenApiSourceNode class >> escapeToken: aToken [
 ]
 
 { #category : 'pointers' }
+FamixOpenApiSourceNode class >> pointer: aPointer isBelow: anAncestorPointer [
+	"True when aPointer designates something strictly inside what anAncestorPointer designates (a token more, at least)"
+
+	^ aPointer size > anAncestorPointer size and: [
+		  (aPointer beginsWith: anAncestorPointer) and: [
+			  (aPointer at: anAncestorPointer size + 1) = $/ ] ]
+]
+
+{ #category : 'pointers' }
 FamixOpenApiSourceNode class >> pointerOf: aParentPointer child: aToken [
 	"Answer the JSON pointer (RFC 6901) of the child aToken (a name or an index) of aParentPointer: '~' is written '~0' then '/' is written '~1' in a name"
 
@@ -39,6 +48,20 @@ FamixOpenApiSourceNode class >> pointerOf: aParentPointer child: aToken [
 FamixOpenApiSourceNode class >> rootPointer [
 
 	^ '#'
+]
+
+{ #category : 'instance creation' }
+FamixOpenApiSourceNode class >> specObject: aSpecObjectName pointer: aPointer in: anInventory value: aJsonValue [
+	"A node for the object at aPointer, to be walked into anInventory (see FamixOpenApiSourceWalker>>walkRoot:into:edge:): its parent is the pointer above aPointer"
+
+	^ self new
+		  pointer: aPointer;
+		  specObject: aSpecObjectName;
+		  parentPointer: (anInventory pointerAbove: aPointer);
+		  version: anInventory version;
+		  key: (self unescapeToken: (aPointer copyAfterLast: $/));
+		  value: aJsonValue;
+		  yourself
 ]
 
 { #category : 'pointers' }

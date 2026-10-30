@@ -1,5 +1,5 @@
 "
-The existence check over the 20 files of the external test corpus (the folder is outside the repository: the tests are skipped, like the ones of FamixOpenApiCorpusTest, when it is absent), each file imported with mergesInlineSchemas false. IMPORTANT: the importer is NOT changed by the step that wrote this test. The expected result is the FROZEN set of #frozenGaps (every gap of the corpus, as file, pointer, kind, spec object): a gap that appears or disappears fails the test, so that a real importer finding is never lost or hidden. It is empty: the 20 files are faithful at level 1. #frozenSyntheticCounts freezes the number of entities accepted by each synthetic rule over the corpus. The mutation tests run the sweeps of the check tests on real imported models.
+The existence check over the 20 files of the external test corpus (the folder is outside the repository: the tests are skipped, like the ones of FamixOpenApiCorpusTest, when it is absent), each file imported with mergesInlineSchemas false. IMPORTANT: the importer is NOT changed by the steps that wrote this test. The expected result is the FROZEN set of #frozenGaps (every gap of the corpus, as file, pointer, kind, spec object): a gap that appears or disappears fails the test, so that a real importer finding is never lost or hidden. It is empty: the 20 files are faithful at level 1, the entities without node being EXACTLY the derived ones (V7b: FamixOpenApiSyntheticExpectations; V7 only accepted them by pattern). #frozenDerivedCounts freezes the number of entities each derivation expects over the corpus (the V7 counts, 0 for the rules the corpus never exercises), #frozenSyntheticCounts the number the check found, #frozenCloneSites the $ref response and path item sites that are cloned. The mutation tests run the sweeps of the check tests on real imported models.
 "
 Class {
 	#name : 'FamixOpenApiExistenceCorpusTest',
@@ -13,6 +13,27 @@ FamixOpenApiExistenceCorpusTest >> corpusHelper [
 	"The importer test that owns the raw reading helpers and the corpus folder"
 
 	^ FamixOpenApiCorpusTest new
+]
+
+{ #category : 'data' }
+FamixOpenApiExistenceCorpusTest >> frozenCloneSites [
+	"Rows: file name, number of $ref response or path item use sites that the importer clones. Only giphy has some (40 $ref responses, whose targets hold nothing below the site: a description)"
+
+	^ #( #( 'apisguru-giphy.com.json' 40 ) )
+]
+
+{ #category : 'data' }
+FamixOpenApiExistenceCorpusTest >> frozenDerivedCounts [
+	"Rows: synthetic rule, number of entities of the whole corpus that the derivation expects (V7b: exact, the V7 counts of the rules that accepted entities, and 0 for the rules that the corpus never exercises: the clones of giphy hold nothing below their sites, no Swagger 2 discriminator, no mapping, no wrong-shape discriminator)"
+
+	^ #( #( #swagger2ParameterSchema 401 )
+	     #( #swagger2MediaType 168 ) #( #securityRequirementItem
+	        87 ) #( #synthesizedServer 14 ) #( #swagger2FormDataRequestBody
+	        14 ) #( #securityScope 13 ) #( #swagger2Components
+	        6 ) #( #scalarExample 4 ) #( #cloneSubtree 0 )
+	     #( #discriminatorMappingEntry 0 )
+	     #( #swagger2Discriminator 0 ) #( #wrongShapeDiscriminator
+	        0 ) )
 ]
 
 { #category : 'data' }
@@ -83,6 +104,30 @@ FamixOpenApiExistenceCorpusTest >> specFiles [
 		  helper isSpecDocument: (helper rawDocumentOf: file) ]
 ]
 
+{ #category : 'tests - mutations' }
+FamixOpenApiExistenceCorpusTest >> testAnyDerivedEntityOfARealModelIsRequiredOnceAndOfItsClass [
+
+	self mutationFiles do: [ :each |
+		self assertDerivedSweepsIn: each contents named: each basename ]
+]
+
+{ #category : 'tests' }
+FamixOpenApiExistenceCorpusTest >> testCloneSitesOfTheCorpusAreTheFrozenOnes [
+
+	| actual |
+	actual := Array streamContents: [ :stream |
+		          self specFiles do: [ :file |
+			          | count |
+			          count := (FamixOpenApiCloneExpansion on:
+				                    (self inventoryOf: file contents))
+				                   cloneSitePointers size.
+			          count > 0 ifTrue: [
+				          stream nextPut: {
+						          file basename.
+						          count } ] ] ].
+	self assert: actual equals: self frozenCloneSites
+]
+
 { #category : 'tests' }
 FamixOpenApiExistenceCorpusTest >> testCorpusGapsAreExactlyTheFrozenOnes [
 
@@ -110,6 +155,35 @@ FamixOpenApiExistenceCorpusTest >> testCorpusHasTheTwentyFilesAndTheCheckLooksAt
 		         into: [ :sum :each |
 		         sum + each value nodeCountsBySpecObject values sum ].
 	self assert: nodes > 3000
+]
+
+{ #category : 'tests' }
+FamixOpenApiExistenceCorpusTest >> testDerivedEntitiesOfTheCorpusAreExactlyTheFrozenCounts [
+	"The derivation (no model, no importer) gives, over the 20 files, the V7 counts of each rule and 0 for the ones the corpus does not exercise"
+
+	| totals |
+	totals := Bag new.
+	self reports do: [ :each |
+		each value derivedCountsByRule keysAndValuesDo: [ :rule :count |
+			totals add: rule withOccurrences: count ] ].
+	self
+		assert: (self frozenDerivedCounts collect: [ :row |
+				 row first -> (totals occurrencesOf: row first) ])
+		equals:
+		(self frozenDerivedCounts collect: [ :row | row first -> row second ]).
+	self assert: totals asSet equals: (self frozenDerivedCounts
+			 reject: [ :row | row second = 0 ]
+			 thenCollect: #first) asSet
+]
+
+{ #category : 'tests' }
+FamixOpenApiExistenceCorpusTest >> testEveryDerivedEntityOfTheCorpusIsInTheModel [
+	"Per file and per rule, what the derivation expects is what the check found (the rest would be a gap)"
+
+	self reports do: [ :each |
+		self
+			assert: each value derivedCountsByRule
+			equals: each value syntheticCountsByRule ]
 ]
 
 { #category : 'tests' }

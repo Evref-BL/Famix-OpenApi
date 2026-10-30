@@ -223,6 +223,18 @@ FamixOpenApiSourceWalker >> walk: aJsonObject [
 ]
 
 { #category : 'walking' }
+FamixOpenApiSourceWalker >> walkRoot: aNode into: anInventory edge: anEdgeOrNil [
+	"Add to anInventory the node aNode (the root of a subtree: its pointer, spec object and value are set) and the nodes below it, read the way a document is. anEdgeOrNil is the grammar edge that leads to aNode, nil when it is not known. Used to expand an inventory (clones, synthesized schemas), never for a document"
+
+	version := anInventory version.
+	inventory := anInventory.
+	anEdgeOrNil ifNotNil: [ :edge |
+		inventory noteEdge: edge at: aNode pointer ].
+	pending := OrderedCollection with: aNode.
+	[ pending isEmpty ] whileFalse: [ self visit: pending removeLast ]
+]
+
+{ #category : 'walking' }
 FamixOpenApiSourceWalker >> walkString: aJsonString [
 	"Parse aJsonString like the importer does (objects keep the order of their keys) and walk it. A malformed string raises the NeoJSON error: it is the caller's error"
 

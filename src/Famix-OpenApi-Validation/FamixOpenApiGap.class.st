@@ -1,6 +1,6 @@
 "
-A difference between a source OpenAPI/Swagger document and the model imported from it: a value object shared by the fidelity checks. It says WHERE (sourcePointer, the spec object of the source node, the model entity when there is one, fieldKey for the checks on a field, the file when the document comes from a file), WHAT (kind, a Symbol) and the expected and found values with a message.
-Kinds used by the existence check (V7): #missingEntity (a source node has no entity), #wrongClass (the entity is of another class than the one the node should give), #extraEntity (an entity without a source node that is not a documented synthetic one, or an entity of a family the node should not give), #unexpectedMultiple (several entities of a family at a pointer), #preconditionMerged (the model was imported with the inline schemas merged), #preconditionVersion (the version of the document is unknown), #referenceNotResolved (an unresolved $ref has neither an OPReference at its site nor a diagnostic), #countMismatch and #valueMismatch (the number, the pointers and the urls of the synthesised servers; #countMismatch and #valueMismatch are also the kinds of the value checks of the next steps).
+A difference between a source OpenAPI/Swagger document and the model imported from it: a value object shared by the fidelity checks. It says WHERE (sourcePointer, the spec object of the source node, the model entity when there is one, fieldKey for the checks on a field, the file when the document comes from a file), WHAT (kind, a Symbol) and the expected and found values with a message. The ruleName is the synthetic rule that expects an entity without source node (existence check, V7b), nil for the other gaps.
+Kinds used by the existence check (V7): #missingEntity (a source node, or a derivation, expects an entity that is not there), #wrongClass (the entity is of another class than the one expected), #extraEntity (an entity that no node and no derivation expects, or an entity of a family the node should not give), #unexpectedMultiple (more entities of a family at a pointer than expected), #preconditionMerged (the model was imported with the inline schemas merged), #preconditionVersion (the version of the document is unknown), #referenceNotResolved (an unresolved $ref has neither an OPReference at its site nor a diagnostic), #countMismatch and #valueMismatch (the number, the pointers and the urls of the synthesised servers; #countMismatch and #valueMismatch are also the kinds of the value checks of the next steps).
 Kinds reserved for the next steps: #lost #onlyInExtensions #ignoredByDiagnostic.
 "
 Class {
@@ -15,7 +15,8 @@ Class {
 		'expected',
 		'found',
 		'message',
-		'file'
+		'file',
+		'ruleName'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -135,6 +136,19 @@ FamixOpenApiGap >> printOn: aStream [
 		print: expected;
 		nextPutAll: ', found ';
 		print: found
+]
+
+{ #category : 'accessing' }
+FamixOpenApiGap >> ruleName [
+	"The name of the synthetic rule that derives the expected entity this gap is about, nil for a gap about a node of the document"
+
+	^ ruleName
+]
+
+{ #category : 'accessing' }
+FamixOpenApiGap >> ruleName: aSymbol [
+
+	ruleName := aSymbol
 ]
 
 { #category : 'accessing' }

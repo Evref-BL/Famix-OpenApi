@@ -1,27 +1,57 @@
 "
-Fixtures of the tests of the existence check (V7): small OpenAPI 3.0, 3.1 and Swagger 2 documents, one per concern, imported by the real importer with mergesInlineSchemas false (the test package may use the importer, the production package may not), the inventory of the walker and the report of the check.
+Helpers of the tests of the existence check (V7 and V7b): the real importer (mergesInlineSchemas false; the test package may use it, the production package may not), the inventory of the walker, the report of the check, the mutations of a model (add, remove, replace, move an entity) and the sweeps over the entities that the derivations expect. The documents are in FamixOpenApiExistenceDocumentsTestCase.
 "
 Class {
 	#name : 'FamixOpenApiExistenceTestCase',
-	#superclass : 'TestCase',
+	#superclass : 'FamixOpenApiExistenceDocumentsTestCase',
 	#category : 'Famix-OpenApi-Validation-Test',
 	#package : 'Famix-OpenApi-Validation-Test'
 }
 
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> allDocuments [
-	"Associations name -> JSON text of the fixtures, for the tests that run over all of them"
+{ #category : 'mutations' }
+FamixOpenApiExistenceTestCase >> add: aClass at: aPointer to: aModel [
+	"Add a stray entity of aClass at aPointer"
 
-	^ {
-		  ('openApi30' -> self documentOpenApi30).
-		  ('openApi30Unresolved' -> self documentOpenApi30Unresolved).
-		  ('openApi30Scalars' -> self documentOpenApi30Scalars).
-		  ('openApi31' -> self documentOpenApi31).
-		  ('openApi31Objects' -> self documentOpenApi31Objects).
-		  ('siblings30' -> (self documentWithSiblingsIn: '3.0.3')).
-		  ('siblings31' -> (self documentWithSiblingsIn: '3.1.0')).
-		  ('swagger2' -> self documentSwagger2).
-		  ('swagger2Parameters' -> self documentSwagger2Parameters) }
+	aModel add: (aClass new
+			 canonicalPointer: aPointer;
+			 yourself)
+]
+
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> alternativeClassTo: aClass [
+	"Another class of the family of aClass, nil when the family has none (the sub-schema is left out: it is the sign of a merged import, a precondition of the check)"
+
+	^ ((FamixOpenApiPointerLookup familyOfClass: aClass)
+		   withAllSubclasses copyWithoutAll: {
+			   aClass.
+			   OPSubSchema })
+		  detect: [ :each | each isAbstract not ]
+		  ifNone: [ nil ]
+]
+
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> assertDerivedSweepsIn: aJsonString named: aName [
+	"Every entity that a derivation expects, in the model of the real import: taken out it is a #missingEntity of its rule, doubled an #unexpectedMultiple of its rule, of another class of its family a #wrongClass of its rule (of another family a #missingEntity and an #extraEntity)"
+
+	| inventory model |
+	inventory := self inventoryOf: aJsonString.
+	model := self modelOf: aJsonString.
+	(self derivedFor: aJsonString) expectedEntities do: [ :each |
+		self
+			assertRemoval: each
+			in: model
+			inventory: inventory
+			named: aName.
+		self
+			assertTwin: each
+			in: model
+			inventory: inventory
+			named: aName.
+		self
+			assertSubstitute: each
+			in: model
+			inventory: inventory
+			named: aName ]
 ]
 
 { #category : 'sweeps' }
@@ -51,6 +81,25 @@ FamixOpenApiExistenceTestCase >> assertDuplicatesAreDetectedIn: aJsonString name
 							 entity canonicalPointer }) ]
 ]
 
+{ #category : 'helpers - synthetic' }
+FamixOpenApiExistenceTestCase >> assertFaithful: aJsonString [
+	"The real import of the document has no gap: what the derivations expect is exactly what the importer builds"
+
+	| gaps |
+	gaps := (self reportFor: aJsonString) gaps.
+	self assert: gaps isEmpty description: (self describe: gaps)
+]
+
+{ #category : 'mutations' }
+FamixOpenApiExistenceTestCase >> assertGapsOf: aJsonString after: aBlock are: anArray [
+	"anArray holds the expected kind -> pointer associations, in any order"
+
+	self
+		assert: (self gapsOf: aJsonString after: aBlock)
+		equals: (anArray collect: [ :each |
+				 self describeKind: each key pointer: each value ]) asArray sorted
+]
+
 { #category : 'sweeps' }
 FamixOpenApiExistenceTestCase >> assertMovesAreDetectedIn: aJsonString named: aName [
 	"Every entity, synthetic or not, moved to a pointer that no node and no rule explains is an extra entity there"
@@ -72,6 +121,23 @@ FamixOpenApiExistenceTestCase >> assertMovesAreDetectedIn: aJsonString named: aN
 						 aName.
 						 original.
 						 entity class name }) ]
+]
+
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> assertRemoval: anExpected in: aModel inventory: anInventory named: aName [
+
+	| real descriptions |
+	real := self realEntityOf: anExpected in: aModel.
+	aModel remove: real.
+	descriptions := self descriptionsOf: aModel inventory: anInventory.
+	aModel add: real.
+	self
+		assert: (descriptions includes:
+				 (self describeExpected: anExpected kind: #missingEntity))
+		description: (self describe: {
+					 aName.
+					 'removed'.
+					 anExpected })
 ]
 
 { #category : 'sweeps' }
@@ -135,6 +201,86 @@ FamixOpenApiExistenceTestCase >> assertStraysAreDetectedIn: aJsonString named: a
 			named: aName ]
 ]
 
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> assertSubstitute: anExpected in: aModel inventory: anInventory named: aName [
+	"The entity replaced by one of another class of its family (a #wrongClass), or of another family when it has no sibling class (#missingEntity and #extraEntity)"
+
+	| real other substitute descriptions expectedKinds |
+	real := self realEntityOf: anExpected in: aModel.
+	other := self alternativeClassTo: real class.
+	substitute := (other ifNil: [ OPTag ]) new
+		              canonicalPointer: anExpected pointer;
+		              yourself.
+	aModel remove: real.
+	aModel add: substitute.
+	descriptions := self descriptionsOf: aModel inventory: anInventory.
+	aModel remove: substitute.
+	aModel add: real.
+	expectedKinds := other
+		                 ifNil: [ #( #missingEntity #extraEntity ) ]
+		                 ifNotNil: [ #( #wrongClass ) ].
+	expectedKinds do: [ :kind |
+		self
+			assert:
+			(self
+				 descriptions: descriptions
+				 include: kind
+				 at: anExpected pointer)
+			description: (self describe: {
+						 aName.
+						 'substituted'.
+						 anExpected.
+						 kind }) ]
+]
+
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> assertTwin: anExpected in: aModel inventory: anInventory named: aName [
+
+	| twin descriptions |
+	twin := (self realEntityOf: anExpected in: aModel) class new
+		        canonicalPointer: anExpected pointer;
+		        yourself.
+	aModel add: twin.
+	descriptions := self descriptionsOf: aModel inventory: anInventory.
+	aModel remove: twin.
+	self
+		assert: (descriptions includes:
+				 (self describeExpected: anExpected kind: #unexpectedMultiple))
+		description: (self describe: {
+					 aName.
+					 'doubled'.
+					 anExpected })
+]
+
+{ #category : 'helpers - synthetic' }
+FamixOpenApiExistenceTestCase >> derivedCountsByRuleIn: aJsonString [
+	"A Dictionary rule name -> number of derived entities"
+
+	| counts |
+	counts := (self derivedFor: aJsonString) expectedEntities
+		          collect: #ruleName
+		          as: Bag.
+	^ (counts asSet collect: [ :rule |
+		   rule -> (counts occurrencesOf: rule) ]) asDictionary
+]
+
+{ #category : 'helpers - synthetic' }
+FamixOpenApiExistenceTestCase >> derivedFor: aJsonString [
+	"The entities without node that the derivations expect for the document"
+
+	^ FamixOpenApiSyntheticExpectations on:
+		  (self inventoryOf: aJsonString)
+]
+
+{ #category : 'helpers - synthetic' }
+FamixOpenApiExistenceTestCase >> derivedPointersOf: aClass in: aJsonString [
+	"The sorted pointers where an entity of exactly aClass is derived (twice when it is derived twice)"
+
+	^ ((self derivedFor: aJsonString) expectedEntities
+		   select: [ :each | each targetClassName = aClass name ]
+		   thenCollect: #pointer) asArray sorted
+]
+
 { #category : 'helpers' }
 FamixOpenApiExistenceTestCase >> describe: aCollection [
 	"A failure description: the printed elements of aCollection separated by spaces"
@@ -142,112 +288,53 @@ FamixOpenApiExistenceTestCase >> describe: aCollection [
 	^ ' ' join: (aCollection collect: #asString)
 ]
 
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> documentOpenApi30 [
-	"Every $ref use of OpenAPI 3.0 (shared parameter, header, link, example, callback, request body; cloned response and path item; schema alias, property, items, allOf), resolved or not, with a default-less server list, discriminator, flows, callbacks, encoding, a scalar example..."
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> describeExpected: anExpected kind: aKind [
+	"The description of the gap of aKind about an expected entity"
 
-	^ '{"openapi":"3.0.3","info":{"title":"t","version":"1","contact":{"name":"c"},"license":{"name":"l"}},
-"tags":[{"name":"tg","externalDocs":{"url":"http://x"}}],
-"paths":{
- "/a":{"$ref":"#/components/pathItems/PI"},
- "/ext":{"$ref":"other.json#/x"},
- "/b":{"parameters":[{"$ref":"#/components/parameters/P"},{"$ref":"#/components/parameters/Nope"}],
-  "get":{"operationId":"g","parameters":[{"name":"q","in":"query","schema":{"type":"string","example":"hello"},"example":"ex","examples":{"e1":{"value":1},"e2":{"$ref":"#/components/examples/E"}}}],
-   "requestBody":{"$ref":"#/components/requestBodies/RB"},
-   "callbacks":{"cb":{"$ref":"#/components/callbacks/CB"},"cb2":{"{$request.body#/u}":{"post":{"responses":{"200":{"description":"d"}}}}}},
-   "responses":{"200":{"$ref":"#/components/responses/R"},"201":{"$ref":"#/components/responses/Nope"},"202":{"description":"x","headers":{"h1":{"$ref":"#/components/headers/H"},"h2":{"schema":{"type":"string"}}},"links":{"l1":{"$ref":"#/components/links/L"},"l2":{"operationId":"g","server":{"url":"http://s"}}},"content":{"application/json":{"schema":{"$ref":"#/components/schemas/A"},"encoding":{"p":{"contentType":"x","headers":{"hh":{"schema":{"type":"string"}}}}}}}},
-   "default":{"description":"def"}}},
-  "post":{"requestBody":{"content":{"a/b":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/A"}},"examples":{"x":{"$ref":"#/components/examples/E"}}}}},"responses":{"200":{"description":"ok"}},"security":[{"oa":["read","write"]},{}]}}},
-"servers":[{"url":"http://{h}/v","variables":{"h":{"default":"x","enum":["x","y"]}}}],
-"components":{
- "schemas":{"A":{"type":"object","properties":{"p":{"$ref":"#/components/schemas/B"},"q":{"$ref":"#/components/schemas/Nope"},"r":{"type":"array","items":{"$ref":"#/components/schemas/B"}},"s":true,"t":{"allOf":[{"$ref":"#/components/schemas/B"},{"type":"string"}]}},"additionalProperties":{"$ref":"#/components/schemas/B"},"discriminator":{"propertyName":"p","mapping":{"b":"#/components/schemas/B"}},"xml":{"name":"a"},"example":{"k":1}},
-  "B":{"type":"string"},"Alias":{"$ref":"#/components/schemas/B"},"Dang":{"$ref":"#/components/schemas/Nope"},"Ext":{"$ref":"http://e.com/x.json"},"Bool":false,"One":{"oneOf":[{"type":"string"},{"$ref":"#/components/schemas/B"}],"not":{"$ref":"#/components/schemas/B"}}},
- "responses":{"R":{"description":"r"},"RA":{"$ref":"#/components/responses/R"}},
- "parameters":{"P":{"name":"p","in":"header","schema":{"type":"string"},"content":{}}},
- "examples":{"E":{"value":2}},
- "requestBodies":{"RB":{"content":{"a/b":{}}}},
- "headers":{"H":{"schema":{"type":"string"}}},
- "securitySchemes":{"oa":{"type":"oauth2","flows":{"implicit":{"authorizationUrl":"http://a","scopes":{"read":"r","write":"w"}},"password":{"tokenUrl":"http://t","scopes":{}}}},"k":{"type":"apiKey","name":"n","in":"header"}},
- "links":{"L":{"operationId":"g"}},
- "callbacks":{"CB":{"{$x}":{"get":{"responses":{"200":{"description":"d"}}}}}}}}'
+	^ aKind asString , ' ' , anExpected pointer , ' '
+	  , anExpected ruleName asString
 ]
 
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> documentOpenApi30Scalars [
-	"Boolean schemas and the example of a parameter, a media type and a header"
+{ #category : 'helpers - synthetic' }
+FamixOpenApiExistenceTestCase >> describeGap: aGap [
+	"'kind pointer rule' (without the rule for a gap about a node of the document)"
 
-	^ '{"openapi":"3.0.3","info":{"title":"t","version":"1"},"paths":{"/z":{"get":{"parameters":[{"name":"a","in":"query","schema":{"type":"string"},"examples":{"x":{"value":{"o":1}}},"example":{"o":1}}],"responses":{"200":{"description":"d","headers":{"h":{"example":3,"schema":true}},"content":{"a/b":{"example":"s","schema":{"type":"array","items":true,"additionalProperties":false,"not":false,"allOf":[true]}}}}}}}}}'
+	^ (self describeKind: aGap kind pointer: aGap sourcePointer)
+	  , (aGap ruleName ifNil: [ '' ] ifNotNil: [ :rule | ' ' , rule ])
 ]
 
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> documentOpenApi30Unresolved [
-	"Unresolved $ref in a schema (items, allOf, additionalProperties, not) and in every kind of components entry"
+{ #category : 'mutations' }
+FamixOpenApiExistenceTestCase >> describeKind: aKind pointer: aPointer [
 
-	^ '{"openapi":"3.0.3","info":{"title":"t","version":"1"},"paths":{"/z":{"get":{"responses":{"200":{"description":"d","content":{"a/b":{"schema":{"type":"object","properties":{"x":{"type":"array","items":{"$ref":"#/components/schemas/Nope"},"allOf":[{"$ref":"#/components/schemas/Nope2"}]}},"additionalProperties":{"$ref":"#/components/schemas/Nope3"}}}}}}}}},
-"components":{"schemas":{"S":{"type":"object","not":{"$ref":"#/components/schemas/Nope4"}}},"responses":{"RU":{"$ref":"#/components/responses/Nope"},"RA":{"$ref":"#/components/responses/R"},"R":{"description":"r"}},"parameters":{"PU":{"$ref":"#/components/parameters/Nope"},"PA":{"$ref":"#/components/parameters/P"},"P":{"name":"p","in":"query"}},"headers":{"HU":{"$ref":"#/components/headers/Nope"}},"examples":{"EU":{"$ref":"#/components/examples/Nope"}},"requestBodies":{"RU":{"$ref":"#/components/requestBodies/Nope"},"RA":{"$ref":"#/components/requestBodies/RU"}},"links":{"LU":{"$ref":"#/x"}},"callbacks":{"CU":{"$ref":"#/x"}},"securitySchemes":{"SU":{"$ref":"#/x"}}}}'
+	^ aKind asString , ' ' , aPointer asString
 ]
 
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> documentOpenApi31 [
-	"Web hooks, a $ref path item, the components path items, the JSON Schema 2020-12 keywords (some of them are not read by the importer), a $ref beside other keys, mutualTLS and openIdConnect"
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> descriptions: aCollection include: aKind at: aPointer [
+	"True when a description of aCollection is about a gap of aKind at aPointer"
 
-	^ '{"openapi":"3.1.0","info":{"title":"t","version":"1","summary":"s","license":{"identifier":"MIT","name":"m"}},"jsonSchemaDialect":"http://x",
-"webhooks":{"w":{"post":{"responses":{"200":{"description":"d"}}}},"w2":{"$ref":"#/components/pathItems/PI"}},
-"paths":{"/a":{"$ref":"#/components/pathItems/PI","summary":"s"},"/c":{"get":{"responses":{"200":{"$ref":"#/components/responses/R","description":"over"}},"parameters":[{"name":"q","in":"query","content":{"a/b":{"schema":{"type":"string"}}}}]}}},
-"components":{"pathItems":{"PI":{"get":{"responses":{"200":{"description":"d"}}}},"PI2":{"$ref":"#/components/pathItems/PI"}},
- "responses":{"R":{"description":"r"}},
- "schemas":{"S":{"type":["object","null"],"$defs":{"D":{"type":"string","properties":{"dd":{"type":"string"}}}},"prefixItems":[{"type":"string"},{"$ref":"#/components/schemas/T"}],"items":{"type":"integer"},"contains":{"type":"string"},"if":{"type":"string"},"then":{"type":"string"},"else":{"type":"string"},"not":{"type":"string"},"patternProperties":{"^x":{"type":"string"}},"propertyNames":{"type":"string"},"unevaluatedProperties":false,"dependentSchemas":{"a":{"type":"string"}},"anyOf":[{"type":"string"}],"properties":{"pp":{"$ref":"#/components/schemas/T","description":"sib"},"q":{"type":"string","$ref":"#/components/schemas/T"}},"const":1,"examples":[1,2]},"T":{"type":"string"},"A2":{"$ref":"#/components/schemas/T","description":"alias"}},
- "securitySchemes":{"mt":{"type":"mutualTLS"},"oi":{"type":"openIdConnect","openIdConnectUrl":"http://x"}}}}'
+	| prefix |
+	prefix := self describeKind: aKind pointer: aPointer.
+	^ aCollection anySatisfy: [ :each | each beginsWith: prefix ]
 ]
 
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> documentOpenApi31Objects [
-	"The objects of OpenAPI 3.1 that the other fixtures of 3.1 do not hold: contact, servers and variables, external documentation, encoding, callback, link, tag, discriminator, xml, flows, security requirements"
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> descriptionsOf: aModel inventory: anInventory [
+	"The 'kind pointer rule' Strings of the gaps of the model"
 
-	^ '{"openapi":"3.1.1","info":{"title":"t","version":"1","contact":{"name":"c"}},"servers":[{"url":"http://{h}/v","variables":{"h":{"default":"x"}}}],"tags":[{"name":"tg","externalDocs":{"url":"http://x"}}],"security":[{"oa":["read"]}],
-"paths":{"/p":{"post":{"requestBody":{"content":{"multipart/form-data":{"schema":{"type":"object","properties":{"f":{"type":"string"}}},"encoding":{"f":{"contentType":"text/plain"}}}}},"callbacks":{"cb":{"{$request.body#/u}":{"post":{"responses":{"200":{"description":"d"}}}}}},"responses":{"200":{"description":"ok","links":{"l":{"operationId":"x"}}}}}}},
-"components":{"schemas":{"Pet":{"type":"object","oneOf":[{"$ref":"#/components/schemas/Cat"}],"discriminator":{"propertyName":"t","mapping":{"c":"#/components/schemas/Cat"}},"xml":{"name":"pet"}},"Cat":{"type":"object"}},
-"securitySchemes":{"oa":{"type":"oauth2","flows":{"authorizationCode":{"authorizationUrl":"http://a","tokenUrl":"http://t","scopes":{"read":"r"}},"clientCredentials":{"tokenUrl":"http://t","scopes":{}}}}}}}'
+	^ (self reportOf: aModel inventory: anInventory) gaps collect: [
+		  :each | self describeGap: each ]
 ]
 
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> documentSwagger2 [
-	"Host, basePath and two schemes, produces and consumes, typed parameters with nested items, body and formData parameters, a $ref response and path item, definitions (alias, string discriminator, properties), shared parameters and responses, security definitions with scopes"
+{ #category : 'mutations' }
+FamixOpenApiExistenceTestCase >> entity: aClass at: aPointer in: aModel [
+	"The only entity of exactly aClass at aPointer"
 
-	^ '{"swagger":"2.0","info":{"title":"t","version":"1","contact":{"name":"c"},"license":{"name":"l"}},"host":"h.com","basePath":"/v","schemes":["http","https"],"consumes":["application/json","application/xml"],"produces":["application/json","text/plain"],
-"tags":[{"name":"t","externalDocs":{"url":"http://x"}}],
-"paths":{"/a":{"$ref":"#/x"},"/b":{"parameters":[{"$ref":"#/parameters/P"},{"$ref":"#/parameters/Nope"}],
- "get":{"parameters":[{"name":"q","in":"query","type":"array","items":{"type":"array","items":{"type":"string"}}},{"name":"b","in":"body","schema":{"$ref":"#/definitions/A"}},{"name":"f","in":"formData","type":"string"},{"name":"f2","in":"formData","type":"file"}],
-  "responses":{"200":{"description":"ok","schema":{"type":"array","items":{"$ref":"#/definitions/A"}},"headers":{"h":{"type":"array","items":{"type":"string"}}},"examples":{"application/json":{"a":1}}},"201":{"$ref":"#/responses/R"},"202":{"$ref":"#/responses/Nope"},"default":{"description":"d","schema":{"type":"string"}}},"security":[{"oa":["read"]}]},
- "post":{"parameters":[{"name":"b","in":"body","schema":{"type":"object","properties":{"z":{"type":"string"}}}}],"consumes":["a/b"],"produces":["c/d"],"responses":{"200":{"description":"ok","schema":{"$ref":"#/definitions/A"}}}},
- "put":{"parameters":[{"name":"f","in":"formData","type":"string"}],"responses":{"200":{"description":"ok"}}}}},
-"definitions":{"A":{"type":"object","discriminator":"p","properties":{"p":{"type":"string"},"r":{"$ref":"#/definitions/B"},"s":{"type":"array","items":{"$ref":"#/definitions/B"}},"u":{"$ref":"#/definitions/Nope"},"xx":{"type":"object","xml":{"name":"n"}}},"externalDocs":{"url":"u"}},"B":{"type":"string"},"Al":{"$ref":"#/definitions/B"},"Du":{"$ref":"#/definitions/Nope"}},
-"parameters":{"P":{"name":"p","in":"query","type":"string"},"PB":{"name":"b","in":"body","schema":{"type":"string"}},"PA":{"$ref":"#/parameters/P"}},
-"responses":{"R":{"description":"r","schema":{"type":"string"}},"RA":{"$ref":"#/responses/R"}},
-"securityDefinitions":{"oa":{"type":"oauth2","flow":"implicit","authorizationUrl":"http://a","scopes":{"read":"r","write":"w"}},"k":{"type":"apiKey","name":"n","in":"header"},"b":{"type":"basic"}},"security":[{"k":[]}]}'
-]
-
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> documentSwagger2Parameters [
-	"Body and formData parameters in a path item, an operation with two body parameters, $ref to body and formData parameters, shared formData and body parameters"
-
-	^ '{"swagger":"2.0","info":{"title":"t","version":"1"},
-"paths":{"/b":{"parameters":[{"name":"pb","in":"body","schema":{"type":"string"}},{"name":"pf","in":"formData","type":"string"},{"name":"pq","in":"query","type":"string"}],
- "get":{"responses":{"200":{"description":"ok"}}},
- "post":{"parameters":[{"name":"b1","in":"body","schema":{"type":"string"}},{"name":"b2","in":"body","schema":{"type":"string"}}],"responses":{"200":{"description":"ok"}}},
- "put":{"parameters":[{"name":"f","in":"formData","type":"file"},{"$ref":"#/parameters/PF"},{"$ref":"#/parameters/PB"}],"responses":{"200":{"description":"ok"}}},
- "delete":{"parameters":[{"$ref":"#/parameters/PB"}],"responses":{"200":{"description":"ok"}}}}},
-"parameters":{"PF":{"name":"pf","in":"formData","type":"string"},"PB":{"name":"b","in":"body","schema":{"type":"string"}}}}'
-]
-
-{ #category : 'fixtures - documents' }
-FamixOpenApiExistenceTestCase >> documentWithSiblingsIn: aVersionString [
-	"A $ref beside other keys in a parameter, a request body, a header, and in a schema (media type, items, allOf, resolved or not, property)"
-
-	^ '{"openapi":"' , aVersionString
-	  ,
-		  '","info":{"title":"t","version":"1"},"paths":{"/c":{"post":{"parameters":[{"$ref":"#/components/parameters/P","description":"x"}],"requestBody":{"$ref":"#/components/requestBodies/RB","description":"x"},"responses":{"200":{"description":"d","headers":{"h":{"$ref":"#/components/headers/H","description":"x"}},"content":{"a/b":{"schema":{"$ref":"#/components/schemas/T","description":"sib"}},"c/d":{"schema":{"type":"array","items":{"$ref":"#/components/schemas/T","description":"sib"},"allOf":[{"$ref":"#/components/schemas/T","description":"sib"},{"$ref":"#/components/schemas/Nope","description":"sib"}]}}}},"201":{"$ref":"#/components/responses/R2"}}}}},
-"components":{"parameters":{"P":{"name":"p","in":"query"}},"requestBodies":{"RB":{"content":{"a/b":{"schema":{"type":"string"}}}}},"headers":{"H":{"schema":{"type":"string"}}},"schemas":{"T":{"type":"string","properties":{"pp":{"$ref":"#/components/schemas/T","description":"sib"},"nn":{"$ref":"#/components/schemas/Nope","description":"sib"}}}},"responses":{"R2":{"description":"d","headers":{"h":{"schema":{"type":"string"}}},"content":{"a/b":{"schema":{"type":"string"},"examples":{"e":{"value":1}}}}}}}}'
+	| found |
+	found := self entityOf: aClass at: aPointer in: aModel.
+	self assert: found size equals: 1.
+	^ found first
 ]
 
 { #category : 'helpers' }
@@ -259,12 +346,34 @@ FamixOpenApiExistenceTestCase >> entityOf: aClass at: aPointer in: aModel [
 		  ofClass: aClass
 ]
 
+{ #category : 'helpers - synthetic' }
+FamixOpenApiExistenceTestCase >> gapDescriptionsOf: aJsonString after: aBlock [
+	"The gaps of the model of aJsonString mutated by aBlock, as sorted 'kind pointer rule' Strings"
+
+	| model |
+	model := self modelOf: aJsonString.
+	aBlock value: model.
+	^ ((self reportOf: model for: aJsonString) gaps collect: [ :each |
+		   self describeGap: each ]) asArray sorted
+]
+
+{ #category : 'mutations' }
+FamixOpenApiExistenceTestCase >> gapsOf: aJsonString after: aBlock [
+	"The gaps of the model of aJsonString mutated by aBlock (given the model), as sorted 'kind pointer' Strings"
+
+	| model |
+	model := self modelOf: aJsonString.
+	aBlock value: model.
+	^ ((self reportOf: model for: aJsonString) gaps collect: [ :each |
+		   self describeKind: each kind pointer: each sourcePointer ])
+		  asArray sorted
+]
+
 { #category : 'helpers' }
 FamixOpenApiExistenceTestCase >> inventoryOf: aJsonString [
-	"The inventory of the source document, read independently of the importer"
+	"The inventory of the source document, read independently of the importer, with the objects in the order of their keys as the importer does"
 
-	^ FamixOpenApiSourceWalker new walk:
-		  (NeoJSONReader fromString: aJsonString)
+	^ FamixOpenApiSourceWalker new walkString: aJsonString
 ]
 
 { #category : 'helpers' }
@@ -289,6 +398,36 @@ FamixOpenApiExistenceTestCase >> modelOf: aJsonString merging: aBoolean [
 	^ FamixOpenApiImporter new
 		  mergesInlineSchemas: aBoolean;
 		  importFromString: aJsonString
+]
+
+{ #category : 'mutations' }
+FamixOpenApiExistenceTestCase >> move: aClass at: aPointer to: aNewPointer in: aModel [
+
+	(self entity: aClass at: aPointer in: aModel) canonicalPointer:
+		aNewPointer
+]
+
+{ #category : 'sweeps - synthetic' }
+FamixOpenApiExistenceTestCase >> realEntityOf: anExpected in: aModel [
+	"The entity of the model that the derivation expects"
+
+	^ aModel allModelEntities detect: [ :each |
+		  each canonicalPointer = anExpected pointer and: [
+			  each class name = anExpected targetClassName ] ]
+]
+
+{ #category : 'mutations' }
+FamixOpenApiExistenceTestCase >> remove: aClass at: aPointer from: aModel [
+
+	aModel remove: (self entity: aClass at: aPointer in: aModel)
+]
+
+{ #category : 'mutations' }
+FamixOpenApiExistenceTestCase >> replace: aClass at: aPointer with: anotherClass in: aModel [
+	"Replace the entity of aClass at aPointer by one of anotherClass at the same pointer"
+
+	self remove: aClass at: aPointer from: aModel.
+	self add: anotherClass at: aPointer to: aModel
 ]
 
 { #category : 'helpers' }

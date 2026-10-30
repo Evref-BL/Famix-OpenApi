@@ -51,6 +51,15 @@ FamixOpenApiSynthesizedServers >> inventory: aSourceInventory [
 	inventory := aSourceInventory
 ]
 
+{ #category : 'testing' }
+FamixOpenApiSynthesizedServers >> isSynthesizedServer: anEntity [
+	"An OPServer at #/servers/N: the check compares their number and their urls"
+
+	^ anEntity class == OPServer and: [
+		  anEntity canonicalPointer isString and: [
+			  anEntity canonicalPointer matchesRegex: '#/servers/\d+' ] ]
+]
+
 { #category : 'private' }
 FamixOpenApiSynthesizedServers >> openApiUrls [
 	"The default server, unless the document declares servers (they are nodes)"

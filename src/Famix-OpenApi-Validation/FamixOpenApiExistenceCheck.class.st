@@ -1,9 +1,9 @@
 "
-Import fidelity, level 1 (existence): checks that every node of a SOURCE OpenAPI/Swagger document that should have an entity in the imported model has one, at the right pointer and of the right class, and that the model has no entity without a source node, except the documented synthetic ones.
-INPUTS: the FamixOpenApiSourceInventory of the document (FamixOpenApiSourceWalker), the OPModel, and optionally the diagnostics of the import (any collection whose elements answer #code, #pointer and #severity: only an #unresolvedReference at the site of a $ref is used).
+Import fidelity, level 1 (existence): checks that every node of a SOURCE OpenAPI/Swagger document that should have an entity in the imported model has one, at the right pointer and of the right class, and that the model has no other entity than the ones the document implies: the set of entities of the model must be EXACTLY the expected one (V7b).
+INPUTS: the FamixOpenApiSourceInventory of the document (FamixOpenApiSourceWalker, read with the objects in the order of their keys: #walkString:), the OPModel, and optionally the diagnostics of the import (any collection whose elements answer #code, #pointer and #severity: only an #unresolvedReference or a #wrongNodeType at the site of a $ref is used, see #dataReferenceFailureCodes).
 MODE REQUIREMENT: the model must have been imported with mergesInlineSchemas = FALSE, so that every schema sits at its own pointer (1:1). The merged form is a later step and is not handled: when an OPSchema has mergedPointers, or the model holds an OPSubSchema, the only gap is one #preconditionMerged and nothing else is compared. An inventory of an unknown version gives one #preconditionVersion.
-FORWARD: for each node, FamixOpenApiNodeExpectation says which OP classes (one per family) should sit at its pointer; each one must be there exactly once and of exactly that class (#missingEntity, #wrongClass, #unexpectedMultiple); an entity of another family is an #extraEntity; an unresolved $ref must give an OPReference or be covered by a diagnostic (#referenceNotResolved).
-REVERSE: an entity whose pointer is not the pointer of a node must be accepted by a rule of FamixOpenApiSyntheticPointerRules, else #extraEntity; the servers without node are checked by number and url (#countMismatch, #valueMismatch).
+FORWARD: for each node, FamixOpenApiNodeExpectation says which OP classes (one per family) should sit at its pointer; each one must be there exactly once and of exactly that class (#missingEntity, #wrongClass, #unexpectedMultiple); an entity of another family is an #extraEntity; an unresolved $ref must give an OPReference or be covered by a diagnostic (#referenceNotResolved). A node of the wrong shape gives no entity of its own: its pointer is compared as a pointer without node.
+REVERSE: at every pointer without node (of the right shape) the entities of the model are compared, family by family, with the ones that FamixOpenApiSyntheticExpectations derives from the source (the clones, the Swagger 2 schemas, media types and request bodies, the discriminators, the examples, the security items and scopes...): an expected one that is not there is a #missingEntity (the gap has the #ruleName that expects it), one that nothing expects an #extraEntity, more than expected an #unexpectedMultiple, another class of the family a #wrongClass. The servers without node are checked by number, pointer and url (FamixOpenApiSynthesizedServers: #countMismatch, #valueMismatch). What the derivation does not follow is listed by FamixOpenApiSyntheticExpectations class>>knownLimits.
 The check does not change the importer and does not depend on it.
 "
 Class {
@@ -13,10 +13,11 @@ Class {
 		'inventory',
 		'lookup',
 		'expectation',
-		'synthetic',
 		'unresolvedPointers',
 		'report',
-		'file'
+		'file',
+		'derived',
+		'servers'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -32,22 +33,71 @@ FamixOpenApiExistenceCheck class >> checkInventory: anInventory model: aModel di
 		  diagnostics: aDiagnosticsOrNil
 ]
 
-{ #category : 'checking - entities' }
-FamixOpenApiExistenceCheck >> checkEntitiesWithoutNode [
-	"The entities whose pointer is not the one of a node (the other ones were compared with their node)"
+{ #category : 'data' }
+FamixOpenApiExistenceCheck class >> dataReferenceFailureCodes [
+	"The codes of the diagnostics that tell why a $ref gave no entity at its site: the target does not exist, or is not an object"
 
-	lookup allEntities do: [ :each |
-		(self hasNodeAtPointerOf: each) ifFalse: [
-			self checkEntityWithoutNode: each ] ]
+	^ #( #unresolvedReference #wrongNodeType )
 ]
 
 { #category : 'checking - entities' }
-FamixOpenApiExistenceCheck >> checkEntityWithoutNode: anEntity [
-	"Accepted when a documented rule explains the pointer, an #extraEntity otherwise"
+FamixOpenApiExistenceCheck >> acceptServer: anEntity [
+	"True for a server without node (its number and urls are compared apart), recorded as such"
 
-	(synthetic ruleNameFor: anEntity)
-		ifNil: [ self reportExtraWithoutNode: anEntity ]
-		ifNotNil: [ :rule | report recordSynthetic: rule ]
+	(servers isSynthesizedServer: anEntity) ifFalse: [ ^ false ].
+	report recordSynthetic: #synthesizedServer.
+	^ true
+]
+
+{ #category : 'checking - entities' }
+FamixOpenApiExistenceCheck >> checkDerivedAt: aPointer [
+	"The entities at a pointer without node, family by family, against the derived ones; the servers without node are accepted here and compared apart"
+
+	| expected found |
+	found := (lookup entitiesAt: aPointer) reject: [ :each |
+		         self acceptServer: each ].
+	expected := derived expectedEntitiesAt: aPointer.
+	(self familiesOf: expected and: found) do: [ :family |
+		self
+			checkFamilyAt: aPointer
+			expected: (expected select: [ :each | each family == family ])
+			found: (found select: [ :each |
+					 (FamixOpenApiPointerLookup familyOf: each) == family ]) ]
+]
+
+{ #category : 'checking - entities' }
+FamixOpenApiExistenceCheck >> checkEntitiesWithoutNode [
+	"The pointers that no node has: the entities there are exactly the ones the derivations expect (the servers are checked apart), no more, no less"
+
+	derived expectedEntities do: [ :each |
+		report recordDerived: each ruleName ].
+	self pointersWithoutNode do: [ :each | self checkDerivedAt: each ]
+]
+
+{ #category : 'checking - entities' }
+FamixOpenApiExistenceCheck >> checkExpected: expectedOnes found: foundOnes at: aPointer [
+	"The entities of the expected class are matched one to one (and counted for their rule); what remains is compared in order: another class is a #wrongClass, an expected one left is #missingEntity, an entity left is #unexpectedMultiple"
+
+	| missing surplus |
+	missing := OrderedCollection withAll: expectedOnes.
+	surplus := OrderedCollection withAll: foundOnes.
+	expectedOnes do: [ :each |
+		surplus
+			detect: [ :entity | entity class name = each targetClassName ]
+			ifFound: [ :entity |
+				surplus remove: entity.
+				missing remove: each.
+				report recordSynthetic: each ruleName ] ].
+	self reportLeftoversAt: aPointer missing: missing surplus: surplus
+]
+
+{ #category : 'checking - entities' }
+FamixOpenApiExistenceCheck >> checkFamilyAt: aPointer expected: expectedOnes found: foundOnes [
+	"One family at a pointer: an entity of a family that nothing expects is an #extraEntity, else the expected ones and the found ones are compared"
+
+	expectedOnes isEmpty ifTrue: [
+		^ foundOnes do: [ :each | self reportExtraWithoutNode: each ] ].
+	self checkExpected: expectedOnes found: foundOnes at: aPointer
 ]
 
 { #category : 'checking' }
@@ -61,9 +111,10 @@ FamixOpenApiExistenceCheck >> checkInventory: anInventory model: aModel diagnost
 		          yourself.
 	self satisfiesPreconditions ifFalse: [ ^ report ].
 	expectation := FamixOpenApiNodeExpectation on: anInventory.
-	synthetic := FamixOpenApiSyntheticPointerRules on: anInventory.
+	derived := FamixOpenApiSyntheticExpectations on: anInventory.
+	servers := FamixOpenApiSynthesizedServers on: anInventory.
 	unresolvedPointers := self
-		                      pointersWithCode: #unresolvedReference
+		                      pointersWithCodes: self class dataReferenceFailureCodes
 		                      in: aDiagnosticsOrNil.
 	self checkNodes.
 	self checkEntitiesWithoutNode.
@@ -73,9 +124,11 @@ FamixOpenApiExistenceCheck >> checkInventory: anInventory model: aModel diagnost
 
 { #category : 'checking - nodes' }
 FamixOpenApiExistenceCheck >> checkNode: aNode [
-	"Compare the entities at the pointer of aNode with the ones it should give"
+	"Compare the entities at the pointer of aNode with the ones it should give; a node of the wrong shape gives none of its own, what stands at its pointer is compared with the derived entities"
 
 	| names found matched |
+	aNode isWrongShape ifTrue: [
+		^ report recordNode: aNode specObject expected: 0 found: 0 ].
 	names := expectation expectedClassNamesFor: aNode.
 	found := lookup entitiesAt: aNode pointer.
 	matched := names count: [ :each |
@@ -112,12 +165,13 @@ FamixOpenApiExistenceCheck >> checkServer: aServer at: anIndex expectedUrl: aUrl
 FamixOpenApiExistenceCheck >> checkSynthesizedServers [
 	"The servers without node must be the ones the document implies: as many as expected, with their urls, at #/servers/0, #/servers/1..."
 
-	| servers urls |
-	servers := self synthesizedServers.
-	urls := (FamixOpenApiSynthesizedServers on: inventory) expectedUrls.
-	servers size = urls size ifFalse: [
-		^ self reportServerCount: urls size found: servers size ].
-	servers withIndexDo: [ :each :index |
+	| found urls |
+	found := self synthesizedServers.
+	urls := servers expectedUrls.
+	urls do: [ :unused | report recordDerived: #synthesizedServer ].
+	found size = urls size ifFalse: [
+		^ self reportServerCount: urls size found: found size ].
+	found withIndexDo: [ :each :index |
 		self checkServer: each at: index expectedUrl: (urls at: index) ]
 ]
 
@@ -142,6 +196,15 @@ FamixOpenApiExistenceCheck >> entitiesOfFamilyOf: aClassName in: aCollection [
 		  (FamixOpenApiPointerLookup familyOf: each) == family ]
 ]
 
+{ #category : 'checking - entities' }
+FamixOpenApiExistenceCheck >> familiesOf: expectedOnes and: foundOnes [
+	"The families (classes directly below OPEntity) of the expected entities and of the found ones"
+
+	^ (expectedOnes collect: #family as: Set) union: (foundOnes
+			   collect: [ :each | FamixOpenApiPointerLookup familyOf: each ]
+			   as: Set)
+]
+
 { #category : 'private' }
 FamixOpenApiExistenceCheck >> familyNamed: aClassName [
 	"The family (the class directly below OPEntity) of the OP class named aClassName"
@@ -158,6 +221,18 @@ FamixOpenApiExistenceCheck >> file: aString [
 ]
 
 { #category : 'reporting' }
+FamixOpenApiExistenceCheck >> gapOfKind: aKind derived: anExpectedEntity [
+	"A gap about an entity without node of its own, that a rule derives: it says which rule and from which node"
+
+	^ (FamixOpenApiGap
+		   kind: aKind
+		   pointer: anExpectedEntity pointer
+		   specObject: (derived specObjectOf: anExpectedEntity))
+		  ruleName: anExpectedEntity ruleName;
+		  yourself
+]
+
+{ #category : 'reporting' }
 FamixOpenApiExistenceCheck >> gapOfKind: aKind node: aNode [
 	"A gap about a source node"
 
@@ -169,9 +244,9 @@ FamixOpenApiExistenceCheck >> gapOfKind: aKind node: aNode [
 
 { #category : 'checking - entities' }
 FamixOpenApiExistenceCheck >> hasNodeAtPointerOf: anEntity [
+	"True when a node that can give entities (not of the wrong shape) sits at the pointer of anEntity"
 
-	^ anEntity canonicalPointer isNotNil and: [
-		  inventory includesPointer: anEntity canonicalPointer ]
+	^ self isNodePointer: anEntity canonicalPointer
 ]
 
 { #category : 'preconditions' }
@@ -183,16 +258,39 @@ FamixOpenApiExistenceCheck >> isMergeEvidence: anEntity [
 		  anEntity mergedPointers isNotEmpty ]
 ]
 
+{ #category : 'checking - entities' }
+FamixOpenApiExistenceCheck >> isNodePointer: aPointer [
+	"True when a node that can give entities, one of the right shape, sits at aPointer (nil is no pointer)"
+
+	^ aPointer isNotNil and: [
+		  (inventory nodeAt: aPointer ifAbsent: [ nil ])
+			  ifNil: [ false ]
+			  ifNotNil: [ :node | node isWrongShape not ] ]
+]
+
 { #category : 'private' }
-FamixOpenApiExistenceCheck >> pointersWithCode: aSymbol in: aDiagnosticsOrNil [
-	"The pointers of the diagnostics that have the code aSymbol"
+FamixOpenApiExistenceCheck >> pointersWithCodes: aCollection in: aDiagnosticsOrNil [
+	"The pointers of the diagnostics whose code is one of aCollection"
 
 	| pointers |
 	pointers := Set new.
 	aDiagnosticsOrNil ifNotNil: [ :diagnostics |
 		diagnostics do: [ :each |
-			each code = aSymbol ifTrue: [ pointers add: each pointer ] ] ].
+			(aCollection includes: each code) ifTrue: [ pointers add: each pointer ] ] ].
 	^ pointers
+]
+
+{ #category : 'checking - entities' }
+FamixOpenApiExistenceCheck >> pointersWithoutNode [
+	"The pointers (nil for the entities that have none) where the model holds an entity or a derivation expects one, and that are not the pointer of a node that gives entities"
+
+	| pointers |
+	pointers := Set withAll: derived pointers.
+	pointers addAll: lookup pointers.
+	(lookup includesPointer: nil) ifTrue: [ pointers add: nil ].
+	^ (pointers reject: [ :each | self isNodePointer: each ]) sorted: [
+		  :a
+		  :b | a asString <= b asString ]
 ]
 
 { #category : 'reporting' }
@@ -209,7 +307,7 @@ FamixOpenApiExistenceCheck >> reportExtra: anEntity at: aNode [
 
 { #category : 'reporting' }
 FamixOpenApiExistenceCheck >> reportExtraWithoutNode: anEntity [
-	"An entity whose pointer is not a node and that no documented rule explains"
+	"An entity whose pointer is not a node and that no derivation expects"
 
 	report add: ((FamixOpenApiGap
 			  kind: #extraEntity
@@ -219,8 +317,25 @@ FamixOpenApiExistenceCheck >> reportExtraWithoutNode: anEntity [
 			 found: anEntity class name;
 			 message:
 				 'No source node at the pointer of this ' , anEntity class name
-				 , ', and no synthetic rule';
+				 , ', and no rule derives it';
 			 yourself)
+]
+
+{ #category : 'reporting' }
+FamixOpenApiExistenceCheck >> reportLeftoversAt: aPointer missing: aMissingCollection surplus: aSurplusCollection [
+	"The expected entities not matched and the entities not matched, of one family at a pointer without node"
+
+	| paired |
+	paired := aMissingCollection size min: aSurplusCollection size.
+	1 to: paired do: [ :index |
+		self
+			reportWrongDerived: (aSurplusCollection at: index)
+			expected: (aMissingCollection at: index)
+			at: aPointer ].
+	(aMissingCollection allButFirst: paired) do: [ :each |
+		self reportMissingDerived: each ].
+	(aSurplusCollection allButFirst: paired) ifNotEmpty: [ :rest |
+		self reportMultipleDerived: rest at: aPointer ]
 ]
 
 { #category : 'preconditions' }
@@ -247,6 +362,21 @@ FamixOpenApiExistenceCheck >> reportMissing: aClassName at: aNode [
 ]
 
 { #category : 'reporting' }
+FamixOpenApiExistenceCheck >> reportMissingDerived: anExpectedEntity [
+	"An entity that a rule derives is not in the model"
+
+	report add:
+		((self gapOfKind: #missingEntity derived: anExpectedEntity)
+			 expected: anExpectedEntity targetClassName;
+			 message:
+				 'No ' , anExpectedEntity targetClassName , ' at '
+				 , anExpectedEntity pointer , ', expected by the rule '
+				 , anExpectedEntity ruleName asString , ' from '
+				 , anExpectedEntity originPointer;
+			 yourself)
+]
+
+{ #category : 'reporting' }
 FamixOpenApiExistenceCheck >> reportMultiple: aCollection expected: aClassName at: aNode [
 
 	report add: ((self gapOfKind: #unexpectedMultiple node: aNode)
@@ -256,6 +386,26 @@ FamixOpenApiExistenceCheck >> reportMultiple: aCollection expected: aClassName a
 			 message:
 				 aCollection size printString , ' entities of the family of '
 				 , aClassName , ' at the same pointer';
+			 yourself)
+]
+
+{ #category : 'reporting' }
+FamixOpenApiExistenceCheck >> reportMultipleDerived: aCollection at: aPointer [
+	"More entities of a family than the derivations expect at a pointer without node"
+
+	| expected |
+	expected := (derived expectedEntitiesAt: aPointer) detect: [ :each |
+		            each family
+		            ==
+		            (FamixOpenApiPointerLookup familyOf: aCollection first) ].
+	report add: ((self gapOfKind: #unexpectedMultiple derived: expected)
+			 entity: aCollection first;
+			 expected: expected targetClassName;
+			 found: (aCollection collect: [ :each | each class name ]) asArray;
+			 message:
+				 aCollection size printString , ' more entities of the family of '
+				 , expected targetClassName , ' at ' , aPointer , ' than the rule '
+				 , expected ruleName asString , ' derives';
 			 yourself)
 ]
 
@@ -326,6 +476,21 @@ FamixOpenApiExistenceCheck >> reportWrongClass: anEntity expected: aClassName at
 			 yourself)
 ]
 
+{ #category : 'reporting' }
+FamixOpenApiExistenceCheck >> reportWrongDerived: anEntity expected: anExpectedEntity at: aPointer [
+	"The entity of the family is not of the class that a rule derives"
+
+	report add: ((self gapOfKind: #wrongClass derived: anExpectedEntity)
+			 entity: anEntity;
+			 expected: anExpectedEntity targetClassName;
+			 found: anEntity class name;
+			 message:
+				 'This ' , anEntity class name , ' at ' , aPointer
+				 , ' should be a ' , anExpectedEntity targetClassName , ' (rule '
+				 , anExpectedEntity ruleName asString , ')';
+			 yourself)
+]
+
 { #category : 'preconditions' }
 FamixOpenApiExistenceCheck >> satisfiesPreconditions [
 	"False, with one gap in the report, for a document of unknown version or a model imported with the inline schemas merged"
@@ -350,7 +515,7 @@ FamixOpenApiExistenceCheck >> synthesizedServers [
 
 	^ (lookup allEntities select: [ :each |
 		   (self hasNodeAtPointerOf: each) not and: [
-			   synthetic isSynthesizedServer: each ] ]) sorted: [ :a :b |
+			   servers isSynthesizedServer: each ] ]) sorted: [ :a :b |
 		  (a canonicalPointer allButFirst: 10) asNumber
 		  <= (b canonicalPointer allButFirst: 10) asNumber ]
 ]

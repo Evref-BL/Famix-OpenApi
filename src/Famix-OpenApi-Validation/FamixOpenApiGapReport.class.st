@@ -1,5 +1,5 @@
 "
-The collection of FamixOpenApiGap found by a fidelity check, shared by the checks of the series (existence V7, values V8, extensions and diagnostics V9, corpus report V10). It answers the gaps, narrowed by kind, and counts them by kind and by spec object. Besides the gaps it holds the statistics a check records to say what it looked at: per spec object the number of source nodes, of entities they should give and of entities found, and per rule the number of entities accepted as documented synthetic ones. The optional file is the name of the source document: it is stamped on every gap added without one.
+The collection of FamixOpenApiGap found by a fidelity check, shared by the checks of the series (existence V7, values V8, extensions and diagnostics V9, corpus report V10). It answers the gaps, narrowed by kind, and counts them by kind and by spec object. Besides the gaps it holds the statistics a check records to say what it looked at: per spec object the number of source nodes, of entities they should give and of entities found, and per rule the number of entities without source node that the derivation expects (#derivedCountsByRule) and the number of them found in the model (#syntheticCountsByRule). The optional file is the name of the source document: it is stamped on every gap added without one.
 "
 Class {
 	#name : 'FamixOpenApiGapReport',
@@ -10,7 +10,8 @@ Class {
 		'nodeCounts',
 		'expectedCounts',
 		'foundCounts',
-		'syntheticCounts'
+		'syntheticCounts',
+		'derivedCounts'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -38,6 +39,13 @@ FamixOpenApiGapReport >> countsBySpecObject [
 
 	^ self sortedCountsOf:
 		  (gaps collect: [ :each | each specObject ifNil: [ '-' ] ] as: Bag)
+]
+
+{ #category : 'accessing' }
+FamixOpenApiGapReport >> derivedCountsByRule [
+	"A Dictionary rule name -> number of entities without source node that the rule derives (found or not)"
+
+	^ self sortedCountsOf: derivedCounts
 ]
 
 { #category : 'counting' }
@@ -88,7 +96,8 @@ FamixOpenApiGapReport >> initialize [
 	nodeCounts := Bag new.
 	expectedCounts := Bag new.
 	foundCounts := Bag new.
-	syntheticCounts := Bag new
+	syntheticCounts := Bag new.
+	derivedCounts := Bag new
 ]
 
 { #category : 'testing' }
@@ -122,6 +131,13 @@ FamixOpenApiGapReport >> printOn: aStream [
 		nextPut: $(;
 		print: gaps size;
 		nextPutAll: ' gaps)'
+]
+
+{ #category : 'recording' }
+FamixOpenApiGapReport >> recordDerived: aRuleName [
+	"One entity without source node that the derivation of the rule aRuleName expects, found in the model or not"
+
+	derivedCounts add: aRuleName
 ]
 
 { #category : 'adding' }

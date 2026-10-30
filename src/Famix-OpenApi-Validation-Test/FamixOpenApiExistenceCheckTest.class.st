@@ -8,79 +8,62 @@ Class {
 	#package : 'Famix-OpenApi-Validation-Test'
 }
 
-{ #category : 'mutations' }
-FamixOpenApiExistenceCheckTest >> add: aClass at: aPointer to: aModel [
-	"Add a stray entity of aClass at aPointer"
-
-	aModel add: (aClass new
-			 canonicalPointer: aPointer;
-			 yourself)
-]
-
-{ #category : 'mutations' }
-FamixOpenApiExistenceCheckTest >> assertGapsOf: aJsonString after: aBlock are: anArray [
-	"anArray holds the expected kind -> pointer associations, in any order"
-
-	self
-		assert: (self gapsOf: aJsonString after: aBlock)
-		equals: (anArray collect: [ :each |
-				 self describeKind: each key pointer: each value ]) asArray sorted
-]
-
-{ #category : 'mutations' }
-FamixOpenApiExistenceCheckTest >> describeKind: aKind pointer: aPointer [
-
-	^ aKind asString , ' ' , aPointer asString
-]
-
-{ #category : 'mutations' }
-FamixOpenApiExistenceCheckTest >> entity: aClass at: aPointer in: aModel [
-	"The only entity of exactly aClass at aPointer"
-
-	| found |
-	found := self entityOf: aClass at: aPointer in: aModel.
-	self assert: found size equals: 1.
-	^ found first
-]
-
-{ #category : 'mutations' }
-FamixOpenApiExistenceCheckTest >> gapsOf: aJsonString after: aBlock [
-	"The gaps of the model of aJsonString mutated by aBlock (given the model), as sorted 'kind pointer' Strings"
-
-	| model |
-	model := self modelOf: aJsonString.
-	aBlock value: model.
-	^ ((self reportOf: model for: aJsonString) gaps collect: [ :each |
-		   self describeKind: each kind pointer: each sourcePointer ])
-		  asArray sorted
-]
-
-{ #category : 'mutations' }
-FamixOpenApiExistenceCheckTest >> move: aClass at: aPointer to: aNewPointer in: aModel [
-
-	(self entity: aClass at: aPointer in: aModel) canonicalPointer:
-		aNewPointer
-]
-
-{ #category : 'mutations' }
-FamixOpenApiExistenceCheckTest >> remove: aClass at: aPointer from: aModel [
-
-	aModel remove: (self entity: aClass at: aPointer in: aModel)
-]
-
-{ #category : 'mutations' }
-FamixOpenApiExistenceCheckTest >> replace: aClass at: aPointer with: anotherClass in: aModel [
-	"Replace the entity of aClass at aPointer by one of anotherClass at the same pointer"
-
-	self remove: aClass at: aPointer from: aModel.
-	self add: anotherClass at: aPointer to: aModel
-]
-
 { #category : 'tests - sweeps' }
 FamixOpenApiExistenceCheckTest >> testAStrayEntityAtAnyNodeIsReportedAsExtra [
 
 	self allDocuments do: [ :each |
 		self assertStraysAreDetectedIn: each value named: each key ]
+]
+
+{ #category : 'tests - synthetic' }
+FamixOpenApiExistenceCheckTest >> testAStringDiscriminatorOfOpenApi3GivesAnEntityThatTheDerivationExpects [
+	"The node of the wrong shape gives none of its own: the OPDiscriminator the importer builds there is a derived one (rule wrongShapeDiscriminator), neither extra nor accepted blindly"
+
+	| doc |
+	doc := self documentOpenApi30Keyed.
+	self assert: (self reportFor: doc) isEmpty.
+	self
+		assert: (self gapDescriptionsOf: doc after: [ :model |
+				 self
+					 remove: OPDiscriminator
+					 at: '#/components/schemas/W/discriminator'
+					 from: model ])
+		equals:
+		#( 'missingEntity #/components/schemas/W/discriminator wrongShapeDiscriminator' )
+]
+
+{ #category : 'tests - synthetic' }
+FamixOpenApiExistenceCheckTest >> testASyntheticEntityTheImporterForgetsIsAMissingEntity [
+	"V7b: the entities without node are derived exactly, so a forgotten one is a gap that says which rule expects it (in V7 the rules only accepted them)"
+
+	self
+		assertGapsOf: self documentOpenApi30
+		after: [ :model |
+			self
+				remove: OPExample
+				at: '#/paths/~1b/get/parameters/0/example'
+				from: model.
+			self
+				remove: OPDiscriminatorMapping
+				at: '#/components/schemas/A/discriminator/mapping/b'
+				from: model ]
+		are: {
+				(#missingEntity -> '#/paths/~1b/get/parameters/0/example').
+				(#missingEntity
+				 -> '#/components/schemas/A/discriminator/mapping/b') }
+]
+
+{ #category : 'tests - references' }
+FamixOpenApiExistenceCheckTest >> testAWrongNodeTypeDiagnosticCoversTheMissingReferenceOfATargetThatIsNotAnObject [
+	"The importer reports #wrongNodeType at the site of a $ref whose target is a string (not #unresolvedReference) and builds neither an OPReference nor a clone"
+
+	| doc |
+	doc := '{"openapi":"3.0.3","info":{"title":"t","version":"1"},"paths":{"/p":{"get":{"responses":{"200":{"$ref":"#/components/responses/R"}}}}},"components":{"responses":{"R":"text"}}}'.
+	self assert: (self reportFor: doc) isEmpty.
+	self
+		assertGapsOf: doc
+		after: [ :model |  ]
+		are: { (#referenceNotResolved -> '#/paths/~1p/get/responses/200') }
 ]
 
 { #category : 'tests - swagger 2' }
@@ -156,23 +139,6 @@ FamixOpenApiExistenceCheckTest >> testClonedResponseAndPathItemAreRequired [
 		after: [ :model |
 		self remove: OPReference at: '#/paths/~1a' from: model ]
 		are: { (#referenceNotResolved -> '#/paths/~1a') }
-]
-
-{ #category : 'tests - synthetic' }
-FamixOpenApiExistenceCheckTest >> testClonedSubtreesAreAcceptedBelowTheCloneSiteOnly [
-
-	| doc |
-	doc := self documentOpenApi31.
-	self
-		assertGapsOf: doc
-		after: [ :model |
-		self add: OPOperation at: '#/paths/~1a/put' to: model ]
-		are: #(  ).
-	self
-		assertGapsOf: doc
-		after: [ :model |
-		self add: OPOperation at: '#/paths/~1c/put' to: model ]
-		are: { (#extraEntity -> '#/paths/~1c/put') }
 ]
 
 { #category : 'tests - references' }
@@ -398,6 +364,29 @@ FamixOpenApiExistenceCheckTest >> testOPReferenceAtAResolvedRefIsExtra [
 		after: [ :model |
 			self add: OPReference at: '#/paths/~1b/parameters/0' to: model ]
 		are: { (#extraEntity -> '#/paths/~1b/parameters/0') }
+]
+
+{ #category : 'tests - synthetic' }
+FamixOpenApiExistenceCheckTest >> testOnlyWhatTheTargetGivesIsExpectedBelowTheCloneSite [
+	"V7b: an entity below a $ref path item is accepted only when the target gives it there (in V7 anything below the site was accepted)"
+
+	| doc |
+	doc := self documentOpenApi31.
+	self
+		assertGapsOf: doc
+		after: [ :model |
+		self add: OPOperation at: '#/paths/~1a/put' to: model ]
+		are: { (#extraEntity -> '#/paths/~1a/put') }.
+	self
+		assertGapsOf: doc
+		after: [ :model |
+		self add: OPOperation at: '#/paths/~1c/put' to: model ]
+		are: { (#extraEntity -> '#/paths/~1c/put') }.
+	self
+		assertGapsOf: doc
+		after: [ :model |
+		self remove: OPOperation at: '#/paths/~1a/get' from: model ]
+		are: { (#missingEntity -> '#/paths/~1a/get') }
 ]
 
 { #category : 'tests - references' }
@@ -704,21 +693,24 @@ FamixOpenApiExistenceCheckTest >> testSwagger2SyntheticEntitiesAreRefusedWhenThe
 ]
 
 { #category : 'tests - synthetic' }
-FamixOpenApiExistenceCheckTest >> testSyntheticEntitiesAreAcceptedButNotRequired [
-	"Limit of this level: a synthetic entity that the importer forgets is not a gap (the reverse direction only accepts them); the servers are the exception"
+FamixOpenApiExistenceCheckTest >> testTheReportCountsWhatTheDerivationsExpectAndWhatWasFound [
+	"derivedCountsByRule counts the expected entities, syntheticCountsByRule the matched ones: the same for a faithful model, fewer found for a model that lacks one"
 
+	| doc model report |
+	doc := self documentSwagger2Security.
+	report := self reportFor: doc.
 	self
-		assertGapsOf: self documentOpenApi30
-		after: [ :model |
-			self
-				remove: OPExample
-				at: '#/paths/~1b/get/parameters/0/example'
-				from: model.
-			self
-				remove: OPDiscriminatorMapping
-				at: '#/components/schemas/A/discriminator/mapping/b'
-				from: model ]
-		are: #(  )
+		assert: report derivedCountsByRule
+		equals: report syntheticCountsByRule.
+	model := self modelOf: doc.
+	self
+		remove: OPSecurityScope
+		at: '#/securityDefinitions/oa/scopes/read'
+		from: model.
+	report := self reportOf: model for: doc.
+	self
+		assert: (report derivedCountsByRule at: #securityScope)
+		equals: (report syntheticCountsByRule at: #securityScope) + 1
 ]
 
 { #category : 'tests - preconditions' }

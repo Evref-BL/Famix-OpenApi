@@ -14,7 +14,9 @@ Class {
 	#superclass : 'Object',
 	#instVars : [
 		'inventory',
-		'componentContainers'
+		'componentContainers',
+		'chain',
+		'registration'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -59,6 +61,25 @@ FamixOpenApiNodeExpectation class >> on: aSourceInventory [
 		  yourself
 ]
 
+{ #category : 'references' }
+FamixOpenApiNodeExpectation >> chainTargetOf: aReferenceNode [
+	"The node at the end of the chain of references of aReferenceNode, nil when it is unresolved or cyclic"
+
+	^ chain targetOf: aReferenceNode
+]
+
+{ #category : 'references' }
+FamixOpenApiNodeExpectation >> classNamesOfCyclicReference: aNode [
+	"The references that come back to themselves: a component alias and a response give nothing (the importer reports #refCycle), a path item its OPPath, the shared objects an OPReference"
+
+	| spec |
+	spec := inventory siteSpecObjectOf: aNode.
+	(self isComponentEntry: aNode) ifTrue: [ ^ #(  ) ].
+	spec = 'Response' ifTrue: [ ^ #(  ) ].
+	spec = 'PathItem' ifTrue: [ ^ #( 'OPPath' ) ].
+	^ #( 'OPReference' )
+]
+
 { #category : 'expectations - objects' }
 FamixOpenApiNodeExpectation >> classNamesOfObject: aNode [
 	"A node that is not a reference (or whose $ref is not a string, which the importer reads as an object)"
@@ -73,11 +94,13 @@ FamixOpenApiNodeExpectation >> classNamesOfObject: aNode [
 	^ self tableClassNamesOf: aNode
 ]
 
-{ #category : 'expectations - references' }
+{ #category : 'references' }
 FamixOpenApiNodeExpectation >> classNamesOfReference: aNode [
-	"A node whose $ref is a string: what the same $ref gives when resolved, and an OPReference more when it is not"
+	"A node whose $ref is a string: what the same $ref gives when resolved, an OPReference more when it is not, and what a cycle of references gives"
 
 	| resolved |
+	(self outcomeOf: aNode) == #cyclic ifTrue: [
+		^ self classNamesOfCyclicReference: aNode ].
 	resolved := self classNamesOfResolvedReference: aNode.
 	^ (self isResolved: aNode)
 		  ifTrue: [ resolved ]
@@ -85,7 +108,7 @@ FamixOpenApiNodeExpectation >> classNamesOfReference: aNode [
 		  self classNamesOfUnresolvedReference: aNode given: resolved ]
 ]
 
-{ #category : 'expectations - references' }
+{ #category : 'references' }
 FamixOpenApiNodeExpectation >> classNamesOfResolvedReference: aNode [
 	"The entities at the site of a $ref whose target exists"
 
@@ -95,6 +118,8 @@ FamixOpenApiNodeExpectation >> classNamesOfResolvedReference: aNode [
 	(self isComponentEntry: aNode) ifTrue: [ ^ #(  ) ].
 	(spec = 'Parameter' and: [ aNode version = #v2 ]) ifTrue: [
 		^ self requestBodyNamesOfBody: aNode ].
+	(spec = 'PathItem' and: [ self isSharedCallbackPathItem: aNode ])
+		ifTrue: [ ^ #(  ) ].
 	^ self cloneClassNamesOf: spec
 ]
 
@@ -195,20 +220,22 @@ FamixOpenApiNodeExpectation >> firstBodyParameterOf: aContainerPointer [
 		  ifNone: [ nil ]
 ]
 
-{ #category : 'accessing' }
+{ #category : 'references' }
 FamixOpenApiNodeExpectation >> inventory: aSourceInventory [
 
 	inventory := aSourceInventory.
+	chain := FamixOpenApiReferenceChain on: aSourceInventory.
+	registration := FamixOpenApiRegistrationOrder on: aSourceInventory.
 	componentContainers := self componentContainerPointers
 ]
 
-{ #category : 'swagger 2' }
+{ #category : 'references' }
 FamixOpenApiNodeExpectation >> isBodyParameter: aNode [
-	"A parameter located in the body, or a $ref to one"
+	"A parameter located in the body, or a reference (followed along its chain) to one"
 
 	| parameter |
 	parameter := aNode isReference
-		             ifTrue: [ self targetOf: aNode ]
+		             ifTrue: [ self chainTargetOf: aNode ]
 		             ifFalse: [ aNode ].
 	^ parameter isNotNil and: [
 		  (inventory siteSpecObjectOf: parameter) = 'Parameter' and: [
@@ -280,18 +307,38 @@ FamixOpenApiNodeExpectation >> isPureReference: aNode [
 { #category : 'references' }
 FamixOpenApiNodeExpectation >> isResolved: aReferenceNode [
 
-	^ (self targetOf: aReferenceNode) isNotNil
+	^ (self outcomeOf: aReferenceNode) == #resolved
+]
+
+{ #category : 'references' }
+FamixOpenApiNodeExpectation >> isSharedCallbackPathItem: aNode [
+	"A path item designated by a $ref in a callback: the importer shares the entity of the target when it exists already, and reads the target again (a clone) otherwise, also when the target does not exist"
+
+	| owner target |
+	owner := inventory ownerOf: aNode.
+	target := self targetOf: aNode.
+	^ target isNotNil and: [
+		  owner isNotNil and: [
+			  (inventory siteSpecObjectOf: owner) = 'Callback' and: [
+				  registration isRegistered: target beforeSite: aNode ] ] ]
 ]
 
 { #category : 'references' }
 FamixOpenApiNodeExpectation >> nodeForReference: aText [
 	"A local reference is a pointer in a URI fragment: it may be percent-encoded"
 
-	(aText beginsWith: '#') ifFalse: [ ^ nil ].
-	^ inventory nodeAt: aText ifAbsent: [
-		  inventory
-			  nodeAt: (ZnPercentEncoder new decode: aText)
-			  ifAbsent: [ nil ] ]
+	^ chain nodeForReference: aText
+]
+
+{ #category : 'references' }
+FamixOpenApiNodeExpectation >> outcomeOf: aReferenceNode [
+	"#resolved, #unresolved or #cyclic: for a schema the target of the $ref itself (an alias is a schema of its own), for the other objects the end of the chain of references"
+
+	(inventory siteSpecObjectOf: aReferenceNode) = 'Schema' ifFalse: [
+		^ chain outcomeOf: aReferenceNode ].
+	^ (self targetOf: aReferenceNode)
+		  ifNil: [ #unresolved ]
+		  ifNotNil: [ #resolved ]
 ]
 
 { #category : 'expectations - objects' }

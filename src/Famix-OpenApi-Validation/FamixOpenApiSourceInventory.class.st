@@ -76,6 +76,17 @@ FamixOpenApiSourceInventory >> componentSchemasPointer [
 		  ifFalse: [ '#/components/schemas' ]
 ]
 
+{ #category : 'copying' }
+FamixOpenApiSourceInventory >> copyIndex: anIndex [
+	"A Dictionary key -> OrderedCollection of nodes, copied one level deeper"
+
+	| copy |
+	copy := Dictionary new.
+	anIndex keysAndValuesDo: [ :key :value |
+		copy at: key put: value copy ].
+	^ copy
+]
+
 { #category : 'querying' }
 FamixOpenApiSourceInventory >> countOf: aSpecObjectName [
 	"The number of nodes of the spec object, the wrong-shape nodes excluded"
@@ -261,6 +272,32 @@ FamixOpenApiSourceInventory >> pointers [
 	"The pointers of every node (wrong-shape nodes included) in document order"
 
 	^ nodes keys
+]
+
+{ #category : 'copying' }
+FamixOpenApiSourceInventory >> postCopy [
+	"The copy indexes the same nodes but owns its indexes: nodes can be added to it or removed from it without changing the original"
+
+	super postCopy.
+	nodes := nodes copy.
+	nodesByObject := self copyIndex: nodesByObject.
+	childrenByParent := self copyIndex: childrenByParent.
+	edgesByPointer := edgesByPointer copy
+]
+
+{ #category : 'copying' }
+FamixOpenApiSourceInventory >> removeNodeAt: aPointer [
+	"Forget the node at aPointer (its children, if any, stay indexed)"
+
+	| node |
+	node := nodes removeKey: aPointer.
+	node parentPointer ifNotNil: [ :parent |
+		childrenByParent
+			at: parent
+			ifPresent: [ :children | children remove: node ifAbsent: [  ] ] ].
+	nodesByObject
+		at: node specObject
+		ifPresent: [ :sameObject | sameObject remove: node ifAbsent: [  ] ]
 ]
 
 { #category : 'querying' }
