@@ -31,11 +31,9 @@ FamixOpenApiSwagger2Parameters class >> inventory: anInventory expectation: aNod
 
 { #category : 'parameters' }
 FamixOpenApiSwagger2Parameters >> effectiveNodeOf: aNode [
-	"The parameter itself, or the one at the end of its chain of $ref (nil when it is unresolved)"
+	"The parameter itself (also when its $ref is not a string), or the one at the end of its chain of $ref (nil when it is unresolved)"
 
-	^ aNode isReference
-		  ifTrue: [ expectation chainTargetOf: aNode ]
-		  ifFalse: [ aNode ]
+	^ expectation effectiveNodeOf: aNode
 ]
 
 { #category : 'parameters' }

@@ -40,15 +40,24 @@ FamixOpenApiSwagger2Schemas >> addFormSchemaOf: anOperation [
 ]
 
 { #category : 'deriving' }
+FamixOpenApiSwagger2Schemas >> addOwnTypedSchemaOf: aReference [
+	"A parameter whose $ref is not a string is read by the importer as a parameter of its own: its typed schema (a real $ref gives none)"
+
+	((driver expandedInventory siteSpecObjectOf: aReference)
+	 = 'Parameter' and: [ aReference referenceText isNil ]) ifTrue: [
+		self addTypedSchemaOf: aReference ]
+]
+
+{ #category : 'deriving' }
 FamixOpenApiSwagger2Schemas >> addReferencedBodySchemaOf: aReference [
-	"A $ref to the body parameter that is the request body of its operation: the schema of the target is read again below the site"
+	"A $ref to the body parameter that is the request body of its operation (or a parameter whose $ref is not a string, which the importer reads as a parameter of its own): the schema of the parameter is read again below the site"
 
 	| schema |
 	((driver expandedInventory siteSpecObjectOf: aReference)
 	 = 'Parameter' and: [
 		 driver nodeExpectation isFirstBodyParameter: aReference ])
 		ifFalse: [ ^ self ].
-	schema := (driver nodeExpectation chainTargetOf: aReference)
+	schema := (driver nodeExpectation effectiveNodeOf: aReference)
 		          valueAt: 'schema'.
 	schema isDictionary ifFalse: [ ^ self ].
 	driver
@@ -68,7 +77,8 @@ FamixOpenApiSwagger2Schemas >> addSchemaNodes [
 	(driver eligibleNodesOf: 'Parameter') do: [ :each |
 		self addTypedSchemaOf: each ].
 	(driver eligibleNodesOf: 'Reference') do: [ :each |
-		self addReferencedBodySchemaOf: each ].
+		self addReferencedBodySchemaOf: each.
+		self addOwnTypedSchemaOf: each ].
 	(driver eligibleNodesOf: 'Operation') do: [ :each |
 		self addFormSchemaOf: each ]
 ]

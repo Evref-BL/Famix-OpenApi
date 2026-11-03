@@ -8,6 +8,13 @@ Class {
 	#package : 'Famix-OpenApi-Validation-Test'
 }
 
+{ #category : 'tests' }
+FamixOpenApiExistenceCheckTest >> testAReferenceThatIsNotAStringDoesNotRaiseAndIsFaithful [
+	"VERIFIED: the importer reads the object as an object of its own (a parameter, the body, the typed schema of the parameter); neither the check nor the derivation raise"
+
+	self assertFaithful: self documentSwagger2NonStringReferences
+]
+
 { #category : 'tests - sweeps' }
 FamixOpenApiExistenceCheckTest >> testAStrayEntityAtAnyNodeIsReportedAsExtra [
 

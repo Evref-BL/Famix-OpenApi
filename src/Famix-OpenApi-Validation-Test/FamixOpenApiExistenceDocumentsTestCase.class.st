@@ -33,12 +33,16 @@ FamixOpenApiExistenceDocumentsTestCase >> allDocuments [
 		  ('swagger2Examples' -> self documentSwagger2Examples).
 		  ('swagger2ParameterWithSchema'
 		   -> self documentSwagger2ParameterWithSchema).
+		  ('swagger2NonStringReferences'
+		   -> self documentSwagger2NonStringReferences).
 		  ('openApi30Keyed' -> self documentOpenApi30Keyed).
 		  ('openApi30Clones' -> self documentOpenApi30Clones).
 		  ('openApi31Clones' -> self documentOpenApi31Clones).
 		  ('openApi31Dropped' -> self documentOpenApi31Dropped).
 		  ('callbackClones' -> self documentCallbackClones).
 		  ('callbackTargets' -> self documentCallbackTargets).
+		  ('callbackThroughAlias' -> self documentCallbackThroughAlias).
+		  ('callbackThroughAliases' -> self documentCallbackThroughAliases).
 		  ('activeReferenceCycle' -> self documentActiveReferenceCycle) }
 ]
 
@@ -61,6 +65,20 @@ FamixOpenApiExistenceDocumentsTestCase >> documentCallbackTargets [
 	"OpenAPI 3.0: callbacks that designate a path item inside an entry of paths: shared when the importer visited it before (the same entry above, an earlier entry), cloned when it comes after (the same entry below, a later entry)"
 
 	^ '{"openapi":"3.0.3","info":{"title":"t","version":"1"},"paths":{"/a":{"get":{"callbacks":{"cb":{"{$x}":{"post":{"responses":{"200":{"description":"d"}}}},"{$y}":{"$ref":"#/paths/~1a/post/callbacks/cb/{$k}"},"{$z}":{"$ref":"#/paths/~1a/get/callbacks/cb/{$x}"}}},"responses":{"200":{"description":"d"}}},"post":{"callbacks":{"cb":{"{$k}":{"put":{"responses":{"200":{"description":"d"}}}}}},"responses":{"200":{"description":"d"}}}},"/b":{"get":{"callbacks":{"cb":{"{$w}":{"$ref":"#/paths/~1a/get/callbacks/cb/{$x}"},"{$v}":{"$ref":"#/paths/~1c/get/callbacks/cb/{$m}"}}},"responses":{"200":{"description":"d"}}}},"/c":{"get":{"callbacks":{"cb":{"{$m}":{"delete":{"responses":{"200":{"description":"d"}}}}}},"responses":{"200":{"description":"d"}}}}}}'
+]
+
+{ #category : 'documents - synthetic' }
+FamixOpenApiExistenceDocumentsTestCase >> documentCallbackThroughAlias [
+	"OpenAPI 3.1: a callback of the path item P2 designates the alias P1 of P2 (a cycle through an alias): the importer shares the entity of P2, the end of the chain, and builds nothing at the callback site (the false positive of the clone derivation of V7b: it took the alias, which has no entity, for a target not yet created)"
+
+	^ '{"openapi":"3.1.0","info":{"title":"t","version":"1"},"servers":[{"url":"http://s"}],"paths":{},"components":{"pathItems":{"P1":{"$ref":"#/components/pathItems/P2"},"P2":{"get":{"operationId":"g","responses":{"200":{"description":"d"}},"callbacks":{"cb":{"{$x}":{"$ref":"#/components/pathItems/P1"}}}}}}}}'
+]
+
+{ #category : 'documents - synthetic' }
+FamixOpenApiExistenceDocumentsTestCase >> documentCallbackThroughAliases [
+	"OpenAPI 3.1: callbacks that designate aliases of path items: a chain of two aliases to a component (shared), an alias to an entry of paths visited before the site (shared) and one to an entry visited after it (cloned)"
+
+	^ '{"openapi":"3.1.0","info":{"title":"t","version":"1"},"servers":[{"url":"http://s"}],"paths":{"/e":{"get":{"responses":{"200":{"description":"e"}}}},"/a":{"get":{"responses":{"200":{"description":"d"}},"callbacks":{"cb":{"{$c}":{"$ref":"#/components/pathItems/Chain0"},"{$e}":{"$ref":"#/components/pathItems/Earlier"},"{$l}":{"$ref":"#/components/pathItems/Later"}}}}},"/l":{"get":{"responses":{"200":{"description":"l"}}}}},"components":{"pathItems":{"Chain0":{"$ref":"#/components/pathItems/Chain1"},"Chain1":{"$ref":"#/components/pathItems/Target"},"Target":{"get":{"responses":{"200":{"description":"t"}}}},"Earlier":{"$ref":"#/paths/~1e"},"Later":{"$ref":"#/paths/~1l"}}}}'
 ]
 
 { #category : 'documents - synthetic' }
@@ -222,6 +240,13 @@ FamixOpenApiExistenceDocumentsTestCase >> documentSwagger2Forms [
 	"Swagger 2 formData parameters of operations without body parameter: a file (multipart), an array, a $ref parameter, a repeated name, form media types of the consumes, other consumes, parameters without name or type"
 
 	^ '{"swagger":"2.0","info":{"title":"t","version":"1"},"paths":{"/p":{"post":{"parameters":[{"name":"f","in":"formData","type":"file","required":true},{"name":"g","in":"formData","type":"array","items":{"type":"string"}},{"$ref":"#/parameters/F"},{"name":"f","in":"formData","type":"integer"}],"responses":{"200":{"description":"d"}}},"put":{"consumes":["application/x-www-form-urlencoded","multipart/form-data","a/b"],"parameters":[{"name":"f","in":"formData","type":"file"}],"responses":{"200":{"description":"d"}}},"patch":{"consumes":["a/b"],"parameters":[{"name":"f","in":"formData","type":"string"}],"responses":{"200":{"description":"d"}}},"get":{"parameters":[{"name":"f","in":"formData"},{"in":"formData","type":"string"}],"responses":{"200":{"description":"d"}}}}},"parameters":{"F":{"name":"ff","in":"formData","type":"string","default":"x"}}}'
+]
+
+{ #category : 'documents' }
+FamixOpenApiExistenceDocumentsTestCase >> documentSwagger2NonStringReferences [
+	"Parameters whose $ref is not a string: the importer reads each one as a parameter of its own (the $ref is kept in its extensions): a typed one, the body of the operation, one with nothing else, and a response and a schema in the same case"
+
+	^ '{"swagger":"2.0","info":{"title":"t","version":"1"},"paths":{"/p":{"get":{"operationId":"g","parameters":[{"$ref":7,"name":"n","in":"query","type":"string"},{"$ref":7,"name":"b","in":"body","description":"bd","schema":{"type":"string"}},{"$ref":null}],"responses":{"200":{"$ref":true,"description":"ok"}}},"put":{"operationId":"u","parameters":[{"$ref":{"a":1}}],"responses":{"200":{"description":"d","schema":{"$ref":7}}}}}},"definitions":{"D":{"$ref":7}}}'
 ]
 
 { #category : 'documents - synthetic' }

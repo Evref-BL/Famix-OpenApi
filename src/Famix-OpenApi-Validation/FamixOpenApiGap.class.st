@@ -1,7 +1,7 @@
 "
 A difference between a source OpenAPI/Swagger document and the model imported from it: a value object shared by the fidelity checks. It says WHERE (sourcePointer, the spec object of the source node, the model entity when there is one, fieldKey for the checks on a field, the file when the document comes from a file), WHAT (kind, a Symbol) and the expected and found values with a message. The ruleName is the synthetic rule that expects an entity without source node (existence check, V7b), nil for the other gaps.
 Kinds used by the existence check (V7): #missingEntity (a source node, or a derivation, expects an entity that is not there), #wrongClass (the entity is of another class than the one expected), #extraEntity (an entity that no node and no derivation expects, or an entity of a family the node should not give), #unexpectedMultiple (more entities of a family at a pointer than expected), #preconditionMerged (the model was imported with the inline schemas merged), #preconditionVersion (the version of the document is unknown), #referenceNotResolved (an unresolved $ref has neither an OPReference at its site nor a diagnostic), #countMismatch and #valueMismatch (the number, the pointers and the urls of the synthesised servers; #countMismatch and #valueMismatch are also the kinds of the value checks of the next steps).
-Kinds reserved for the next steps: #lost #onlyInExtensions #ignoredByDiagnostic.
+Kinds of the value check (V8): #valueMismatch (the slot of the entity does not hold what the source says: fieldKey is the key of the source, expected and found the normalised values) and #countMismatch (a relation holds another number of entities than the source has elements). Kinds reserved for the next steps: #lost (a source field that no modelled slot carries and that is not notModelled: left to V9, which classifies the fields that are not modelled by the extensions and the diagnostics), #onlyInExtensions, #ignoredByDiagnostic. The expected and found values are kept in a FamixOpenApiGapValues so that the gap stays small.
 "
 Class {
 	#name : 'FamixOpenApiGap',
@@ -12,11 +12,10 @@ Class {
 		'specObject',
 		'fieldKey',
 		'kind',
-		'expected',
-		'found',
 		'message',
 		'file',
-		'ruleName'
+		'ruleName',
+		'values'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -50,13 +49,13 @@ FamixOpenApiGap >> entity: anEntity [
 FamixOpenApiGap >> expected [
 	"What the source says should be in the model"
 
-	^ expected
+	^ values expected
 ]
 
 { #category : 'accessing' }
 FamixOpenApiGap >> expected: anObject [
 
-	expected := anObject
+	values expected: anObject
 ]
 
 { #category : 'accessing' }
@@ -89,13 +88,19 @@ FamixOpenApiGap >> file: aString [
 FamixOpenApiGap >> found [
 	"What the model holds instead"
 
-	^ found
+	^ values found
 ]
 
 { #category : 'accessing' }
 FamixOpenApiGap >> found: anObject [
 
-	found := anObject
+	values found: anObject
+]
+
+{ #category : 'initialization' }
+FamixOpenApiGap >> initialize [
+	super initialize.
+	values := FamixOpenApiGapValues new
 ]
 
 { #category : 'accessing' }
@@ -133,9 +138,9 @@ FamixOpenApiGap >> printOn: aStream [
 		nextPutAll: ' (';
 		nextPutAll: specObject asString;
 		nextPutAll: '): expected ';
-		print: expected;
+		print: self expected;
 		nextPutAll: ', found ';
-		print: found
+		print: self found
 ]
 
 { #category : 'accessing' }

@@ -21,6 +21,23 @@ FamixOpenApiSyntheticExpectationsTest >> testABodyReferenceGivesMediaTypesOnlyWh
 	self assert: (self derivedPointersOf: OPSchema in: doc) isEmpty
 ]
 
+{ #category : 'tests - clones' }
+FamixOpenApiSyntheticExpectationsTest >> testACallbackThroughAnAliasSharesTheEntityOfTheEndOfTheChain [
+	"V7b false positive: a callback designates the alias P1 of the path item P2 that holds the callback (a cycle through an alias). The importer shares the entity of P2 and builds nothing at the callback site: the derivation follows the chain of aliases like the importer"
+
+	| doc |
+	doc := self documentCallbackThroughAlias.
+	self assertFaithful: doc.
+	self assert: (self derivedFor: doc) expectedEntities isEmpty.
+	self
+		assert: (self
+				 entityOf: OPPath
+				 at: '#/components/pathItems/P2'
+				 in: (self modelOf: doc)) size
+		equals: 1.
+	self assert: (self gapsOf: doc after: [ :model |  ]) equals: #(  )
+]
+
 { #category : 'tests - swagger 2' }
 FamixOpenApiSyntheticExpectationsTest >> testAParameterThatHasASchemaNodeGetsNoSchemaFromItsType [
 	"The node of the document is at <parameter>/schema: the derivation adds nothing there (it would be a second entity)"
@@ -116,6 +133,18 @@ FamixOpenApiSyntheticExpectationsTest >> testCallbackTargetsInsideAnEntryAreShar
 		assert: (self derivedPointersOf: OPOperation in: doc)
 		equals: #( '#/paths/~1a/get/callbacks/cb/{$y}/put'
 			   '#/paths/~1b/get/callbacks/cb/{$v}/delete' )
+]
+
+{ #category : 'tests - clones' }
+FamixOpenApiSyntheticExpectationsTest >> testCallbacksThroughAliasesShareOrCloneAccordingToTheEndOfTheChain [
+	"A chain of aliases to a component and an alias to an earlier entry of paths share the entity of the target; an alias to a later entry of paths is cloned at the site"
+
+	| doc |
+	doc := self documentCallbackThroughAliases.
+	self assertFaithful: doc.
+	self
+		assert: (self derivedPointersOf: OPOperation in: doc)
+		equals: #( '#/paths/~1a/get/callbacks/cb/{$l}/get' )
 ]
 
 { #category : 'tests - clones' }

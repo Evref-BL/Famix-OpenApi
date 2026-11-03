@@ -35,6 +35,22 @@ FamixOpenApiGapReportTest >> sampleReport [
 	^ report
 ]
 
+{ #category : 'tests' }
+FamixOpenApiGapReportTest >> testCountMismatchesAndValueMismatchesSelectTheirKind [
+
+	| report |
+	report := FamixOpenApiGapReport new.
+	report add:
+		(self gapOfKind: #countMismatch at: '#/a' spec: 'OpenAPI').
+	report add: (self gapOfKind: #valueMismatch at: '#/b' spec: 'Info').
+	report add: (self gapOfKind: #valueMismatch at: '#/c' spec: 'Info').
+	report add: (self gapOfKind: #missingEntity at: '#/d' spec: 'Info').
+	self assert: report countMismatches size equals: 1.
+	self assert: report countMismatches first sourcePointer equals: '#/a'.
+	self assert: report valueMismatches size equals: 2.
+	self assert: FamixOpenApiGapReport new countMismatches isEmpty
+]
+
 { #category : 'tests - report' }
 FamixOpenApiGapReportTest >> testCountsByKindAreSortedByKind [
 
@@ -186,4 +202,19 @@ FamixOpenApiGapReportTest >> testSummaryIsPlainTextWithLfLines [
 	self assert: (summary includesSubstring:
 			 'Info: nodes 2, entities expected 2, found 1').
 	self deny: (summary includes: Character cr)
+]
+
+{ #category : 'tests' }
+FamixOpenApiGapReportTest >> testTheMarkdownSummaryHasTheTableOfTheIgnoredSiblingsOfTheCoverage [
+
+	| report markdown |
+	report := FamixOpenApiGapReport new.
+	self assert:
+		(report markdownSummary includesSubstring: 'Ignored sibling') not.
+	report coverage recordIgnoredSibling: 'title'.
+	markdown := report markdownSummary.
+	self assert:
+		(markdown includesSubstring: '| Ignored sibling of $ref | Count |').
+	self assert: (markdown includesSubstring: '| title | 1 |').
+	self deny: (markdown includes: Character cr)
 ]

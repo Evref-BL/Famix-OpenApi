@@ -1,5 +1,5 @@
 "
-The collection of FamixOpenApiGap found by a fidelity check, shared by the checks of the series (existence V7, values V8, extensions and diagnostics V9, corpus report V10). It answers the gaps, narrowed by kind, and counts them by kind and by spec object. Besides the gaps it holds the statistics a check records to say what it looked at: per spec object the number of source nodes, of entities they should give and of entities found, and per rule the number of entities without source node that the derivation expects (#derivedCountsByRule) and the number of them found in the model (#syntheticCountsByRule). The optional file is the name of the source document: it is stamped on every gap added without one.
+The collection of FamixOpenApiGap found by a fidelity check, shared by the checks of the series (existence V7, values V8, extensions and diagnostics V9, corpus report V10). It answers the gaps, narrowed by kind, and counts them by kind and by spec object. Besides the gaps it holds the statistics a check records to say what it looked at: per spec object the number of source nodes, of entities they should give and of entities found, and per rule the number of entities without source node that the derivation expects (#derivedCountsByRule) and the number of them found in the model (#syntheticCountsByRule). The optional file is the name of the source document: it is stamped on every gap added without one. A value check also records its coverage (#coverage, FamixOpenApiCoverage: what was compared, per field), shown by #markdownSummary, and the gaps of a field are counted by #countsByField.
 "
 Class {
 	#name : 'FamixOpenApiGapReport',
@@ -11,7 +11,8 @@ Class {
 		'expectedCounts',
 		'foundCounts',
 		'syntheticCounts',
-		'derivedCounts'
+		'derivedCounts',
+		'coverage'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -24,6 +25,24 @@ FamixOpenApiGapReport >> add: aGap [
 	aGap file ifNil: [ aGap file: file ].
 	gaps add: aGap.
 	^ aGap
+]
+
+{ #category : 'value checks' }
+FamixOpenApiGapReport >> countMismatches [
+	"The gaps about a number of elements that is not the one of the source"
+
+	^ self gapsOfKind: #countMismatch
+]
+
+{ #category : 'value checks' }
+FamixOpenApiGapReport >> countsByField [
+	"A Dictionary 'spec object.field' -> number of gaps, sorted, for the gaps about a field"
+
+	^ self sortedCountsOf:
+		  ((gaps select: [ :each | each fieldKey isNotNil ])
+			   collect: [ :each |
+			   each specObject asString , '.' , each fieldKey ]
+			   as: Bag)
 ]
 
 { #category : 'counting' }
@@ -39,6 +58,13 @@ FamixOpenApiGapReport >> countsBySpecObject [
 
 	^ self sortedCountsOf:
 		  (gaps collect: [ :each | each specObject ifNil: [ '-' ] ] as: Bag)
+]
+
+{ #category : 'value checks' }
+FamixOpenApiGapReport >> coverage [
+	"What the value check compared (FamixOpenApiCoverage); empty for a check that records none"
+
+	^ coverage
 ]
 
 { #category : 'accessing' }
@@ -97,7 +123,8 @@ FamixOpenApiGapReport >> initialize [
 	expectedCounts := Bag new.
 	foundCounts := Bag new.
 	syntheticCounts := Bag new.
-	derivedCounts := Bag new
+	derivedCounts := Bag new.
+	coverage := FamixOpenApiCoverage new
 ]
 
 { #category : 'testing' }
@@ -108,11 +135,12 @@ FamixOpenApiGapReport >> isEmpty [
 
 { #category : 'reporting' }
 FamixOpenApiGapReport >> markdownSummary [
-	"Markdown tables of the gaps per kind and of the statistics per spec object, then the list of the gaps. Lines end with LF"
+	"Markdown tables of the gaps per kind and of the statistics per spec object, the coverage table of a value check, then the list of the gaps. Lines end with LF"
 
 	^ String streamContents: [ :stream |
 		  self writeKindTableOn: stream.
 		  self writeSpecObjectTableOn: stream.
+		  self writeCoverageOn: stream.
 		  self writeGapListOn: stream ]
 ]
 
@@ -198,6 +226,13 @@ FamixOpenApiGapReport >> syntheticCountsByRule [
 	^ self sortedCountsOf: syntheticCounts
 ]
 
+{ #category : 'value checks' }
+FamixOpenApiGapReport >> valueMismatches [
+	"The gaps about a value of a slot that is not the one of the source"
+
+	^ self gapsOfKind: #valueMismatch
+]
+
 { #category : 'private' }
 FamixOpenApiGapReport >> writeCountsOf: aSpecObjectName nodes: aCount on: aStream [
 
@@ -210,6 +245,20 @@ FamixOpenApiGapReport >> writeCountsOf: aSpecObjectName nodes: aCount on: aStrea
 		nextPutAll: ', found ';
 		print: (foundCounts occurrencesOf: aSpecObjectName);
 		lf
+]
+
+{ #category : 'value checks' }
+FamixOpenApiGapReport >> writeCoverageOn: aStream [
+	"The coverage tables of the value check, when there is one: the fields compared, then the keys beside a $ref that were ignored"
+
+	coverage isEmpty ifTrue: [ ^ self ].
+	aStream
+		lf;
+		nextPutAll: coverage markdownTable.
+	coverage ignoredSiblingKeys ifEmpty: [ ^ self ].
+	aStream
+		lf;
+		nextPutAll: coverage markdownIgnoredSiblings
 ]
 
 { #category : 'private' }

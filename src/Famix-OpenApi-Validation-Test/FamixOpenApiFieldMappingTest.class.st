@@ -136,11 +136,17 @@ FamixOpenApiFieldMappingTest >> testFieldWithoutEntry [
 
 { #category : 'tests' }
 FamixOpenApiFieldMappingTest >> testKnownImporterGaps [
-	| gaps |
+	"Each entry is a non-empty sentence that mentions its subject"
+
+	| gaps subjects |
 	gaps := FamixOpenApiFieldMapping knownImporterGaps.
-	self deny: gaps isEmpty.
-	self assert: (gaps allSatisfy: [ :each | each isString and: [ each notEmpty ] ]).
-	self assert: (gaps anySatisfy: [ :each | each includesSubstring: 'Header' ])
+	subjects := #( 'Header' 'Response' 'schema' 'PathItem' 'JSON type'
+	               'typed parameter' 'openapiVersion' ).
+	self assert: gaps size equals: subjects size.
+	self assert:
+		(gaps allSatisfy: [ :each | each isString and: [ each notEmpty ] ]).
+	gaps with: subjects do: [ :each :subject |
+		self assert: (each includesSubstring: subject) description: subject ]
 ]
 
 { #category : 'tests - lookup' }

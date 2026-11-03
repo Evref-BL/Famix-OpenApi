@@ -21,10 +21,11 @@ FamixOpenApiReferenceChain class >> on: aSourceInventory [
 
 { #category : 'references' }
 FamixOpenApiReferenceChain >> follow: aReferenceNode [
-	"Answer an Association outcome -> final node (nil unless #resolved), the way referencedNodeFor:at: of the importer follows the references"
+	"Answer an Association outcome -> final node (nil unless #resolved), the way referencedNodeFor:at: of the importer follows the references. A node whose $ref is not a string designates nothing (the importer reads it as an object of its own): #unresolved"
 
 	| current visited node |
 	current := aReferenceNode referenceText.
+	current ifNil: [ ^ #unresolved -> nil ].
 	visited := Set new.
 	[
 	node := self nodeForReference: current.

@@ -22,6 +22,36 @@ FamixOpenApiNodeExpectationTest >> assertAt: aPointer in: aJsonString expects: a
 		equals: aCollection asArray sorted
 ]
 
+{ #category : 'tests' }
+FamixOpenApiNodeExpectationTest >> testAParameterWhoseReferenceIsNotAStringIsReadAsAParameterOfItsOwn [
+	"VERIFIED by import: an OPParameter for the typed one, an OPRequestBody for the body one (the $ref is kept in the extensions)"
+
+	| inventory expectation |
+	inventory := self inventoryOf:
+		             self documentSwagger2NonStringReferences.
+	expectation := FamixOpenApiNodeExpectation on: inventory.
+	self
+		assert: (expectation isBodyParameter:
+				 (inventory nodeAt: '#/paths/~1p/get/parameters/0'))
+		equals: false.
+	self
+		assert: (expectation isBodyParameter:
+				 (inventory nodeAt: '#/paths/~1p/get/parameters/1'))
+		equals: true.
+	self
+		assert: (expectation effectiveNodeOf:
+				 (inventory nodeAt: '#/paths/~1p/get/parameters/1'))
+		equals: (inventory nodeAt: '#/paths/~1p/get/parameters/1').
+	self
+		assert: (expectation expectedClassNamesFor:
+				 (inventory nodeAt: '#/paths/~1p/get/parameters/0'))
+		equals: #( 'OPParameter' ).
+	self
+		assert: (expectation expectedClassNamesFor:
+				 (inventory nodeAt: '#/paths/~1p/get/parameters/1'))
+		equals: #( 'OPRequestBody' )
+]
+
 { #category : 'tests - swagger 2' }
 FamixOpenApiNodeExpectationTest >> testBodyAndFormDataParametersOfAPathItemGiveNothing [
 

@@ -64,6 +64,24 @@ FamixOpenApiReferenceChainTest >> testAPercentEncodedReferenceIsDecoded [
 ]
 
 { #category : 'tests' }
+FamixOpenApiReferenceChainTest >> testAReferenceThatIsNotAStringDesignatesNothingAndDoesNotRaise [
+	"The importer reads such an object as an object of its own: the chain has nothing to follow"
+
+	| inventory chain |
+	inventory := self inventoryOf:
+		             self documentSwagger2NonStringReferences.
+	chain := FamixOpenApiReferenceChain on: inventory.
+	#( '#/paths/~1p/get/parameters/0' '#/paths/~1p/get/parameters/1'
+	   '#/paths/~1p/get/parameters/2' '#/paths/~1p/put/parameters/0' )
+		do: [ :each |
+			| site |
+			site := inventory nodeAt: each.
+			self assert: (chain outcomeOf: site) equals: #unresolved.
+			self deny: (chain isCyclic: site).
+			self assert: (chain targetOf: site) isNil ]
+]
+
+{ #category : 'tests' }
 FamixOpenApiReferenceChainTest >> testAnAliasOfAnAliasEndsAtTheNodeThatIsNotAReference [
 
 	| inventory chain site |

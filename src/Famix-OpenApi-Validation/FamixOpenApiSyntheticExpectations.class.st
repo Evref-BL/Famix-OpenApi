@@ -182,6 +182,22 @@ FamixOpenApiSyntheticExpectations >> pointers [
 	^ byPointer keys
 ]
 
+{ #category : 'accessing' }
+FamixOpenApiSyntheticExpectations >> referenceTextAt: aPointer [
+	"The text of the $ref of the site cloned at aPointer, nil when aPointer is not a cloned site"
+
+	expanded ifNil: [ self compute ].
+	^ expansion referenceTextAt: aPointer
+]
+
+{ #category : 'accessing' }
+FamixOpenApiSyntheticExpectations >> ruleAt: aPointer [
+	"The rule that added the node at aPointer to the expanded inventory (#cloneSubtree, #swagger2ParameterSchema, #swagger2FormDataRequestBody), nil for a node of the document"
+
+	expanded ifNil: [ self compute ].
+	^ ruleByPointer at: aPointer ifAbsent: [ nil ]
+]
+
 { #category : 'services for the derivations' }
 FamixOpenApiSyntheticExpectations >> ruleFor: aPointer default: aRuleName [
 

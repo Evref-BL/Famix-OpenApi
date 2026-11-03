@@ -202,6 +202,15 @@ FamixOpenApiNodeExpectation >> componentContainerPointers [
 				  '#/components/' , each ] ]
 ]
 
+{ #category : 'references' }
+FamixOpenApiNodeExpectation >> effectiveNodeOf: aNode [
+	"The node itself, also when its $ref is not a string (the importer reads such a node as an object of its own); the node at the end of the chain of references of a $ref that is a string, nil when it is unresolved or cyclic"
+
+	^ aNode referenceText
+		  ifNil: [ aNode ]
+		  ifNotNil: [ self chainTargetOf: aNode ]
+]
+
 { #category : 'expectations' }
 FamixOpenApiNodeExpectation >> expectedClassNamesFor: aNode [
 	"The names of the OP classes of the entities that should sit at the pointer of aNode, one per family; an empty Array when there is none"
@@ -221,6 +230,16 @@ FamixOpenApiNodeExpectation >> firstBodyParameterOf: aContainerPointer [
 ]
 
 { #category : 'references' }
+FamixOpenApiNodeExpectation >> ignoredSiblingKeysOf: aNode [
+	"The keys beside the $ref (a string) of aNode that the importer does not read in OpenAPI 3.0 and Swagger 2, where the spec ignores them (VERIFIED by import: for a schema, a path item that does not resolve, a response or a parameter). Exception: the description of an alias, a schema of the components that is only a $ref, is read (contrary to the spec: see FamixOpenApiFieldMapping class>>knownImporterGaps). Empty in OpenAPI 3.1, which reads the siblings"
+
+	aNode version = #v31 ifTrue: [ ^ #(  ) ].
+	aNode referenceText ifNil: [ ^ #(  ) ].
+	^ (aNode value keys reject: [ :each |
+		   self isReadBesideReference: each of: aNode ]) asArray
+]
+
+{ #category : 'references' }
 FamixOpenApiNodeExpectation >> inventory: aSourceInventory [
 
 	inventory := aSourceInventory.
@@ -234,9 +253,7 @@ FamixOpenApiNodeExpectation >> isBodyParameter: aNode [
 	"A parameter located in the body, or a reference (followed along its chain) to one"
 
 	| parameter |
-	parameter := aNode isReference
-		             ifTrue: [ self chainTargetOf: aNode ]
-		             ifFalse: [ aNode ].
+	parameter := self effectiveNodeOf: aNode.
 	^ parameter isNotNil and: [
 		  (inventory siteSpecObjectOf: parameter) = 'Parameter' and: [
 			  (parameter valueAt: 'in') = 'body' ] ]
@@ -305,6 +322,16 @@ FamixOpenApiNodeExpectation >> isPureReference: aNode [
 ]
 
 { #category : 'references' }
+FamixOpenApiNodeExpectation >> isReadBesideReference: aKey of: aReferenceNode [
+	"True for the $ref itself and for the description of an alias schema (VERIFIED by import)"
+
+	^ aKey = '$ref' or: [
+		  aKey = 'description' and: [
+			  (inventory siteSpecObjectOf: aReferenceNode) = 'Schema' and: [
+				  self isComponentEntry: aReferenceNode ] ] ]
+]
+
+{ #category : 'references' }
 FamixOpenApiNodeExpectation >> isResolved: aReferenceNode [
 
 	^ (self outcomeOf: aReferenceNode) == #resolved
@@ -312,11 +339,11 @@ FamixOpenApiNodeExpectation >> isResolved: aReferenceNode [
 
 { #category : 'references' }
 FamixOpenApiNodeExpectation >> isSharedCallbackPathItem: aNode [
-	"A path item designated by a $ref in a callback: the importer shares the entity of the target when it exists already, and reads the target again (a clone) otherwise, also when the target does not exist"
+	"A path item designated by a $ref in a callback: the importer shares the entity of the target (the end of the chain of references: an alias leads to the path item it designates) when it exists already, and reads the target again (a clone) otherwise, also when the target does not exist"
 
 	| owner target |
 	owner := inventory ownerOf: aNode.
-	target := self targetOf: aNode.
+	target := self chainTargetOf: aNode.
 	^ target isNotNil and: [
 		  owner isNotNil and: [
 			  (inventory siteSpecObjectOf: owner) = 'Callback' and: [

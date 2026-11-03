@@ -148,6 +148,14 @@ FamixOpenApiCloneExpansion >> isExpandable: aSite [
 ]
 
 { #category : 'expanding' }
+FamixOpenApiCloneExpansion >> referenceTextAt: aPointer [
+	"The text of the $ref of the site that was cloned at aPointer, nil when aPointer is not a cloned site"
+
+	self expandedInventory.
+	^ sites at: aPointer ifAbsent: [ nil ]
+]
+
+{ #category : 'expanding' }
 FamixOpenApiCloneExpansion >> valueReadAt: aSite [
 	"The value the importer reads at aSite: the one of the target (end of the chain of references), overridden by the keys beside the $ref in OpenAPI 3.1 for a path item"
 

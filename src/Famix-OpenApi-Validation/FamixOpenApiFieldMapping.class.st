@@ -382,9 +382,18 @@ FamixOpenApiFieldMapping class >> isPlainIdentifier: aFieldName [
 
 { #category : 'data - tables' }
 FamixOpenApiFieldMapping class >> knownImporterGaps [
-	"Documentation of findings about the importer, established by importing real documents. The validation package does not reference the importer: these are data only."
 
-	^ #( 'Swagger 2 Header keywords are not converted to a schema (importer fidelity gap, to be handled in the import-fidelity step)' )
+	"Documentation of findings about the importer, established by importing real documents (VERIFIED by import). The validation package does not reference the importer: these are data only. The first ones are findings of the audit that differ from the spec and that the value check accepts as expectations or does not compare."
+
+	^ {
+		'Swagger 2 Header keywords are not converted to a schema (importer fidelity gap, to be handled in the import-fidelity step).'.
+		'OpenAPI 3.1 Response (also Parameter, RequestBody, Header and Link) with a $ref and a sibling description or summary: the spec says they override the ones of the referenced object, the importer keeps the description of the target for a Response clone and builds no entity at the site of the shared kinds (Parameter, RequestBody, Header, Link), so the override is never compared (a PathItem does apply it).'.
+		'OpenAPI 3.0 and Swagger 2 schema with a $ref and a sibling description: the spec says the siblings of a $ref are ignored, the importer reads the description of a schema that is only a $ref in the components (an alias) and ignores it for an inline schema, so the check expects it for the alias only and counts every other sibling as ignored.'.
+		'OpenAPI 3.1 PathItem whose $ref does not resolve: the spec makes the summary and the description beside the $ref fields of the path item, the importer gives nil for both (in OpenAPI 3.0 the spec ignores them and the check does not expect them), so the check reports them as valueMismatch.'.
+		'Values of a JSON type that is not the one of the field (maximum "5", readOnly "yes", title 7): the importer drops them (the slot is nil) while it stores a non-integral number (minLength 3.5, maxItems 2.5) as it is, the check does not compare the wrong types (coverage wrongType) and compares the stored number.'.
+		'Swagger 2 typed parameter that also has a schema: the typed keywords (type, format, items...) replace the schema, the schema entity of the parameter holds the type of the parameter and nothing of its schema, the check expects the typed keys.'.
+		'OPOpenApi>>openapiVersion is always 3.1.0 (for a document of OpenAPI 3.0.3, of 3.1.0 and of Swagger 2.0), the real text of the version is in OPOpenApi>>sourceVersion, which is the one the check compares.'.
+	}
 ]
 
 { #category : 'api' }

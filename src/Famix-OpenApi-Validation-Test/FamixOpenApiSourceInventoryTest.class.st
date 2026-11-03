@@ -16,6 +16,22 @@ FamixOpenApiSourceInventoryTest >> inventory [
 ]
 
 { #category : 'tests' }
+FamixOpenApiSourceInventoryTest >> testACopyOwnsItsIndexOfEdges [
+	"The grammar edge noted on the copy (as the clone expansion does when it walks a subtree) is not seen by the original, and the other way round"
+
+	| inventory copy edge |
+	inventory := self inventory.
+	copy := inventory copy.
+	edge := inventory edgeAt: '#/info'.
+	copy noteEdge: edge at: '#/stray'.
+	self assert: edge isNotNil.
+	self assert: (copy edgeAt: '#/stray') equals: edge.
+	self assert: (inventory edgeAt: '#/stray') isNil.
+	inventory noteEdge: edge at: '#/other'.
+	self assert: (copy edgeAt: '#/other') isNil
+]
+
+{ #category : 'tests' }
 FamixOpenApiSourceInventoryTest >> testAncestorsAndOwnerSkipTheContainersOfMapsAndArrays [
 
 	| inventory node |
