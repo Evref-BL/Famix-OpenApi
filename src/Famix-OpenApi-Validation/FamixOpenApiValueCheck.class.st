@@ -49,9 +49,7 @@ FamixOpenApiValueCheck >> checkNode: aNode [
 	(self isCompared: aNode) ifFalse: [ ^ self ].
 	self recordIgnoredSiblingsOf: aNode.
 	names := expectation expectedClassNamesFor: aNode.
-	(rulesBySpecObject
-		 at: (expanded siteSpecObjectOf: aNode)
-		 ifAbsent: [ #(  ) ]) do: [ :each |
+	(self rulesOf: aNode) do: [ :each |
 		self checkRule: each of: aNode names: names ]
 ]
 
@@ -111,6 +109,13 @@ FamixOpenApiValueCheck >> comparisons [
 	"The comparisons made when #keepComparisons was sent before the check, in the order of the nodes"
 
 	^ comparisons ifNil: [ #(  ) ]
+]
+
+{ #category : 'accessing' }
+FamixOpenApiValueCheck >> derivation [
+	"The FamixOpenApiSyntheticExpectations of the inventory, available once the check was prepared"
+
+	^ derived
 ]
 
 { #category : 'checking' }
@@ -208,6 +213,13 @@ FamixOpenApiValueCheck >> keyOf: aRule [
 	^ aRule coverageKeyIn: inventory version
 ]
 
+{ #category : 'accessing' }
+FamixOpenApiValueCheck >> lookup [
+	"The FamixOpenApiPointerLookup of the model, available once the check looked at a model"
+
+	^ lookup
+]
+
 { #category : 'checking' }
 FamixOpenApiValueCheck >> messageOf: aComparison [
 	"What the source says and what the slot holds, as text"
@@ -239,6 +251,13 @@ FamixOpenApiValueCheck >> node: aNode without: aCollectionOfKeys [
 		  pointer: aNode pointer
 		  in: expanded
 		  value: value
+]
+
+{ #category : 'accessing' }
+FamixOpenApiValueCheck >> nodeExpectation [
+	"The FamixOpenApiNodeExpectation on the expanded inventory, available once the check was prepared"
+
+	^ expectation
 ]
 
 { #category : 'context of the comparators' }
@@ -334,6 +353,15 @@ FamixOpenApiValueCheck >> reportPrecondition: aKind message: aString [
 			 yourself)
 ]
 
+{ #category : 'checking' }
+FamixOpenApiValueCheck >> rulesOf: aNode [
+	"The rows of the table for the fields of the node (those of the spec object of its place)"
+
+	^ rulesBySpecObject
+		  at: (expanded siteSpecObjectOf: aNode)
+		  ifAbsent: [ #(  ) ]
+]
+
 { #category : 'preconditions' }
 FamixOpenApiValueCheck >> satisfiesPreconditions [
 	"False, with one gap in the report, for a document of unknown version or a model imported with the inline schemas merged"
@@ -401,4 +429,16 @@ FamixOpenApiValueCheck >> withoutIgnoredSiblings: aNode [
 	^ (expectation ignoredSiblingKeysOf: aNode)
 		  ifEmpty: [ aNode ]
 		  ifNotEmpty: [ :ignored | self node: aNode without: ignored ]
+]
+
+{ #category : 'checking' }
+FamixOpenApiValueCheck >> wrongTypeRulesOf: aNode [
+	"The rules whose field the node has with a value of a JSON type that does not fit: they are not compared (#wrongType in the coverage), the extensions check (V9) classifies them. The check must have been prepared (#prepare)"
+
+	| values |
+	(self isCompared: aNode) ifFalse: [ ^ #(  ) ].
+	values := self valueNodeOf: aNode.
+	^ (self rulesOf: aNode) select: [ :each |
+		  (each comparator applicabilityOf: values rule: each context: self)
+		  == #wrongType ]
 ]

@@ -16,7 +16,7 @@ Class {
 
 { #category : 'fuzzing' }
 FamixOpenApiNeverRaisesTest >> checkText: aJsonString label: aLabel [
-	"Import the text (an exception of the importer is kept in importerErrors and the text skipped), then run both checks, which must not raise"
+	"Import the text (an exception of the importer is kept in importerErrors and the text skipped), then run the three checks, which must not raise"
 
 	| importer model |
 	importer := FamixOpenApiImporter new
@@ -39,7 +39,15 @@ FamixOpenApiNeverRaisesTest >> checkText: aJsonString label: aLabel [
 	self
 		guard: [ self valueReportOf: aJsonString model: model ]
 		label: aLabel
-		check: 'value'
+		check: 'value'.
+	self
+		guard: [
+			FamixOpenApiExtensionsCheck
+				checkInventory: (self inventoryOf: aJsonString)
+				model: model
+				diagnostics: importer diagnostics ]
+		label: aLabel
+		check: 'extensions'
 ]
 
 { #category : 'fuzzing' }

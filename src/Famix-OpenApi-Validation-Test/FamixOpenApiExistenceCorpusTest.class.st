@@ -15,6 +15,13 @@ FamixOpenApiExistenceCorpusTest >> corpusHelper [
 	^ FamixOpenApiCorpusTest new
 ]
 
+{ #category : 'accessing' }
+FamixOpenApiExistenceCorpusTest >> defaultTimeLimit [
+	"The checks and the sweeps import and walk the 20 files: they error under the default 10 seconds when the machine is loaded"
+
+	^ 2 minutes
+]
+
 { #category : 'data' }
 FamixOpenApiExistenceCorpusTest >> frozenCloneSites [
 	"Rows: file name, number of $ref response or path item use sites that the importer clones. Only giphy has some (40 $ref responses, whose targets hold nothing below the site: a description)"

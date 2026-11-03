@@ -12,11 +12,27 @@ Class {
 		'foundCounts',
 		'syntheticCounts',
 		'derivedCounts',
-		'coverage'
+		'coverage',
+		'extensions'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
 }
+
+{ #category : 'data' }
+FamixOpenApiGapReport class >> failingKinds [
+	"The kinds of gap of the extensions check that are failures: the source says something that the model does not hold and nothing tells it (#lost), a value of a wrong type is dropped without a diagnostic (#silentDrop), or the extensions hold another value than the source (#valueMismatch)"
+
+	^ #( #lost #silentDrop #valueMismatch )
+]
+
+{ #category : 'data' }
+FamixOpenApiGapReport class >> informationalKinds [
+	"The kinds of gap that say what became of a field and are not failures: the value is kept in the extensions (#onlyInExtensions), the importer reports that it ignores it (#ignoredByDiagnostic), a value of a wrong type is kept anyway (#valueKeptAnyway), or whether a diagnostic covers it cannot be told because none was given (#notDecidable)"
+
+	^ #( #onlyInExtensions #ignoredByDiagnostic #valueKeptAnyway
+	     #notDecidable )
+]
 
 { #category : 'adding' }
 FamixOpenApiGapReport >> add: aGap [
@@ -82,6 +98,20 @@ FamixOpenApiGapReport >> expectedCountsBySpecObject [
 ]
 
 { #category : 'accessing' }
+FamixOpenApiGapReport >> extensions [
+	"The frequency table of the extensions check (FamixOpenApiExtensionsReport); empty for a check that records none"
+
+	^ extensions
+]
+
+{ #category : 'accessing' }
+FamixOpenApiGapReport >> failingGaps [
+	"The gaps of the kinds of the extensions check that are failures (see the class side #failingKinds)"
+
+	^ gaps select: [ :each | self class failingKinds includes: each kind ]
+]
+
+{ #category : 'accessing' }
 FamixOpenApiGapReport >> file [
 	"The name of the source document, nil when it is unknown"
 
@@ -114,6 +144,14 @@ FamixOpenApiGapReport >> gapsOfKind: aSymbol [
 	^ gaps select: [ :each | each kind = aSymbol ]
 ]
 
+{ #category : 'accessing' }
+FamixOpenApiGapReport >> informationalGaps [
+	"The gaps that say what became of a field without being failures (see the class side #informationalKinds)"
+
+	^ gaps select: [ :each |
+		  self class informationalKinds includes: each kind ]
+]
+
 { #category : 'initialization' }
 FamixOpenApiGapReport >> initialize [
 
@@ -124,7 +162,8 @@ FamixOpenApiGapReport >> initialize [
 	foundCounts := Bag new.
 	syntheticCounts := Bag new.
 	derivedCounts := Bag new.
-	coverage := FamixOpenApiCoverage new
+	coverage := FamixOpenApiCoverage new.
+	extensions := FamixOpenApiExtensionsReport new
 ]
 
 { #category : 'testing' }
@@ -135,12 +174,13 @@ FamixOpenApiGapReport >> isEmpty [
 
 { #category : 'reporting' }
 FamixOpenApiGapReport >> markdownSummary [
-	"Markdown tables of the gaps per kind and of the statistics per spec object, the coverage table of a value check, then the list of the gaps. Lines end with LF"
+	"Markdown tables of the gaps per kind and of the statistics per spec object, the coverage table of a value check, the frequency table of an extensions check, then the list of the gaps. Lines end with LF"
 
 	^ String streamContents: [ :stream |
 		  self writeKindTableOn: stream.
 		  self writeSpecObjectTableOn: stream.
 		  self writeCoverageOn: stream.
+		  self writeExtensionsOn: stream.
 		  self writeGapListOn: stream ]
 ]
 
@@ -259,6 +299,16 @@ FamixOpenApiGapReport >> writeCoverageOn: aStream [
 	aStream
 		lf;
 		nextPutAll: coverage markdownIgnoredSiblings
+]
+
+{ #category : 'reporting' }
+FamixOpenApiGapReport >> writeExtensionsOn: aStream [
+	"The frequency table of the extensions check, when there is one"
+
+	extensions isEmpty ifTrue: [ ^ self ].
+	aStream
+		lf;
+		nextPutAll: extensions markdownSummary
 ]
 
 { #category : 'private' }

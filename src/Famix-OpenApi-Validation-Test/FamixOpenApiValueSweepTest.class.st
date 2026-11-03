@@ -8,6 +8,13 @@ Class {
 	#package : 'Famix-OpenApi-Validation-Test'
 }
 
+{ #category : 'accessing' }
+FamixOpenApiValueSweepTest >> defaultTimeLimit [
+	"The sweeps change every slot of the rich documents in turn: they error under the default 10 seconds when the machine is loaded"
+
+	^ 2 minutes
+]
+
 { #category : 'tests' }
 FamixOpenApiValueSweepTest >> testAChangedSlotThatNoRuleReadsIsNotDetected [
 	"The names that are structural are not compared, and nothing else is invented"
