@@ -2,6 +2,7 @@
 Import fidelity, level 4 (relations, V10): checks that the RELATIONS of the entities of the model (an operation to its parameters, responses and request body, a schema to its properties and its allOf, a security requirement to the schemes...) are the ones that the SOURCE document says: the same children, resolved through $ref to the right target entities, in the right order, with the right count. Entry: #checkInventory:model:diagnostics: answers a FamixOpenApiGapReport with the gaps #relationMismatch (the relation of an entity does not hold the targets that the source designates: expected and found are the lists of the canonical pointers of the targets, fieldKey is the key of the source, the message says what is missing, what is extra or that the order differs) and #countMismatch (for a row compared by its number of targets), and the coverage (FamixOpenApiGapReport>>coverage): per version, spec object, field and relation, how many relations were compared (one per owner), how many targets (#linkCountOf:), how many did not match and how many were deferred, with the reason.
 HOW: the table is FamixOpenApiRelationRules (one FamixOpenApiRelationRule per relation of the model, with a derivation of the targets from the source: FamixOpenApiRelationDerivation). The owners are the nodes of the EXPANDED inventory of FamixOpenApiSyntheticExpectations (the clones of the $ref responses and path items re-rooted at their sites, the schemas that Swagger 2 makes of typed parameters), the entities derived without node (the media types of Swagger 2, the entries of the mapping, the items of the security requirements) or the entries of the properties. The target of a child is the entity that the node gives for the family of the relation (FamixOpenApiNodeExpectation says which), else the one its $ref designates, following the importer: a schema designates the schema at the end of ONE step (an alias of the components is an entity), the other objects the end of the chain; an unresolved or cyclic $ref gives no target. The relations of the model are sets that keep the first occurrence: a target met twice in the source is held once (VERIFIED by import).
 SCOPE: mergesInlineSchemas = FALSE only (the same preconditions as V7 to V9: #preconditionMerged, #preconditionVersion). The inverse relations (usedBy..., the owner side of a containment: the validator of V4 and V5 checks them) are not compared. DEFERRED, on purpose, each one counted in the coverage with its reason: the keys beside a $ref of OpenAPI 3.1 (the importer reads them, the inventory does not walk them). The check does not change the importer and does not depend on it. The diagnostics of the import are used for one thing: a $ref to a value that is not an object gets a diagnostic (wrongNodeType, unresolvedReference) and no OPReference, and the existence check accepts it the same way, so the unresolved references of the relation check do not expect the OPReference of a site that a diagnostic covers (without diagnostics, it is a gap).
+KNOWN LIMIT E1 (frozen by FamixOpenApiRelationSwagger2Test>>testKnownLimitE1ATypedParameterWithItemsAndASchemaGivesARelationMismatchForItsItems): a Swagger 2 typed parameter that has BOTH items and a non-empty schema key (an invalid document, e.g. {""name"":""q"",""in"":""query"",""type"":""array"",""items"":{""type"":""string""},""schema"":{""type"":""string""}}) gives a #relationMismatch for items at '<param>/schema' (missing: none, extra: the schema at '<param>/schema/items'). The virtual pointer of the schema that Swagger 2 makes of the typed keywords is '<param>/schema', the pointer of the real schema key of the document, so the two collide; the existence check reports the entity at '<param>/schema/items' as #extraEntity too. It is not fixed: no valid document has both.
 "
 Class {
 	#name : 'FamixOpenApiRelationCheck',
@@ -14,7 +15,8 @@ Class {
 		'nodesBySite',
 		'syntheticByParent',
 		'comparisons',
-		'referenceFailures'
+		'referenceFailures',
+		'sharedValueCheck'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -317,8 +319,7 @@ FamixOpenApiRelationCheck >> prepareInventory: anInventory model: aModel diagnos
 	inventory := anInventory.
 	referenceFailures := self pointersOfReferenceFailuresIn:
 		                     aDiagnosticsOrNil.
-	valueCheck := FamixOpenApiValueCheck new.
-	valueCheck prepareInventory: anInventory model: aModel.
+	valueCheck := self valueCheckOn: anInventory model: aModel.
 	report := FamixOpenApiGapReport new
 		          file: file;
 		          yourself
@@ -385,6 +386,13 @@ FamixOpenApiRelationCheck >> satisfiesPreconditions [
 	^ false
 ]
 
+{ #category : 'preparing' }
+FamixOpenApiRelationCheck >> shareValueCheck: aValueCheck [
+	"Use aValueCheck, prepared on the same inventory and model, instead of a new one: the expansion of the inventory and the lookup of the model are then made once for several checks (FamixOpenApiFidelityChecker). The check must be given before #checkInventory:model:diagnostics:"
+
+	sharedValueCheck := aValueCheck
+]
+
 { #category : 'targets' }
 FamixOpenApiRelationCheck >> syntheticAt: aPointer family: aFamily [
 	"The pointers of the entities of the family derived without node at aPointer"
@@ -431,6 +439,16 @@ FamixOpenApiRelationCheck >> targetPointerOf: aNode family: aFamily visited: aSe
 	(self node: aNode givesFamily: aFamily) ifTrue: [ ^ aNode pointer ].
 	(self givesEntityOfItsOwn: aNode) ifTrue: [ ^ nil ].
 	^ self designatedPointerOf: aNode family: aFamily visited: aSet
+]
+
+{ #category : 'preparing' }
+FamixOpenApiRelationCheck >> valueCheckOn: anInventory model: aModel [
+	"The value check that reads the model and supplies the expanded inventory: the one given by #shareValueCheck: when there is one, else a new one"
+
+	^ sharedValueCheck ifNil: [
+		  FamixOpenApiValueCheck new
+			  prepareInventory: anInventory model: aModel;
+			  yourself ]
 ]
 
 { #category : 'accessing' }

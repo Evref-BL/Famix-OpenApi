@@ -248,7 +248,7 @@ FamixOpenApiRelationTestCase >> documentUnresolved30 [
 
 { #category : 'documents' }
 FamixOpenApiRelationTestCase >> documentUnresolvedSwagger2 [
-	"Swagger 2: unresolved references at the paths (a body parameter schema, a parameter, a response schema, a response), in the parameters, in the responses and in the definitions of the root, the paths coming FIRST in the document (VERIFIED by import: the importer keeps them in the order of the definitions, the parameters and the responses first, the paths after, and the OpenAPI 3 importer does the same for the components)"
+	"Swagger 2: unresolved references at the paths (a body parameter schema, a parameter, a response schema, a response), in the parameters, in the responses and in the definitions of the root, the paths coming FIRST in the document (VERIFIED by import: the importer meets the definitions first, then the responses, then the paths, so the unresolvedReferences of the root are N7, N6, N2, N1, N3, N4; N5 is not a reference but a componentAlias diagnostic, the parameter Q being an alias of the components)"
 
 	^ '{"swagger":"2.0","info":{"title":"t","version":"1"},"paths":{"/p":{"post":{"parameters":[{"name":"b","in":"body","schema":{"$ref":"#/definitions/N1"}},{"$ref":"#/parameters/N2"}],"responses":{"200":{"description":"d","schema":{"$ref":"#/definitions/N3"}},"201":{"$ref":"#/responses/N4"}}}}},"parameters":{"Q":{"$ref":"#/parameters/N5"}},"responses":{"R":{"description":"r","schema":{"$ref":"#/definitions/N6"}}},"definitions":{"D":{"type":"object","properties":{"a":{"$ref":"#/definitions/N7"}}}}}'
 ]

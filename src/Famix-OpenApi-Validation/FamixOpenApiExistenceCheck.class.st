@@ -17,7 +17,8 @@ Class {
 		'report',
 		'file',
 		'derived',
-		'servers'
+		'servers',
+		'sharedValueCheck'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -105,16 +106,17 @@ FamixOpenApiExistenceCheck >> checkInventory: anInventory model: aModel diagnost
 	"Answer the FamixOpenApiGapReport of the model against the inventory; aDiagnosticsOrNil is nil or a collection of diagnostics (#code, #pointer)"
 
 	inventory := anInventory.
-	lookup := FamixOpenApiPointerLookup onModel: aModel.
+	lookup := self lookupOn: aModel.
 	report := FamixOpenApiGapReport new
 		          file: file;
 		          yourself.
 	self satisfiesPreconditions ifFalse: [ ^ report ].
 	expectation := FamixOpenApiNodeExpectation on: anInventory.
-	derived := FamixOpenApiSyntheticExpectations on: anInventory.
+	derived := self derivationOn: anInventory.
 	servers := FamixOpenApiSynthesizedServers on: anInventory.
 	unresolvedPointers := self
-		                      pointersWithCodes: self class dataReferenceFailureCodes
+		                      pointersWithCodes:
+		                      self class dataReferenceFailureCodes
 		                      in: aDiagnosticsOrNil.
 	self checkNodes.
 	self checkEntitiesWithoutNode.
@@ -185,6 +187,15 @@ FamixOpenApiExistenceCheck >> checkUnexpectedAt: aNode among: aCollection expect
 	aCollection do: [ :each |
 		(families includes: (FamixOpenApiPointerLookup familyOf: each))
 			ifFalse: [ self reportExtra: each at: aNode ] ]
+]
+
+{ #category : 'checking' }
+FamixOpenApiExistenceCheck >> derivationOn: anInventory [
+	"What the document implies without node: the one of the value check given by #shareValueCheck: when there is one (it expands the inventory once)"
+
+	^ sharedValueCheck
+		  ifNil: [ FamixOpenApiSyntheticExpectations on: anInventory ]
+		  ifNotNil: [ sharedValueCheck derivation ]
 ]
 
 { #category : 'private' }
@@ -266,6 +277,15 @@ FamixOpenApiExistenceCheck >> isNodePointer: aPointer [
 		  (inventory nodeAt: aPointer ifAbsent: [ nil ])
 			  ifNil: [ false ]
 			  ifNotNil: [ :node | node isWrongShape not ] ]
+]
+
+{ #category : 'checking' }
+FamixOpenApiExistenceCheck >> lookupOn: aModel [
+	"The FamixOpenApiPointerLookup of the model: the one of the value check given by #shareValueCheck: when there is one"
+
+	^ sharedValueCheck
+		  ifNil: [ FamixOpenApiPointerLookup onModel: aModel ]
+		  ifNotNil: [ sharedValueCheck lookup ]
 ]
 
 { #category : 'private' }
@@ -507,6 +527,13 @@ FamixOpenApiExistenceCheck >> satisfiesPreconditions [
 	merged ifEmpty: [ ^ true ].
 	self reportMerged: merged.
 	^ false
+]
+
+{ #category : 'checking' }
+FamixOpenApiExistenceCheck >> shareValueCheck: aValueCheck [
+	"Use the lookup and the derivation of aValueCheck, prepared on the same inventory and model, instead of new ones (FamixOpenApiFidelityChecker). The check must be given before #checkInventory:model:diagnostics:"
+
+	sharedValueCheck := aValueCheck
 ]
 
 { #category : 'checking - servers' }

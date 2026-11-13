@@ -37,8 +37,7 @@ FamixOpenApiValueCheck >> checkInventory: anInventory model: aModel [
 	self prepareInventory: anInventory model: aModel.
 	self satisfiesPreconditions ifFalse: [ ^ report ].
 	self prepare.
-	expanded allNodes do: [ :each | self checkNode: each ].
-	^ report
+	^ self checkNodes
 ]
 
 { #category : 'checking' }
@@ -51,6 +50,17 @@ FamixOpenApiValueCheck >> checkNode: aNode [
 	names := expectation expectedClassNamesFor: aNode.
 	(self rulesOf: aNode) do: [ :each |
 		self checkRule: each of: aNode names: names ]
+]
+
+{ #category : 'checking' }
+FamixOpenApiValueCheck >> checkNodes [
+	"Answer a new FamixOpenApiGapReport with the gaps of every node of the expanded inventory (the check was prepared, see #prepare)"
+
+	report := FamixOpenApiGapReport new
+		          file: file;
+		          yourself.
+	expanded allNodes do: [ :each | self checkNode: each ].
+	^ report
 ]
 
 { #category : 'checking' }
@@ -280,8 +290,9 @@ FamixOpenApiValueCheck >> parameterTargetOf: aNode [
 
 { #category : 'checking' }
 FamixOpenApiValueCheck >> prepare [
-	"The expanded inventory (clones re-rooted, Swagger 2 schemas added) and what reads it"
+	"The expanded inventory (clones re-rooted, Swagger 2 schemas added) and what reads it. Done once: the checks that share this one (see FamixOpenApiFidelityChecker) find it ready"
 
+	expanded ifNotNil: [ ^ self ].
 	derived := FamixOpenApiSyntheticExpectations on: inventory.
 	expanded := derived expandedInventory.
 	expectation := derived nodeExpectation.
@@ -296,6 +307,7 @@ FamixOpenApiValueCheck >> prepareInventory: anInventory model: aModel [
 
 	inventory := anInventory.
 	lookup := FamixOpenApiPointerLookup onModel: aModel.
+	expanded := nil.
 	report := FamixOpenApiGapReport new
 		          file: file;
 		          yourself

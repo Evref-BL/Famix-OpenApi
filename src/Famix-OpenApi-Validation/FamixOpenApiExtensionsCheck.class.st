@@ -24,7 +24,8 @@ Class {
 		'report',
 		'file',
 		'diagnostics',
-		'parsed'
+		'parsed',
+		'sharedValueCheck'
 	],
 	#classInstVars : [
 		'rowIndex'
@@ -626,8 +627,7 @@ FamixOpenApiExtensionsCheck >> prepareInventory: anInventory model: aModel diagn
 	inventory := anInventory.
 	diagnostics := FamixOpenApiDiagnosticCoverage on: aDiagnosticsOrNil.
 	parsed := IdentityDictionary new.
-	valueCheck := FamixOpenApiValueCheck new.
-	valueCheck prepareInventory: anInventory model: aModel.
+	valueCheck := self valueCheckOn: anInventory model: aModel.
 	lookup := valueCheck lookup.
 	report := FamixOpenApiGapReport new
 		          file: file;
@@ -688,6 +688,13 @@ FamixOpenApiExtensionsCheck >> satisfiesPreconditions [
 	^ false
 ]
 
+{ #category : 'preparing' }
+FamixOpenApiExtensionsCheck >> shareValueCheck: aValueCheck [
+	"Use aValueCheck, prepared on the same inventory and model, instead of a new one: the expansion of the inventory and the lookup of the model are then made once for several checks (FamixOpenApiFidelityChecker). The check must be given before #checkInventory:model:diagnostics:"
+
+	sharedValueCheck := aValueCheck
+]
+
 { #category : 'extensions' }
 FamixOpenApiExtensionsCheck >> siblingCodesOf: aNode [
 	"The codes of the diagnostics that say the importer ignores the keys beside the $ref of the node (none for a node without $ref)"
@@ -730,4 +737,14 @@ FamixOpenApiExtensionsCheck >> slotRulesOf: aKey in: aNode [
 	^ (#( #v30 #v31 #v2 ) flatCollect: [ :each |
 		   FamixOpenApiValueRules rulesFor: specObject in: each ]) select: [
 		  :each | each fieldKey = aKey ]
+]
+
+{ #category : 'preparing' }
+FamixOpenApiExtensionsCheck >> valueCheckOn: anInventory model: aModel [
+	"The value check that reads the model and supplies the expanded inventory: the one given by #shareValueCheck: when there is one, else a new one"
+
+	^ sharedValueCheck ifNil: [
+		  FamixOpenApiValueCheck new
+			  prepareInventory: anInventory model: aModel;
+			  yourself ]
 ]

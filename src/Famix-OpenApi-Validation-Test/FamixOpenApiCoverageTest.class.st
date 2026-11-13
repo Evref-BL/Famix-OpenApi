@@ -62,6 +62,46 @@ FamixOpenApiCoverageTest >> testIgnoredSiblingsAreCountedPerKeyAndMerged [
 ]
 
 { #category : 'tests' }
+FamixOpenApiCoverageTest >> testMergeIntoACoverageThatHasAReasonKeepsIt [
+	"The reason already there wins over the one of the merged coverage (a corpus report merges the files in order)"
+
+	| merged other |
+	merged := FamixOpenApiCoverage new.
+	merged recordDeferred: 'k' reason: 'mine'.
+	other := FamixOpenApiCoverage new.
+	other recordDeferred: 'k' reason: 'theirs'.
+	merged mergeWith: other.
+	self assert: (merged deferralReasonOf: 'k') equals: 'mine'.
+	self assert: (merged deferredCountOf: 'k') equals: 2.
+	self assert: (other deferralReasonOf: 'k') equals: 'theirs'
+]
+
+{ #category : 'tests' }
+FamixOpenApiCoverageTest >> testMergeKeepsTheDeferredCountsAndTheFirstReasonOfEveryKey [
+	"The counts of the deferred relations add up, a key keeps the reason of the first coverage that deferred it, a key met only by the second one brings its reason"
+
+	| first second merged |
+	first := FamixOpenApiCoverage new.
+	first recordDeferred: 'k1' reason: 'reason one'.
+	first recordDeferred: 'k2' reason: 'first reason of k2'.
+	second := FamixOpenApiCoverage new.
+	second recordDeferred: 'k2' reason: 'second reason of k2'.
+	second recordDeferred: 'k2' reason: 'second reason of k2'.
+	second recordDeferred: 'k3' reason: 'reason three'.
+	merged := FamixOpenApiCoverage new.
+	merged mergeWith: first.
+	merged mergeWith: second.
+	self assert: merged deferredKeys equals: #( 'k1' 'k2' 'k3' ).
+	self assert: (merged deferredCountOf: 'k2') equals: 3.
+	self assert: merged totalDeferred equals: 5.
+	self assert: (merged deferralReasonOf: 'k1') equals: 'reason one'.
+	self
+		assert: (merged deferralReasonOf: 'k2')
+		equals: 'first reason of k2'.
+	self assert: (merged deferralReasonOf: 'k3') equals: 'reason three'
+]
+
+{ #category : 'tests' }
 FamixOpenApiCoverageTest >> testMergingAddsTheCounts [
 
 	| total |

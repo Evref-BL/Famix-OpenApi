@@ -9,6 +9,13 @@ Class {
 }
 
 { #category : 'tests' }
+FamixOpenApiRelationSwagger2Test >> documentTypedParameterWithItemsAndSchema [
+	"Swagger 2: a typed parameter that has items AND a non-empty schema (an invalid document: the schema of a typed parameter is the one that the typed keywords give)"
+
+	^ '{"swagger":"2.0","info":{"title":"t","version":"1"},"paths":{"/p":{"get":{"parameters":[{"name":"q","in":"query","type":"array","items":{"type":"string"},"schema":{"type":"string"}}],"responses":{"200":{"description":"d"}}}}}}'
+]
+
+{ #category : 'tests' }
 FamixOpenApiRelationSwagger2Test >> testAMediaTypeListedTwiceInProducesIsHeldTwice [
 	"VERIFIED: two entities at the same pointer, both in the relation (the other relations are sets, this one is derived without node)"
 
@@ -177,6 +184,27 @@ FamixOpenApiRelationSwagger2Test >> testATypedParameterThatAlsoHasASchemaKeyHold
 ]
 
 { #category : 'tests' }
+FamixOpenApiRelationSwagger2Test >> testKnownLimitE1ATypedParameterWithItemsAndASchemaGivesARelationMismatchForItsItems [
+	"KNOWN LIMIT E1 (frozen, see the comment of FamixOpenApiRelationCheck): the virtual pointer of the schema of the typed parameter ('<param>/schema') is the one of the real schema key of the document, so the items of the typed schema are looked for at the pointer where the importer put the real schema: the relation check says that items is missing there and that the entity at '<param>/schema/items' is extra, and the existence check says #extraEntity at that entity. VERIFIED by import. An invalid document"
+
+	| gaps |
+	gaps := (self relationReportFor:
+		         self documentTypedParameterWithItemsAndSchema) gaps.
+	self assert: gaps size equals: 1.
+	self assert: gaps first kind equals: #relationMismatch.
+	self
+		assert: gaps first sourcePointer
+		equals: '#/paths/~1p/get/parameters/0/schema'.
+	self assert: gaps first fieldKey equals: 'items'.
+	self
+		assert:
+			((self reportFor: self documentTypedParameterWithItemsAndSchema)
+				 gaps collect: [ :each | each kind -> each sourcePointer ])
+		equals:
+		{ (#extraEntity -> '#/paths/~1p/get/parameters/0/schema/items') }
+]
+
+{ #category : 'tests' }
 FamixOpenApiRelationSwagger2Test >> testTheBodyParameterIsTheRequestBodyAtItsPointerWithTheMediaTypesOfConsumes [
 
 	| json |
@@ -316,6 +344,29 @@ FamixOpenApiRelationSwagger2Test >> testTheFormParametersMakeARequestBodyWithAFo
 ]
 
 { #category : 'tests' }
+FamixOpenApiRelationSwagger2Test >> testTheImporterMeetsTheDefinitionsThenTheResponsesThenThePaths [
+	"VERIFIED by import (documentUnresolvedSwagger2): the unresolvedReferences of the root are N7 (definitions), N6 (responses), then N2, N1, N3, N4 (paths). N5, the parameter Q that is an alias of the components, is a componentAlias diagnostic, not a reference"
+
+	| importer model root |
+	importer := FamixOpenApiImporter new
+		            mergesInlineSchemas: false;
+		            yourself.
+	model := importer importFromString: self documentUnresolvedSwagger2.
+	root := model allModelEntities detect: [ :each |
+		        each class == OPOpenApi ].
+	self
+		assert: (root unresolvedReferences collect: #name as: Array)
+		equals: #( 'N7' 'N6' 'N2' 'N1' 'N3' 'N4' ).
+	self
+		assert: (importer diagnostics withCode: #componentAlias) size
+		equals: 1.
+	self
+		assert:
+		(importer diagnostics withCode: #componentAlias) first pointer
+		equals: '#/parameters/Q'
+]
+
+{ #category : 'tests' }
 FamixOpenApiRelationSwagger2Test >> testTheOperationsAreInTheOrderOfTheSourceAndTheirParametersLeaveOutTheBodyAndTheForm [
 	"VERIFIED: the body parameter is the request body, the formData parameters make the form"
 
@@ -349,7 +400,7 @@ FamixOpenApiRelationSwagger2Test >> testTheServersAreMadeOfHostBasePathAndScheme
 
 { #category : 'tests' }
 FamixOpenApiRelationSwagger2Test >> testTheUnresolvedReferencesAreComparedAsASetBecauseTheImporterMeetsTheDefinitionsBeforeThePaths [
-	"VERIFIED by import: the importer keeps the unresolved references of the definitions, the parameters and the responses before those of the paths, the document lists the paths first: the same references in another order, not a gap"
+	"VERIFIED by import: the importer keeps the unresolved references of the definitions, then the responses, before those of the paths (see the next test), the document lists the paths first: the same references in another order, not a gap"
 
 	| comparison |
 	self assertRelationFaithful: self documentUnresolvedSwagger2.

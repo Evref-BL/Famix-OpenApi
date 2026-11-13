@@ -59,6 +59,28 @@ FamixOpenApiNeverRaisesTest >> checkText: aJsonString label: aLabel [
 ]
 
 { #category : 'fuzzing' }
+FamixOpenApiNeverRaisesTest >> checkUnifiedText: aJsonString label: aLabel [
+	"Import the text (an exception of the importer skips the text), then run the unified fidelity checker, which must not raise"
+
+	| importer model |
+	importer := FamixOpenApiImporter new
+		            mergesInlineSchemas: false;
+		            yourself.
+	model := [ importer importFromString: aJsonString ]
+		         on: Error
+		         do: [ :error | ^ self ].
+	runs := runs + 1.
+	self
+		guard: [
+			FamixOpenApiFidelityChecker new
+				checkJsonString: aJsonString
+				model: model
+				diagnostics: importer diagnostics all ]
+		label: aLabel
+		check: 'fidelity'
+]
+
+{ #category : 'fuzzing' }
 FamixOpenApiNeverRaisesTest >> child: aToken of: aContainer [
 	"The element of an object (token: key) or of an array (token: 0-based index)"
 
@@ -117,6 +139,25 @@ FamixOpenApiNeverRaisesTest >> fuzzRichDocuments [
 ]
 
 { #category : 'fuzzing' }
+FamixOpenApiNeverRaisesTest >> fuzzUnifiedDocument: aJsonString named: aName [
+	"The unified checker over one mutated text over every fourth mutated text, in the fixed order of the positions and of the replacements"
+
+	| json inventory count |
+	json := (NeoJSONReader on: aJsonString readStream)
+		        mapClass: OrderedDictionary;
+		        next.
+	inventory := self inventoryOf: aJsonString.
+	count := 0.
+	(self positionsOf: json in: inventory) do: [ :path |
+		self replacements do: [ :each |
+			count := count + 1.
+			count \\ 4 = 0 ifTrue: [
+				self
+					checkUnifiedText: (self mutate: json at: path with: each)
+					label: (self labelOf: aName at: path replacedBy: each) ] ] ]
+]
+
+{ #category : 'fuzzing' }
 FamixOpenApiNeverRaisesTest >> guard: aBlock label: aLabel check: aCheckName [
 	"Run the block, keep the exception in failures instead of raising it"
 
@@ -134,6 +175,15 @@ FamixOpenApiNeverRaisesTest >> importerErrors [
 	"What the importer itself raised, for the documents the checks skipped"
 
 	^ importerErrors
+]
+
+{ #category : 'fuzzing' }
+FamixOpenApiNeverRaisesTest >> importerOn: aJsonString [
+
+	^ FamixOpenApiImporter new
+		  mergesInlineSchemas: false;
+		  importFromString: aJsonString;
+		  yourself
 ]
 
 { #category : 'fuzzing' }
@@ -361,6 +411,37 @@ FamixOpenApiNeverRaisesTest >> testTheReplacementsAreTheEightKindsOfValues [
 	self assert: self replacements size equals: 8.
 	self assert: self replacements last isDictionary.
 	self assert: (self replacements last at: '$ref') equals: 7
+]
+
+{ #category : 'fuzzing' }
+FamixOpenApiNeverRaisesTest >> testTheUnifiedCheckerNeverRaises [
+	"The unified fidelity checker over every fourth mutated rich document (VERIFIED: about 800 documents, a fraction of the time of the four checks over all of them)"
+
+	self richDocuments do: [ :each |
+		self fuzzUnifiedDocument: each value named: each key ].
+	self
+		assert: failures isEmpty
+		description:
+		(self describe: (failures first: (5 min: failures size))).
+	self assert: runs >= 600
+]
+
+{ #category : 'tests' }
+FamixOpenApiNeverRaisesTest >> testTheUnifiedCheckerNeverRaisesOnTextsThatAreNotDocuments [
+	"Every text answers a FamixOpenApiFidelityReport (an error would fail the test)"
+
+	| importer |
+	importer := self importerOn: self documentValues30.
+	#( '' 'null' '0' '"text"' '[]' '[[],{}]' '{}' '{"openapi":null}'
+	   '{"openapi":3}' '{"swagger":[]}' '{"openapi":"3.0.3","paths":5}'
+	   '{"openapi":"3.0.3","paths":{"/p":null,"/q":[]},"components":3}' )
+		do: [ :each |
+			self
+				assert: (FamixOpenApiFidelityChecker new
+						 checkJsonString: each
+						 model: importer model
+						 diagnostics: importer diagnostics all) class
+				equals: FamixOpenApiFidelityReport ]
 ]
 
 { #category : 'fuzzing' }
