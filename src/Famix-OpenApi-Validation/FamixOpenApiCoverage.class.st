@@ -1,5 +1,5 @@
 "
-What a value check really verified, per key (a String such as 'v30 Info.title -> OPInfo>>title', see FamixOpenApiValueRule>>coverageKeyIn:): how many values were COMPARED, how many of them did not match (a #valueMismatch gap), how many were left out because the source value has a JSON type that does not fit the field (the importer reports it and does not store it) and how many because the entity that should carry the slot is not in the model (the existence check reports it). A field with no count at all was never met in the documents checked. It is the main result of the value check besides the gaps: it says what a check without gap has verified.
+What a value check really verified, per key (a String such as 'v30 Info.title -> OPInfo>>title', see FamixOpenApiValueRule>>coverageKeyIn:): how many values were COMPARED, how many of them did not match (a #valueMismatch gap), how many were left out because the source value has a JSON type that does not fit the field (the importer reports it and does not store it) and how many because the entity that should carry the slot is not in the model (the existence check reports it). A field with no count at all was never met in the documents checked. It is the main result of the value check besides the gaps: it says what a check without gap has verified. The relation check (V10) records the relations compared (one per owner), their links (#linkCountOf:, the number of targets) and the relations deferred with their reason (#recordDeferred:reason:, #markdownDeferred).
 "
 Class {
 	#name : 'FamixOpenApiCoverage',
@@ -10,7 +10,10 @@ Class {
 		'wrongType',
 		'withoutEntity',
 		'informative',
-		'ignoredSiblings'
+		'ignoredSiblings',
+		'deferred',
+		'deferralReasons',
+		'links'
 	],
 	#category : 'Famix-OpenApi-Validation',
 	#package : 'Famix-OpenApi-Validation'
@@ -27,6 +30,26 @@ FamixOpenApiCoverage >> comparedKeys [
 	"The keys of the fields with at least one value compared, sorted"
 
 	^ compared asSet asArray sorted
+]
+
+{ #category : 'recording' }
+FamixOpenApiCoverage >> deferralReasonOf: aKey [
+	"Why the relations of the key were deferred, nil when none was"
+
+	^ deferralReasons at: aKey ifAbsent: [ nil ]
+]
+
+{ #category : 'recording' }
+FamixOpenApiCoverage >> deferredCountOf: aKey [
+
+	^ deferred occurrencesOf: aKey
+]
+
+{ #category : 'recording' }
+FamixOpenApiCoverage >> deferredKeys [
+	"The keys with at least one relation deferred, sorted"
+
+	^ deferred asSet asArray sorted
 ]
 
 { #category : 'accessing' }
@@ -58,16 +81,41 @@ FamixOpenApiCoverage >> initialize [
 	wrongType := Bag new.
 	withoutEntity := Bag new.
 	informative := Bag new.
-	ignoredSiblings := Bag new
+	ignoredSiblings := Bag new.
+	deferred := Bag new.
+	deferralReasons := Dictionary new.
+	links := Bag new
 ]
 
-{ #category : 'testing' }
+{ #category : 'recording' }
 FamixOpenApiCoverage >> isEmpty [
-	"True when the check met nothing: no value compared, no value of a wrong JSON type, no field without an entity and no sibling of a $ref ignored (a mismatch is a value compared, so it is not counted apart)"
+	"True when the check met nothing: no value compared, no value of a wrong JSON type, no field without an entity, no sibling of a $ref ignored and no relation deferred (a mismatch is a value compared, so it is not counted apart)"
 
 	^ compared isEmpty and: [
 		  wrongType isEmpty and: [
-			  withoutEntity isEmpty and: [ ignoredSiblings isEmpty ] ] ]
+			  withoutEntity isEmpty and: [
+				  ignoredSiblings isEmpty and: [ deferred isEmpty ] ] ] ]
+]
+
+{ #category : 'recording' }
+FamixOpenApiCoverage >> linkCountOf: aKey [
+	"The number of targets compared for the key (V10)"
+
+	^ links occurrencesOf: aKey
+]
+
+{ #category : 'recording' }
+FamixOpenApiCoverage >> markdownDeferred [
+	"A Markdown table of the relations that were deferred (V10) with their reason, empty text when there is none. Lines end with LF"
+
+	^ String streamContents: [ :stream |
+		  self deferredKeys ifNotEmpty: [ :keys |
+			  stream
+				  nextPutAll: '| Deferred relation | Count | Reason |';
+				  lf;
+				  nextPutAll: '|---|---|---|';
+				  lf.
+			  keys do: [ :key | self writeDeferredRowOf: key on: stream ] ] ]
 ]
 
 { #category : 'printing' }
@@ -120,9 +168,15 @@ FamixOpenApiCoverage >> mergeWith: aCoverage [
 		informative
 			add: key
 			withOccurrences: (aCoverage informativeCountOf: key).
+		links add: key withOccurrences: (aCoverage linkCountOf: key).
 		withoutEntity
 			add: key
 			withOccurrences: (aCoverage withoutEntityCountOf: key) ].
+	aCoverage deferredKeys do: [ :key |
+		deferred add: key withOccurrences: (aCoverage deferredCountOf: key).
+		deferralReasons
+			at: key
+			ifAbsentPut: [ aCoverage deferralReasonOf: key ] ].
 	aCoverage ignoredSiblingKeys do: [ :key |
 		ignoredSiblings
 			add: key
@@ -143,6 +197,14 @@ FamixOpenApiCoverage >> recordCompared: aKey [
 ]
 
 { #category : 'recording' }
+FamixOpenApiCoverage >> recordDeferred: aKey reason: aString [
+	"One relation was not compared (V10): the reason is kept per key, the first one met"
+
+	deferred add: aKey.
+	deferralReasons at: aKey ifAbsentPut: [ aString ]
+]
+
+{ #category : 'recording' }
 FamixOpenApiCoverage >> recordIgnoredSibling: aKey [
 	"One key beside the $ref of a schema that is only a reference (OpenAPI 3.0, Swagger 2) was not compared: the importer ignores it, as the spec requires"
 
@@ -154,6 +216,13 @@ FamixOpenApiCoverage >> recordInformative: aKey [
 	"One value compared was not a default (not nil, false or empty): a comparison that could not pass by chance"
 
 	informative add: aKey
+]
+
+{ #category : 'recording' }
+FamixOpenApiCoverage >> recordLinks: aCount at: aKey [
+	"The number of targets of one relation compared (V10): aCount links of the key"
+
+	links add: aKey withOccurrences: aCount
 ]
 
 { #category : 'recording' }
@@ -194,6 +263,12 @@ FamixOpenApiCoverage >> totalCompared [
 	^ compared size
 ]
 
+{ #category : 'recording' }
+FamixOpenApiCoverage >> totalDeferred [
+
+	^ deferred size
+]
+
 { #category : 'accessing' }
 FamixOpenApiCoverage >> totalIgnoredSiblings [
 
@@ -206,6 +281,12 @@ FamixOpenApiCoverage >> totalInformative [
 	^ informative size
 ]
 
+{ #category : 'recording' }
+FamixOpenApiCoverage >> totalLinks [
+
+	^ links size
+]
+
 { #category : 'accessing' }
 FamixOpenApiCoverage >> totalMismatched [
 
@@ -216,6 +297,20 @@ FamixOpenApiCoverage >> totalMismatched [
 FamixOpenApiCoverage >> withoutEntityCountOf: aKey [
 
 	^ withoutEntity occurrencesOf: aKey
+]
+
+{ #category : 'recording' }
+FamixOpenApiCoverage >> writeDeferredRowOf: aKey on: aStream [
+
+	aStream
+		nextPutAll: '| ';
+		nextPutAll: aKey;
+		nextPutAll: ' | ';
+		print: (self deferredCountOf: aKey);
+		nextPutAll: ' | ';
+		nextPutAll: (self deferralReasonOf: aKey) asString;
+		nextPutAll: ' |';
+		lf
 ]
 
 { #category : 'printing' }

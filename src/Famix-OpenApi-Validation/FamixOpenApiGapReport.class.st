@@ -1,5 +1,5 @@
 "
-The collection of FamixOpenApiGap found by a fidelity check, shared by the checks of the series (existence V7, values V8, extensions and diagnostics V9, corpus report V10). It answers the gaps, narrowed by kind, and counts them by kind and by spec object. Besides the gaps it holds the statistics a check records to say what it looked at: per spec object the number of source nodes, of entities they should give and of entities found, and per rule the number of entities without source node that the derivation expects (#derivedCountsByRule) and the number of them found in the model (#syntheticCountsByRule). The optional file is the name of the source document: it is stamped on every gap added without one. A value check also records its coverage (#coverage, FamixOpenApiCoverage: what was compared, per field), shown by #markdownSummary, and the gaps of a field are counted by #countsByField.
+The collection of FamixOpenApiGap found by a fidelity check, shared by the checks of the series (existence V7, values V8, extensions and diagnostics V9, corpus report V10). It answers the gaps, narrowed by kind, and counts them by kind and by spec object. Besides the gaps it holds the statistics a check records to say what it looked at: per spec object the number of source nodes, of entities they should give and of entities found, and per rule the number of entities without source node that the derivation expects (#derivedCountsByRule) and the number of them found in the model (#syntheticCountsByRule). The optional file is the name of the source document: it is stamped on every gap added without one. A value check also records its coverage (#coverage, FamixOpenApiCoverage: what was compared, per field), shown by #markdownSummary, and the gaps of a field are counted by #countsByField. The relation check (V10, FamixOpenApiRelationCheck) adds the gaps of the kinds of the class side #relationKinds (#relationGaps, #relationMismatches), the links it compared per relation in the coverage and the relations it deferred, with their reason (markdownSummary).
 "
 Class {
 	#name : 'FamixOpenApiGapReport',
@@ -32,6 +32,13 @@ FamixOpenApiGapReport class >> informationalKinds [
 
 	^ #( #onlyInExtensions #ignoredByDiagnostic #valueKeptAnyway
 	     #notDecidable )
+]
+
+{ #category : 'data' }
+FamixOpenApiGapReport class >> relationKinds [
+	"The kinds of gap of the relation check (V10), all failures: #relationMismatch (the relation does not hold the targets that the source designates: expected and found are the lists of the canonical pointers of the targets, the message says what is missing, extra or in another order) and #countMismatch (a relation compared by its count only holds another number of targets)"
+
+	^ #( #relationMismatch #countMismatch )
 ]
 
 { #category : 'adding' }
@@ -224,6 +231,21 @@ FamixOpenApiGapReport >> recordSynthetic: aRuleName [
 	syntheticCounts add: aRuleName
 ]
 
+{ #category : 'value checks' }
+FamixOpenApiGapReport >> relationGaps [
+	"The gaps of the relation check (V10): the kinds of the class side #relationKinds, which are all failures"
+
+	^ gaps select: [ :each |
+		  self class relationKinds includes: each kind ]
+]
+
+{ #category : 'value checks' }
+FamixOpenApiGapReport >> relationMismatches [
+	"The gaps about a relation that does not hold the targets of the source (#relationMismatch)"
+
+	^ self gapsOfKind: #relationMismatch
+]
+
 { #category : 'accessing' }
 FamixOpenApiGapReport >> size [
 
@@ -289,16 +311,20 @@ FamixOpenApiGapReport >> writeCountsOf: aSpecObjectName nodes: aCount on: aStrea
 
 { #category : 'value checks' }
 FamixOpenApiGapReport >> writeCoverageOn: aStream [
-	"The coverage tables of the value check, when there is one: the fields compared, then the keys beside a $ref that were ignored"
+	"The coverage tables of the value and relation checks, when there is one: the fields compared, the keys beside a $ref that were ignored, the relations deferred with their reason"
 
 	coverage isEmpty ifTrue: [ ^ self ].
 	aStream
 		lf;
 		nextPutAll: coverage markdownTable.
-	coverage ignoredSiblingKeys ifEmpty: [ ^ self ].
-	aStream
-		lf;
-		nextPutAll: coverage markdownIgnoredSiblings
+	coverage ignoredSiblingKeys ifNotEmpty: [
+		aStream
+			lf;
+			nextPutAll: coverage markdownIgnoredSiblings ].
+	coverage deferredKeys ifNotEmpty: [
+		aStream
+			lf;
+			nextPutAll: coverage markdownDeferred ]
 ]
 
 { #category : 'reporting' }

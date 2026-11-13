@@ -16,7 +16,7 @@ Class {
 
 { #category : 'fuzzing' }
 FamixOpenApiNeverRaisesTest >> checkText: aJsonString label: aLabel [
-	"Import the text (an exception of the importer is kept in importerErrors and the text skipped), then run the three checks, which must not raise"
+	"Import the text (an exception of the importer is kept in importerErrors and the text skipped), then run the four checks, which must not raise"
 
 	| importer model |
 	importer := FamixOpenApiImporter new
@@ -47,7 +47,15 @@ FamixOpenApiNeverRaisesTest >> checkText: aJsonString label: aLabel [
 				model: model
 				diagnostics: importer diagnostics ]
 		label: aLabel
-		check: 'extensions'
+		check: 'extensions'.
+	self
+		guard: [
+			FamixOpenApiRelationCheck
+				checkInventory: (self inventoryOf: aJsonString)
+				model: model
+				diagnostics: importer diagnostics ]
+		label: aLabel
+		check: 'relation'
 ]
 
 { #category : 'fuzzing' }
@@ -251,15 +259,20 @@ FamixOpenApiNeverRaisesTest >> replacements [
 
 { #category : 'fuzzing' }
 FamixOpenApiNeverRaisesTest >> richDocuments [
-	"Associations name -> JSON text of the rich fixtures: OpenAPI 3.0, 3.1 and Swagger 2, for the checks of values and of existence"
+	"Associations name -> JSON text of the rich fixtures: OpenAPI 3.0, 3.1 and Swagger 2, for the checks of values, of existence and of relations (the last three have the shared and cloned $ref, the aliases, the security graph and the conversions of Swagger 2)"
 
+	| relations |
+	relations := FamixOpenApiRelationTestCase new.
 	^ {
 		  ('values30' -> self documentValues30).
 		  ('values31' -> self documentValues31).
 		  ('valuesSwagger2' -> self documentValuesSwagger2).
 		  ('openApi30' -> self documentOpenApi30).
 		  ('openApi31' -> self documentOpenApi31).
-		  ('swagger2' -> self documentSwagger2) }
+		  ('swagger2' -> self documentSwagger2).
+		  ('relations30' -> relations documentStructure30).
+		  ('relations31' -> relations documentStructure31).
+		  ('relationsSwagger2' -> relations documentStructureSwagger2) }
 ]
 
 { #category : 'fuzzing' }
